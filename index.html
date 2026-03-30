@@ -1578,7 +1578,7 @@ const CONTRATOS = [
     address:'Calle Las Trinitarias No. 08, Apto 1-B\n2do nivel, Cumbre de Paraíso, Bayona',
     apt:'Apto 1-B · 2do Piso',
     rent:14000, deposit:28000,
-    startBase: new Date('2024-09-25'), payDay:25,
+    startBase: new Date('2024-09-25'), payDay:5,
     notary:'Dr. César S. Alcantara Moquete',
     notes:'Depósito 2 meses (RD$28,000). Inicio 25/09/2024. Renovación automática. No mascotas.'
   },
@@ -1598,7 +1598,7 @@ const CONTRATOS = [
     address:'Cumbres del Paraíso, Calle Las Trinitarias\nNo. 8, 2do nivel, Bayona, SDO',
     apt:'Apartamento · Vivienda Familiar',
     rent:13000, deposit:26000,
-    startBase: new Date('2023-09-04'), payDay:4,
+    startBase: new Date('2023-09-04'), payDay:30,
     notary:'Dr. Jorge José Pichardo Terrero',
     notes:'Pichardo & Asociados. Depósito 2 meses. Servicios a cargo de la inquilina.'
   }
@@ -1935,7 +1935,7 @@ function renderFinanzas() {
   let paidCount = 0, pendCount = 0;
   $('month-tbody').innerHTML = CONTRATOS.map(c => {
     const paid = PAGOS_HISTORICOS.find(p=>p.contratoId===c.id&&p.mes===mes&&p.año===año);
-    const estado = paid ? 'pagado' : (n.getDate()>c.payDay+3?'atrasado':'pendiente');
+    const estado = paid ? 'pagado' : 'pendiente';
     if(paid) paidCount++; else pendCount++;
     const label = paid ? 'Pagado' : (estado==='atrasado' ? 'Atrasado' : 'Pendiente');
     return `
