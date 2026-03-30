@@ -1,1 +1,1 @@
-﻿{"version":2,"builds":[{"src":"onyx_realty.html","use":"@vercel/static"}],"routes":[{"src":"/","dest":"/onyx_realty.html"}]}
+﻿{"rewrites":[{"source":"/","destination":"/onyx_realty.html"}]}
