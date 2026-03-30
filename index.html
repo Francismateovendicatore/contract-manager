@@ -2333,9 +2333,9 @@ async function loadAndInit(){
       fetch('https://contract-manager-u2hy.onrender.com/contratos').then(r=>r.json()),
       fetch('https://contract-manager-u2hy.onrender.com/pagos').then(r=>r.json())
     ]);
-    CONTRATOS.length=0;
+    // CONTRATOS.length=0; // keep fallback data
     cr.forEach(c=>CONTRATOS.push({id:c.id,aptNombre:c.apt_nombre,tenant:c.tenant,address:c.address,apt:c.apt,rent:parseFloat(c.rent),deposit:parseFloat(c.deposit),startBase:new Date(c.start_base),payDay:c.pay_day,notary:c.notary||'',notes:c.notes||''}));
-    PAGOS_HISTORICOS.length=0;
+    // PAGOS_HISTORICOS.length=0; // keep fallback data
     pr.forEach(p=>PAGOS_HISTORICOS.push({id:p.id,contratoId:p.contrato_id,aptId:p.contrato_id,monto:parseFloat(p.monto),fechaPago:new Date(p.fecha_pago),mes:p.mes-1,anio:p.anio,metodo:p.metodo,notas:p.notas||'',auto:true}));
   }catch(e){console.error('API error:',e);}
   init();
