@@ -1695,13 +1695,10 @@ function DetectarMorosos(mes, año) {
 }
 
 function CalcularDeudaPorApartamento(c) {
-  const start = new Date(c.startBase);
-  const n = now();
-  const mesesActivos = Math.max(0,
-    (n.getFullYear()-start.getFullYear())*12 + (n.getMonth()-start.getMonth()));
-  const esperado = mesesActivos * c.rent;
   const cobrado = PAGOS_HISTORICOS.filter(p=>p.contratoId===c.id).reduce((s,p)=>s+p.monto,0);
-  return {esperado, cobrado, deuda: Math.max(0, esperado-cobrado), meses: mesesActivos};
+  const pagos = PAGOS_HISTORICOS.filter(p=>p.contratoId===c.id).length;
+  const esperado = pagos * c.rent;
+  return {esperado, cobrado, deuda: Math.max(0, esperado-cobrado), meses: pagos};
 }
 
 function AnalizarSubidaRenta(c, pct=5) {
