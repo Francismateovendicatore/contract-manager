@@ -1,0 +1,84 @@
+﻿const express = require('express');
+const { Pool } = require('pg');
+const cors = require('cors');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+
+// CONTRATOS
+app.get('/contratos', async (req, res) => {
+  try { const r = await pool.query('SELECT * FROM contratos WHERE activo = true ORDER BY id'); res.json(r.rows); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// PAGOS
+app.get('/pagos', async (req, res) => {
+  try { const r = await pool.query('SELECT * FROM pagos ORDER BY fecha_pago DESC'); res.json(r.rows); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/pagos', async (req, res) => {
+  const { contrato_id, monto, fecha_pago, mes, anio, metodo, notas } = req.body;
+  try {
+    const r = await pool.query(
+      'INSERT INTO pagos (contrato_id, monto, fecha_pago, mes, anio, metodo, notas) VALUES (\,\,\,\,\,\,\) RETURNING *',
+      [contrato_id, monto, fecha_pago, mes, anio, metodo || 'transferencia', notas || null]
+    );
+    res.json(r.rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// NOTAS DE INQUILINO
+app.get('/notas/:contrato_id', async (req, res) => {
+  try {
+    const r = await pool.query('SELECT * FROM notas_inquilino WHERE contrato_id = \ ORDER BY created_at DESC', [req.params.contrato_id]);
+    res.json(r.rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/notas', async (req, res) => {
+  const { contrato_id, nota } = req.body;
+  try {
+    const r = await pool.query('INSERT INTO notas_inquilino (contrato_id, nota) VALUES (\,\) RETURNING *', [contrato_id, nota]);
+    res.json(r.rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/notas/:id', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM notas_inquilino WHERE id = \', [req.params.id]);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// EXPULSIONES
+app.get('/expulsiones/:contrato_id', async (req, res) => {
+  try {
+    const r = await pool.query('SELECT * FROM expulsiones WHERE contrato_id = \', [req.params.contrato_id]);
+    res.json(r.rows[0] || null);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/expulsiones', async (req, res) => {
+  const { contrato_id, motivo } = req.body;
+  try {
+    await pool.query('DELETE FROM expulsiones WHERE contrato_id = \', [contrato_id]);
+    const r = await pool.query('INSERT INTO expulsiones (contrato_id, motivo) VALUES (\,\) RETURNING *', [contrato_id, motivo]);
+    res.json(r.rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/expulsiones/:contrato_id', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM expulsiones WHERE contrato_id = \', [req.params.contrato_id]);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/health', (req, res) => res.json({ ok: true }));
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log('Onyx API running on port ' + PORT));
