@@ -14,6 +14,7 @@ app.delete('/notas/:id', async (req, res) => { try { await pool.query('DELETE FR
 app.get('/expulsiones/:contrato_id', async (req, res) => { try { const r = await pool.query('SELECT * FROM expulsiones WHERE contrato_id = ', [req.params.contrato_id]); res.json(r.rows[0] || null); } catch(e) { res.status(500).json({ error: e.message }); } });
 app.post('/expulsiones', async (req, res) => { const { contrato_id, motivo } = req.body; try { await pool.query('DELETE FROM expulsiones WHERE contrato_id = ', [contrato_id]); const r = await pool.query('INSERT INTO expulsiones (contrato_id, motivo) VALUES (,) RETURNING *', [contrato_id, motivo]); res.json(r.rows[0]); } catch(e) { res.status(500).json({ error: e.message }); } });
 app.delete('/expulsiones/:contrato_id', async (req, res) => { try { await pool.query('DELETE FROM expulsiones WHERE contrato_id = ', [req.params.contrato_id]); res.json({ ok: true }); } catch(e) { res.status(500).json({ error: e.message }); } });
+app.get('/', (req, res) => res.sendFile(require('path').join(__dirname, 'onyx_realty.html')));
 app.get('/health', (req, res) => res.json({ ok: true }));
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log('Onyx API running on port ' + PORT));
