@@ -1,0 +1,2249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Francisco Mateo Jiménez — Sistema Inmobiliario</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN SYSTEM — ONYX REALTY
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  /* ── Void backgrounds */
+  --void:      #030305;
+  --base:      #060609;
+  --low:       #0A0A10;
+  --mid:       #0F0F18;
+  --high:      #151522;
+  --raised:    #1B1B2C;
+  --top:       #222236;
+
+  /* ── Borders */
+  --b0: rgba(255,255,255,0.03);
+  --b1: rgba(255,255,255,0.055);
+  --b2: rgba(255,255,255,0.09);
+  --b3: rgba(255,255,255,0.15);
+
+  /* ── Gold Accent (brand / power / money) */
+  --gold:        #C9934A;
+  --gold-bright: #E2A85A;
+  --gold-dim:    rgba(201,147,74,0.08);
+  --gold-glow:   rgba(201,147,74,0.15);
+  --gold-border: rgba(201,147,74,0.24);
+
+  /* ── Status: Emerald (healthy / paid) */
+  --em:        #2EBD8E;
+  --em-dim:    rgba(46,189,142,0.08);
+  --em-border: rgba(46,189,142,0.22);
+
+  /* ── Status: Amber (warning / near) */
+  --am:        #ECAF42;
+  --am-dim:    rgba(236,175,66,0.08);
+  --am-border: rgba(236,175,66,0.22);
+
+  /* ── Status: Rose (critical / overdue) */
+  --rs:        #F2415A;
+  --rs-dim:    rgba(242,65,90,0.08);
+  --rs-border: rgba(242,65,90,0.22);
+
+  /* ── Text */
+  --t1: #EDEDF8;
+  --t2: #6868A0;
+  --t3: #323250;
+
+  --sidebar-w: 258px;
+  --r: 18px;
+  --rsm: 11px;
+  --rxs: 8px;
+}
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { font-size:15px; scroll-behavior:smooth; }
+
+body {
+  background: var(--void);
+  color: var(--t1);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── AMBIENT ATMOSPHERE ──────────────────────────────────── */
+#atm {
+  position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 15% -10%, rgba(201,147,74,0.055) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 105%, rgba(46,189,142,0.038) 0%, transparent 58%),
+    radial-gradient(ellipse 50% 40% at 55% 45%, rgba(242,65,90,0.018) 0%, transparent 55%);
+}
+#grain {
+  position:fixed; inset:0; pointer-events:none; z-index:0; opacity:0.22;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 600 600' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+/* ─── SIDEBAR ─────────────────────────────────────────────── */
+.sidebar {
+  position:fixed; top:0; left:0; bottom:0;
+  width:var(--sidebar-w); z-index:200;
+  display:flex; flex-direction:column;
+  background: linear-gradient(180deg, rgba(6,6,9,0.98) 0%, rgba(4,4,7,0.99) 100%);
+  border-right:1px solid var(--b1);
+  overflow: hidden;
+}
+.sidebar::before {
+  content:''; position:absolute;
+  top:0; left:0; right:0; height:180px;
+  background: radial-gradient(ellipse 100% 100% at 50% 0%, rgba(201,147,74,0.06) 0%, transparent 70%);
+  pointer-events:none;
+}
+
+.sb-head { padding:32px 26px 26px; border-bottom:1px solid var(--b1); position:relative; }
+.sb-eyebrow {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8.5px; letter-spacing:0.2em;
+  text-transform:uppercase; color:var(--t3);
+  display:block; margin-bottom:12px;
+}
+.sb-logo { display:flex; align-items:center; gap:14px; }
+.sb-gem {
+  width:38px; height:38px;
+  background: linear-gradient(135deg, rgba(201,147,74,0.15), rgba(201,147,74,0.06));
+  border:1px solid var(--gold-border);
+  border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow: 0 0 20px rgba(201,147,74,0.1), inset 0 1px 0 rgba(201,147,74,0.2);
+  flex-shrink:0;
+}
+.sb-gem svg { width:18px; height:18px; color:var(--gold); }
+.sb-brand {
+  font-family:'Cormorant Garamond',serif;
+  font-size:32px; font-weight:400;
+  color:var(--t1); letter-spacing:0.08em; line-height:1;
+}
+.sb-tagline {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8px; color:var(--t3);
+  letter-spacing:0.08em; display:block; margin-top:4px;
+}
+
+.sb-nav { padding:20px 16px; flex:1; overflow-y:auto; }
+.nav-group-label {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8px; letter-spacing:0.18em;
+  text-transform:uppercase; color:var(--t3);
+  padding:0 10px; margin:0 0 6px; display:block;
+}
+.nav-item {
+  display:flex; align-items:center; gap:11px;
+  padding:10px 12px;
+  border-radius:var(--rsm);
+  color:var(--t2); font-size:13px; font-weight:500;
+  cursor:pointer; user-select:none;
+  transition:all 0.18s ease;
+  margin-bottom:2px; position:relative;
+  border:1px solid transparent;
+}
+.nav-item svg { width:16px; height:16px; flex-shrink:0; opacity:0.6; transition:opacity 0.18s; }
+.nav-item:hover { background:var(--high); color:var(--t1); }
+.nav-item:hover svg { opacity:0.85; }
+.nav-item.active {
+  background: linear-gradient(90deg, rgba(201,147,74,0.12), rgba(201,147,74,0.04));
+  color:var(--gold);
+  border-color:var(--gold-border);
+  box-shadow: inset 0 1px 0 rgba(201,147,74,0.1);
+}
+.nav-item.active svg { opacity:1; color:var(--gold); }
+.nav-item.active::before {
+  content:''; position:absolute;
+  left:0; top:8px; bottom:8px; width:2.5px;
+  background:var(--gold);
+  border-radius:0 2px 2px 0;
+  box-shadow: 0 0 12px rgba(201,147,74,0.6);
+}
+.nav-badge {
+  margin-left:auto; font-family:'JetBrains Mono',monospace;
+  font-size:9px; padding:2px 8px;
+  background:var(--high); border-radius:20px; color:var(--t3);
+}
+.nav-badge.alert { background:var(--rs-dim); color:var(--rs); border:1px solid var(--rs-border); }
+
+.sb-sep { height:1px; background:var(--b1); margin:8px 26px 16px; }
+
+/* ── Sidebar Financial Summary */
+.sb-fin { padding:0 26px; }
+.sb-fin-title {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8px; letter-spacing:0.18em;
+  text-transform:uppercase; color:var(--t3); display:block; margin-bottom:14px;
+}
+.sb-fin-total {
+  font-family:'Cormorant Garamond',serif;
+  font-size:28px; font-weight:400;
+  color:var(--gold); letter-spacing:-0.01em;
+  display:block; line-height:1; margin-bottom:4px;
+  text-shadow: 0 0 40px rgba(201,147,74,0.35);
+}
+.sb-fin-sublabel {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8.5px; color:var(--t3); display:block; margin-bottom:18px;
+}
+.sb-mini-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:7px 0; border-bottom:1px solid var(--b0);
+}
+.sb-mini-row:last-child { border-bottom:none; }
+.sb-mini-k { font-size:11.5px; color:var(--t2); }
+.sb-mini-v {
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px; color:var(--t1);
+}
+.sb-mini-v.em { color:var(--em); }
+.sb-mini-v.rs { color:var(--rs); }
+
+.sb-footer {
+  padding:16px 26px 24px; border-top:1px solid var(--b1);
+  margin-top:auto;
+}
+.sb-owner {
+  font-family:'Cormorant Garamond',serif;
+  font-size:14px; font-weight:400; color:var(--t2); display:block; margin-bottom:2px;
+}
+.sb-location {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8.5px; color:var(--t3); display:block; margin-bottom:10px;
+}
+.live-pill {
+  display:inline-flex; align-items:center; gap:7px;
+  background:var(--em-dim); border:1px solid var(--em-border);
+  border-radius:40px; padding:5px 12px;
+}
+.live-dot {
+  width:5px; height:5px; border-radius:50%;
+  background:var(--em); box-shadow:0 0 8px var(--em);
+  animation:breathe 2.2s ease infinite;
+}
+.live-label {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8.5px; color:var(--em); letter-spacing:0.08em;
+}
+@keyframes breathe {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:0.3; transform:scale(0.6); }
+}
+
+/* ─── MAIN ─────────────────────────────────────────────────── */
+.main { margin-left:var(--sidebar-w); position:relative; z-index:1; min-height:100vh; }
+
+/* ─── TOPBAR ───────────────────────────────────────────────── */
+.topbar {
+  position:sticky; top:0; z-index:100;
+  background:rgba(5,5,8,0.9);
+  backdrop-filter:blur(32px) saturate(180%);
+  border-bottom:1px solid var(--b1);
+  padding:0 44px;
+}
+.topbar-inner {
+  display:flex; align-items:center; justify-content:space-between;
+  height:60px; gap:24px;
+}
+.breadcrumb {
+  display:flex; align-items:center; gap:8px;
+  font-size:12px; color:var(--t2);
+}
+.breadcrumb span { color:var(--t3); }
+.breadcrumb svg { width:12px; height:12px; color:var(--t3); }
+.breadcrumb strong { color:var(--t1); font-size:13px; font-weight:600; }
+
+.topbar-actions { display:flex; align-items:center; gap:16px; }
+.search-field { position:relative; }
+.search-field svg {
+  position:absolute; left:12px; top:50%; transform:translateY(-50%);
+  width:13px; height:13px; color:var(--t3); pointer-events:none;
+}
+.search-field input {
+  background:var(--low);
+  border:1px solid var(--b1);
+  border-radius:var(--rsm);
+  padding:8px 14px 8px 34px;
+  color:var(--t1); font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:12.5px; width:200px; outline:none;
+  transition:border-color 0.2s, background 0.2s, width 0.3s cubic-bezier(.22,.68,0,1.1);
+}
+.search-field input::placeholder { color:var(--t3); }
+.search-field input:focus { border-color:var(--gold-border); background:var(--mid); width:240px; }
+.topbar-btn {
+  display:flex; align-items:center; gap:7px;
+  padding:8px 16px;
+  background: linear-gradient(135deg, rgba(201,147,74,0.15), rgba(201,147,74,0.07));
+  border:1px solid var(--gold-border);
+  border-radius:var(--rsm);
+  color:var(--gold); font-size:12.5px; font-weight:600;
+  cursor:pointer; transition:all 0.18s;
+  box-shadow: 0 0 16px rgba(201,147,74,0.06), inset 0 1px 0 rgba(201,147,74,0.12);
+  white-space:nowrap;
+}
+.topbar-btn:hover {
+  background: linear-gradient(135deg, rgba(201,147,74,0.25), rgba(201,147,74,0.12));
+  box-shadow: 0 0 24px rgba(201,147,74,0.14), inset 0 1px 0 rgba(201,147,74,0.18);
+}
+.topbar-btn svg { width:14px; height:14px; }
+.clock-wrap { text-align:right; }
+.clock-time {
+  font-family:'JetBrains Mono',monospace;
+  font-size:15px; color:var(--t1); display:block; line-height:1; letter-spacing:0.04em;
+}
+.clock-date {
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px; color:var(--t3); display:block; margin-top:3px; letter-spacing:0.07em;
+}
+
+/* ─── CONTENT ──────────────────────────────────────────────── */
+.content { padding:40px 44px 80px; }
+
+/* ─── PAGES ────────────────────────────────────────────────── */
+.page { display:none; }
+.page.active { display:block; animation:pgIn 0.28s ease both; }
+@keyframes pgIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+/* ─── SECTION HEADING ──────────────────────────────────────── */
+.sec-hdr {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:24px;
+}
+.sec-title {
+  font-size:11px; font-weight:700; letter-spacing:0.14em;
+  text-transform:uppercase; color:var(--t2);
+  display:flex; align-items:center; gap:10px;
+}
+.sec-title::before {
+  content:''; display:block;
+  width:3px; height:15px;
+  background:var(--gold); border-radius:2px;
+  box-shadow:0 0 12px rgba(201,147,74,0.7);
+}
+.sec-sub { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--t3); }
+
+/* ─── KPI CARDS (DASHBOARD) ────────────────────────────────── */
+.kpi-row {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:14px; margin-bottom:28px;
+}
+.kpi-card {
+  background: linear-gradient(145deg, var(--mid) 0%, var(--low) 100%);
+  border:1px solid var(--b1);
+  border-radius:var(--r);
+  padding:24px 26px;
+  position:relative; overflow:hidden;
+  transition:transform 0.22s cubic-bezier(.22,.68,0,1.2), box-shadow 0.22s ease;
+  box-shadow: inset 0 1px 0 var(--b1), 0 20px 50px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.35);
+  cursor:default;
+  animation:cardIn 0.5s cubic-bezier(.22,.68,0,1.1) both;
+}
+.kpi-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1.5px;
+  background:linear-gradient(90deg, transparent 10%, rgba(201,147,74,0.3) 50%, transparent 90%);
+}
+.kpi-card:hover {
+  transform:translateY(-3px);
+  box-shadow: inset 0 1px 0 var(--b1), 0 30px 70px rgba(0,0,0,0.55), 0 0 0 1px var(--gold-border);
+}
+@keyframes cardIn {
+  from { opacity:0; transform:translateY(18px) scale(0.99); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+
+.kpi-label {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8.5px; letter-spacing:0.16em;
+  text-transform:uppercase; color:var(--t3); display:block; margin-bottom:14px;
+}
+.kpi-num {
+  font-family:'Cormorant Garamond',serif;
+  font-size:40px; font-weight:400;
+  letter-spacing:-0.01em; line-height:1; display:block;
+}
+.kpi-num.gold   { color:var(--gold); text-shadow:0 0 50px rgba(201,147,74,0.3); }
+.kpi-num.em     { color:var(--em);   text-shadow:0 0 50px rgba(46,189,142,0.3); }
+.kpi-num.am     { color:var(--am);   text-shadow:0 0 50px rgba(236,175,66,0.3); }
+.kpi-num.rs     { color:var(--rs);   text-shadow:0 0 50px rgba(242,65,90,0.3); }
+.kpi-meta {
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px; color:var(--t3); display:block; margin-top:6px;
+}
+
+/* ─── DASHBOARD GRID ───────────────────────────────────────── */
+.dash-grid {
+  display:grid;
+  grid-template-columns:1fr 380px;
+  gap:14px; margin-bottom:14px;
+}
+
+/* ─── PANEL (generic glass container) ─────────────────────── */
+.panel {
+  background: linear-gradient(145deg, var(--mid) 0%, var(--low) 100%);
+  border:1px solid var(--b1);
+  border-radius:var(--r);
+  box-shadow: inset 0 1px 0 var(--b1), 0 20px 50px rgba(0,0,0,0.45), 0 4px 12px rgba(0,0,0,0.3);
+  overflow:hidden;
+  animation:cardIn 0.5s cubic-bezier(.22,.68,0,1.1) both;
+}
+.panel-head {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:20px 22px 16px;
+  border-bottom:1px solid var(--b1);
+}
+.panel-title {
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px; letter-spacing:0.14em;
+  text-transform:uppercase; color:var(--t2);
+}
+.panel-body { padding:20px 22px; }
+
+/* ─── CHART ────────────────────────────────────────────────── */
+.chart-container { position:relative; height:220px; }
+canvas#revenue-chart { width:100%; height:100%; }
+
+/* ─── ALERTS PANEL ─────────────────────────────────────────── */
+.alert-item {
+  display:flex; align-items:flex-start; gap:12px;
+  padding:12px 0;
+  border-bottom:1px solid var(--b0);
+  animation:cardIn 0.4s ease both;
+}
+.alert-item:last-child { border-bottom:none; padding-bottom:0; }
+.alert-dot {
+  width:8px; height:8px; border-radius:50%;
+  flex-shrink:0; margin-top:4px;
+}
+.alert-dot.rs { background:var(--rs); box-shadow:0 0 8px var(--rs); }
+.alert-dot.am { background:var(--am); box-shadow:0 0 8px var(--am); }
+.alert-dot.em { background:var(--em); box-shadow:0 0 8px var(--em); }
+.alert-text { font-size:12px; color:var(--t1); line-height:1.5; }
+.alert-time {
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px; color:var(--t3); display:block; margin-top:2px;
+}
+
+/* ─── RECENT PAYMENTS ──────────────────────────────────────── */
+.pay-row {
+  display:grid; grid-template-columns:auto 1fr auto auto;
+  align-items:center; gap:12px;
+  padding:10px 0; border-bottom:1px solid var(--b0);
+}
+.pay-row:last-child { border-bottom:none; }
+.pay-avatar {
+  width:32px; height:32px; border-radius:8px;
+  background:var(--high);
+  border:1px solid var(--b2);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px; color:var(--t2); flex-shrink:0;
+}
+.pay-tenant { font-size:12.5px; color:var(--t1); font-weight:500; display:block; }
+.pay-apt {
+  font-family:'JetBrains Mono',monospace;
+  font-size:9.5px; color:var(--t3); display:block; margin-top:1px;
+}
+.pay-amount {
+  font-family:'Cormorant Garamond',serif;
+  font-size:18px; font-weight:400; color:var(--em); text-align:right;
+}
+.pay-date {
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px; color:var(--t3); text-align:right; display:block; margin-top:1px;
+}
+
+/* ─── CONTRACT CARDS ───────────────────────────────────────── */
+.contracts-toolbar {
+  display:flex; align-items:center; gap:10px; margin-bottom:22px;
+}
+.filter-btn {
+  padding:7px 16px;
+  background:var(--low); border:1px solid var(--b1);
+  border-radius:var(--rxs); color:var(--t2);
+  font-size:12px; font-weight:500; cursor:pointer;
+  transition:all 0.18s;
+}
+.filter-btn:hover { background:var(--mid); color:var(--t1); }
+.filter-btn.active {
+  background:var(--gold-dim); border-color:var(--gold-border);
+  color:var(--gold);
+}
+
+.cards-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(420px, 1fr));
+  gap:16px;
+}
+
+/* ─── THE CONTRACT CARD ────────────────────────────────────── */
+.ccard {
+  position:relative;
+  background: linear-gradient(150deg, rgba(16,16,26,0.96) 0%, rgba(10,10,18,0.98) 100%);
+  border:1px solid var(--b1);
+  border-radius:var(--r);
+  overflow:hidden; cursor:default;
+  box-shadow: inset 0 1px 0 var(--b1), 0 30px 70px rgba(0,0,0,0.6), 0 6px 20px rgba(0,0,0,0.4);
+  transition:transform 0.28s cubic-bezier(.22,.68,0,1.2), border-color 0.28s ease, box-shadow 0.28s ease;
+  animation:cardIn 0.5s cubic-bezier(.22,.68,0,1.1) both;
+}
+/* Top chromatic line */
+.ccard::before {
+  content:''; position:absolute;
+  top:0; left:0; right:0; height:1.5px; z-index:2;
+}
+/* Left accent pillar */
+.ccard::after {
+  content:''; position:absolute;
+  left:0; top:20px; bottom:20px;
+  width:3px; border-radius:0 3px 3px 0;
+}
+
+.ccard.s-em { border-color:var(--em-border); }
+.ccard.s-em::before { background:linear-gradient(90deg, transparent 5%, rgba(46,189,142,0.35) 50%, transparent 95%); }
+.ccard.s-em::after  { background:var(--em); box-shadow:0 0 18px rgba(46,189,142,0.55); }
+.ccard.s-em:hover {
+  transform:translateY(-5px) scale(1.004);
+  border-color:rgba(46,189,142,0.38);
+  box-shadow: inset 0 1px 0 var(--b1), 0 40px 90px rgba(0,0,0,0.65), 0 0 0 1px rgba(46,189,142,0.28), 0 0 60px rgba(46,189,142,0.04);
+}
+
+.ccard.s-am { border-color:var(--am-border); }
+.ccard.s-am::before { background:linear-gradient(90deg, transparent 5%, rgba(236,175,66,0.35) 50%, transparent 95%); }
+.ccard.s-am::after  { background:var(--am); box-shadow:0 0 18px rgba(236,175,66,0.55); }
+.ccard.s-am:hover {
+  transform:translateY(-5px) scale(1.004);
+  border-color:rgba(236,175,66,0.38);
+  box-shadow: inset 0 1px 0 var(--b1), 0 40px 90px rgba(0,0,0,0.65), 0 0 0 1px rgba(236,175,66,0.28), 0 0 60px rgba(236,175,66,0.04);
+}
+
+.ccard.s-rs { border-color:var(--rs-border); }
+.ccard.s-rs::before { background:linear-gradient(90deg, transparent 5%, rgba(242,65,90,0.35) 50%, transparent 95%); }
+.ccard.s-rs::after  { background:var(--rs); box-shadow:0 0 18px rgba(242,65,90,0.55); }
+.ccard.s-rs:hover {
+  transform:translateY(-5px) scale(1.004);
+  border-color:rgba(242,65,90,0.38);
+  box-shadow: inset 0 1px 0 var(--b1), 0 40px 90px rgba(0,0,0,0.65), 0 0 0 1px rgba(242,65,90,0.28), 0 0 60px rgba(242,65,90,0.04);
+}
+
+/* Card Header */
+.ccard-head {
+  padding:20px 24px 18px 30px;
+  display:flex; justify-content:space-between; align-items:flex-start; gap:14px;
+  border-bottom:1px solid var(--b1);
+}
+.ccard-id {
+  font-family:'JetBrains Mono',monospace;
+  font-size:9.5px; letter-spacing:0.1em; color:var(--t3);
+  display:block; margin-bottom:7px;
+}
+.ccard-name {
+  font-family:'Cormorant Garamond',serif;
+  font-size:18px; font-weight:400; color:var(--t1);
+  line-height:1.35; letter-spacing:0.01em;
+}
+.ccard-addr {
+  font-family:'JetBrains Mono',monospace;
+  font-size:9.5px; color:var(--t3);
+  line-height:1.9; display:block; margin-top:7px;
+}
+.ccard-unit {
+  font-family:'JetBrains Mono',monospace;
+  font-size:9.5px; display:block; margin-top:1px;
+}
+.ccard.s-em .ccard-unit { color:rgba(46,189,142,0.55); }
+.ccard.s-am .ccard-unit { color:rgba(236,175,66,0.55); }
+.ccard.s-rs .ccard-unit { color:rgba(242,65,90,0.55); }
+
+/* Status badges */
+.sbadge {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:5px 13px; border-radius:40px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:8.5px; letter-spacing:0.12em; text-transform:uppercase;
+  white-space:nowrap; flex-shrink:0;
+}
+.sbadge.em { background:var(--em-dim); color:var(--em); border:1px solid var(--em-border); }
+.sbadge.am { background:var(--am-dim); color:var(--am); border:1px solid var(--am-border); }
+.sbadge.rs { background:var(--rs-dim); color:var(--rs); border:1px solid var(--rs-border); }
+.sdot {
+  width:4.5px; height:4.5px; border-radius:50%;
+  animation:breathe 2.5s ease infinite;
+}
+.em .sdot { background:var(--em); box-shadow:0 0 5px var(--em); }
+.am .sdot { background:var(--am); box-shadow:0 0 5px var(--am); }
+.rs .sdot { background:var(--rs); box-shadow:0 0 5px var(--rs); }
+
+/* Card Body */
+.ccard-body { padding:20px 24px 20px 30px; }
+
+/* Rent Hero */
+.rent-hero {
+  display:flex; justify-content:space-between; align-items:flex-end;
+  margin-bottom:18px; padding-bottom:18px;
+  border-bottom:1px solid var(--b1);
+}
+.rent-lbl {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8.5px; letter-spacing:0.14em;
+  text-transform:uppercase; color:var(--t3); display:block; margin-bottom:6px;
+}
+.rent-num {
+  font-family:'Cormorant Garamond',serif;
+  font-size:44px; font-weight:300;
+  letter-spacing:-0.01em; line-height:1;
+}
+.ccard.s-em .rent-num { color:var(--em); text-shadow:0 0 60px rgba(46,189,142,0.22); }
+.ccard.s-am .rent-num { color:var(--am); text-shadow:0 0 60px rgba(236,175,66,0.22); }
+.ccard.s-rs .rent-num { color:var(--rs); text-shadow:0 0 60px rgba(242,65,90,0.22); }
+.rent-sub {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8.5px; color:var(--t3); display:block; margin-top:5px;
+}
+.dep-blk { text-align:right; }
+.dep-lbl {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8.5px; letter-spacing:0.14em;
+  text-transform:uppercase; color:var(--t3); display:block; margin-bottom:6px;
+}
+.dep-num {
+  font-family:'JetBrains Mono',monospace;
+  font-size:14px; color:var(--t2);
+}
+
+/* Info Cells */
+.info-cells {
+  display:grid; grid-template-columns:1fr 1fr 1fr;
+  gap:10px 14px; margin-bottom:18px;
+  padding:14px 16px;
+  background:rgba(255,255,255,0.016);
+  border:1px solid var(--b0);
+  border-radius:var(--rsm);
+}
+.info-cells .span2 { grid-column:1 / span 2; }
+.info-cells .span3 { grid-column:1 / -1; }
+.ic { display:flex; flex-direction:column; gap:3px; }
+.ik {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8px; letter-spacing:0.12em;
+  text-transform:uppercase; color:var(--t3);
+}
+.iv {
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px; color:var(--t1);
+}
+.iv.dm { color:var(--t2); font-size:10.5px; }
+.iv.notary { font-family:'Plus Jakarta Sans',sans-serif; font-size:11.5px; color:var(--t2); }
+
+/* Countdown */
+.countdown {
+  background: linear-gradient(135deg, var(--low) 0%, var(--void) 100%);
+  border:1px solid var(--b1);
+  border-radius:var(--rsm);
+  padding:15px 18px; margin-bottom:14px;
+  box-shadow: inset 0 1px 0 var(--b0), 0 8px 24px rgba(0,0,0,0.4);
+}
+.cd-lbl {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8px; letter-spacing:0.14em;
+  text-transform:uppercase; color:var(--t3); display:block; margin-bottom:12px;
+}
+.cd-row { display:flex; align-items:flex-end; gap:3px; }
+.cd-unit { display:flex; flex-direction:column; align-items:center; min-width:52px; }
+.cd-n {
+  font-family:'JetBrains Mono',monospace;
+  font-size:30px; font-weight:300; line-height:1; letter-spacing:0.02em;
+}
+.ccard.s-em .cd-n { color:var(--em); text-shadow:0 0 30px rgba(46,189,142,0.3); }
+.ccard.s-am .cd-n { color:var(--am); text-shadow:0 0 30px rgba(236,175,66,0.3); }
+.ccard.s-rs .cd-n { color:var(--rs); text-shadow:0 0 30px rgba(242,65,90,0.3); }
+.cd-u {
+  font-family:'JetBrains Mono',monospace;
+  font-size:7.5px; color:var(--t3); letter-spacing:0.12em;
+  text-transform:uppercase; margin-top:4px;
+}
+.cd-sep {
+  font-family:'JetBrains Mono',monospace;
+  font-size:22px; color:var(--t3); padding-bottom:14px; opacity:0.25;
+}
+
+/* Progress bar */
+.prog-wrap { margin-bottom:14px; }
+.prog-meta {
+  display:flex; justify-content:space-between;
+  font-family:'JetBrains Mono',monospace;
+  font-size:8.5px; color:var(--t3); margin-bottom:7px;
+}
+.prog-track {
+  height:2.5px; background:var(--raised); border-radius:3px; overflow:hidden;
+}
+.prog-fill { height:100%; border-radius:3px; transition:width 1s cubic-bezier(.22,.68,0,1); }
+.ccard.s-em .prog-fill { background:linear-gradient(90deg, rgba(46,189,142,0.3), var(--em)); }
+.ccard.s-am .prog-fill { background:linear-gradient(90deg, rgba(236,175,66,0.3), var(--am)); }
+.ccard.s-rs .prog-fill { background:linear-gradient(90deg, rgba(242,65,90,0.3), var(--rs)); }
+
+/* Alert bar */
+.abar {
+  display:flex; align-items:center; gap:9px;
+  padding:9px 13px; border-radius:var(--rxs);
+  font-family:'JetBrains Mono',monospace;
+  font-size:9.5px; margin-bottom:12px;
+}
+.ccard.s-em .abar { background:rgba(46,189,142,0.045); color:rgba(46,189,142,0.7); border:1px solid rgba(46,189,142,0.1); }
+.ccard.s-am .abar { background:rgba(236,175,66,0.045); color:rgba(236,175,66,0.7); border:1px solid rgba(236,175,66,0.1); }
+.ccard.s-rs .abar { background:rgba(242,65,90,0.045); color:rgba(242,65,90,0.7); border:1px solid rgba(242,65,90,0.1); }
+
+/* Payment chip */
+.pay-chip {
+  display:inline-flex; align-items:center; gap:8px;
+  background:var(--gold-dim); border:1px solid var(--gold-border);
+  border-radius:40px; padding:6px 14px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:9.5px; color:rgba(201,147,74,0.85);
+  margin-bottom:12px;
+}
+.pay-chip svg { width:10px; height:10px; }
+
+/* Notes */
+.notes-box {
+  background:rgba(255,255,255,0.016); border:1px solid var(--b0);
+  border-radius:var(--rsm); padding:11px 15px;
+}
+.notes-lbl {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8px; letter-spacing:0.12em; text-transform:uppercase;
+  color:var(--t3); display:block; margin-bottom:5px;
+}
+.notes-txt { font-size:12px; color:var(--t2); line-height:1.75; }
+
+/* ─── FINANZAS PAGE ────────────────────────────────────────── */
+.fin-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+.fin-full { margin-bottom:14px; }
+
+/* Month status table */
+.month-table { width:100%; border-collapse:collapse; }
+.month-table th {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8.5px; letter-spacing:0.12em; text-transform:uppercase;
+  color:var(--t3); padding:10px 14px; text-align:left;
+  border-bottom:1px solid var(--b1);
+}
+.month-table td { padding:12px 14px; border-bottom:1px solid var(--b0); }
+.month-table tr:last-child td { border-bottom:none; }
+.month-table tr:hover td { background:rgba(255,255,255,0.015); }
+.td-apt {
+  font-family:'JetBrains Mono',monospace;
+  font-size:10.5px; color:var(--gold); letter-spacing:0.06em;
+}
+.td-name { font-size:12.5px; color:var(--t1); font-weight:500; }
+.td-monto {
+  font-family:'Cormorant Garamond',serif;
+  font-size:17px; color:var(--t1);
+}
+.td-estado {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:4px 11px; border-radius:30px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px; letter-spacing:0.09em; text-transform:uppercase; white-space:nowrap;
+}
+.td-estado.pagado { background:var(--em-dim); color:var(--em); border:1px solid var(--em-border); }
+.td-estado.pendiente { background:var(--am-dim); color:var(--am); border:1px solid var(--am-border); }
+.td-estado.atrasado { background:var(--rs-dim); color:var(--rs); border:1px solid var(--rs-border); }
+.td-btn {
+  padding:5px 12px; font-size:11.5px; font-weight:600;
+  background:var(--gold-dim); border:1px solid var(--gold-border);
+  border-radius:var(--rxs); color:var(--gold); cursor:pointer;
+  transition:all 0.18s;
+}
+.td-btn:hover { background:var(--gold-glow); }
+
+/* Debt breakdown */
+.debt-item {
+  display:flex; align-items:center; gap:14px;
+  padding:14px 22px; border-bottom:1px solid var(--b0);
+}
+.debt-item:last-child { border-bottom:none; }
+.debt-apt-id {
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px; color:var(--gold); width:68px; flex-shrink:0; letter-spacing:0.07em;
+}
+.debt-name { flex:1; }
+.debt-tenant { font-size:12px; color:var(--t1); font-weight:500; }
+.debt-detail { font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--t3); }
+.debt-bar-wrap { flex:1; }
+.debt-bar-track { height:4px; background:var(--raised); border-radius:3px; overflow:hidden; margin-top:4px; }
+.debt-bar-fill { height:100%; border-radius:3px; }
+.debt-amount {
+  font-family:'Cormorant Garamond',serif;
+  font-size:20px; font-weight:400; text-align:right; min-width:110px;
+}
+.debt-amount.zero { color:var(--em); font-size:14px; font-family:'JetBrains Mono',monospace; }
+.debt-amount.positive { color:var(--rs); }
+
+/* History table */
+.hist-row {
+  display:grid; grid-template-columns:100px 1fr auto auto auto;
+  align-items:center; gap:14px;
+  padding:11px 22px; border-bottom:1px solid var(--b0);
+  transition:background 0.15s;
+}
+.hist-row:hover { background:rgba(255,255,255,0.015); }
+.hist-row:last-child { border-bottom:none; }
+.hist-id {
+  font-family:'JetBrains Mono',monospace;
+  font-size:9.5px; color:var(--t3);
+}
+.hist-tenant { font-size:12px; color:var(--t1); font-weight:500; }
+.hist-apt { font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--t3); }
+.hist-monto {
+  font-family:'Cormorant Garamond',serif;
+  font-size:18px; color:var(--em); text-align:right;
+}
+.hist-method {
+  font-family:'JetBrains Mono',monospace;
+  font-size:9.5px; color:var(--t2); text-align:center;
+  background:var(--high); padding:3px 10px; border-radius:5px;
+}
+.hist-date {
+  font-family:'JetBrains Mono',monospace;
+  font-size:9.5px; color:var(--t3); text-align:right;
+}
+
+/* ─── SISTEMA DB PAGE ──────────────────────────────────────── */
+.db-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.code-block {
+  background: var(--void);
+  border:1px solid var(--b2);
+  border-radius:var(--rsm);
+  overflow:hidden;
+}
+.code-head {
+  display:flex; align-items:center; gap:10px;
+  padding:12px 18px; background:var(--low);
+  border-bottom:1px solid var(--b1);
+}
+.code-dots { display:flex; gap:6px; }
+.code-dots span {
+  width:10px; height:10px; border-radius:50%; background:var(--raised);
+}
+.code-dots span:nth-child(1) { background:#FF5F57; }
+.code-dots span:nth-child(2) { background:#FEBC2E; }
+.code-dots span:nth-child(3) { background:#28C840; }
+.code-filename {
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px; color:var(--t3); letter-spacing:0.06em;
+}
+.code-body {
+  padding:18px 22px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:11.5px; line-height:1.85;
+  color:#A8A8D0; white-space:pre; overflow-x:auto;
+}
+.kw { color:#C9934A; }
+.ty { color:#2EBD8E; }
+.cm { color:#383858; font-style:italic; }
+.st { color:#E4A14C; }
+.fn { color:#7B8BD4; }
+.num { color:#ECAF42; }
+
+/* ─── MODAL ────────────────────────────────────────────────── */
+.modal-overlay {
+  position:fixed; inset:0; z-index:1000;
+  background:rgba(3,3,5,0.88);
+  backdrop-filter:blur(20px) saturate(180%);
+  display:none; align-items:center; justify-content:center;
+  animation:ovIn 0.2s ease both;
+}
+.modal-overlay.open { display:flex; }
+@keyframes ovIn { from { opacity:0; } to { opacity:1; } }
+.modal {
+  background: linear-gradient(150deg, var(--high) 0%, var(--mid) 100%);
+  border:1px solid var(--b2);
+  border-radius:22px; width:500px; max-height:90vh; overflow-y:auto;
+  padding:38px;
+  box-shadow:
+    0 0 0 1px var(--gold-border),
+    0 50px 100px rgba(0,0,0,0.85),
+    0 0 80px rgba(201,147,74,0.04),
+    inset 0 1px 0 var(--b2);
+  animation:modIn 0.3s cubic-bezier(.22,.68,0,1.2) both;
+}
+@keyframes modIn {
+  from { opacity:0; transform:translateY(24px) scale(0.97); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+.modal-title {
+  font-family:'Cormorant Garamond',serif;
+  font-size:28px; font-weight:400; color:var(--t1);
+  letter-spacing:0.03em; display:block; margin-bottom:6px;
+}
+.modal-sub {
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px; color:var(--t3); letter-spacing:0.12em;
+  text-transform:uppercase; display:block; margin-bottom:28px;
+}
+.form-group { margin-bottom:20px; }
+.form-label {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8.5px; letter-spacing:0.14em; text-transform:uppercase;
+  color:var(--t3); display:block; margin-bottom:7px;
+}
+.form-input, .form-select, .form-textarea {
+  width:100%; background:var(--low);
+  border:1px solid var(--b2);
+  border-radius:var(--rsm);
+  padding:11px 14px;
+  color:var(--t1); font-family:'Plus Jakarta Sans',sans-serif; font-size:13px;
+  outline:none; transition:border-color 0.2s, background 0.2s;
+  appearance:none;
+}
+.form-select { cursor:pointer; }
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color:var(--gold-border); background:var(--mid);
+}
+.form-input::placeholder, .form-textarea::placeholder { color:var(--t3); }
+.form-textarea { resize:vertical; min-height:80px; line-height:1.6; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.modal-actions { display:flex; gap:12px; margin-top:28px; }
+.btn-cancel {
+  flex:1; padding:12px;
+  background:var(--raised); border:1px solid var(--b2);
+  border-radius:var(--rsm); color:var(--t2); font-size:13px; font-weight:600;
+  cursor:pointer; transition:all 0.18s;
+}
+.btn-cancel:hover { background:var(--top); color:var(--t1); }
+.btn-confirm {
+  flex:2; padding:12px;
+  background: linear-gradient(135deg, rgba(201,147,74,0.22), rgba(201,147,74,0.1));
+  border:1px solid var(--gold-border);
+  border-radius:var(--rsm); color:var(--gold); font-size:13px; font-weight:700;
+  cursor:pointer; transition:all 0.18s;
+  box-shadow:0 0 20px rgba(201,147,74,0.06), inset 0 1px 0 rgba(201,147,74,0.12);
+}
+.btn-confirm:hover {
+  background: linear-gradient(135deg, rgba(201,147,74,0.32), rgba(201,147,74,0.16));
+  box-shadow:0 0 30px rgba(201,147,74,0.14), inset 0 1px 0 rgba(201,147,74,0.2);
+}
+
+/* ─── TOAST ────────────────────────────────────────────────── */
+.toast {
+  position:fixed; bottom:28px; right:28px; z-index:2000;
+  display:flex; align-items:center; gap:12px;
+  background: linear-gradient(135deg, var(--high), var(--mid));
+  border:1px solid var(--em-border);
+  border-radius:var(--rsm); padding:14px 20px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px var(--em-border);
+  transform:translateY(20px); opacity:0;
+  transition:all 0.3s cubic-bezier(.22,.68,0,1.2);
+  pointer-events:none;
+}
+.toast.show { transform:translateY(0); opacity:1; }
+.toast-icon { color:var(--em); }
+.toast-text { font-size:13px; color:var(--t1); font-weight:500; }
+
+/* ─── URGENT CARD OVERRIDE ─────────────────────────────────── */
+.ccard.s-rs {
+  border-color: rgba(242,65,90,0.5) !important;
+  box-shadow: inset 0 1px 0 rgba(242,65,90,0.15),
+              0 0 0 1px rgba(242,65,90,0.25),
+              0 20px 50px rgba(242,65,90,0.15),
+              0 4px 12px rgba(0,0,0,0.35) !important;
+  background: linear-gradient(145deg, rgba(242,65,90,0.08) 0%, var(--low) 100%) !important;
+}
+.ccard.s-rs::before {
+  background: linear-gradient(90deg, transparent 10%, rgba(242,65,90,0.5) 50%, transparent 90%) !important;
+}
+.ccard.s-rs:hover {
+  box-shadow: inset 0 1px 0 rgba(242,65,90,0.2),
+              0 0 0 1px rgba(242,65,90,0.45),
+              0 30px 70px rgba(242,65,90,0.2) !important;
+}
+/* ─── API STATUS ───────────────────────────────────────────── */
+.api-status {
+  display:inline-flex; align-items:center; gap:6px;
+  font-family:'JetBrains Mono',monospace; font-size:9px;
+  color:var(--t3); padding:4px 10px;
+  background:var(--low); border:1px solid var(--b1);
+  border-radius:20px;
+}
+.api-dot { width:5px; height:5px; border-radius:50%; background:var(--am); }
+.api-dot.ok { background:var(--em); box-shadow:0 0 6px var(--em); }
+.api-dot.err { background:var(--rs); box-shadow:0 0 6px var(--rs); }
+
+::-webkit-scrollbar { width:3px; height:3px; }
+::-webkit-scrollbar-track { background:var(--void); }
+::-webkit-scrollbar-thumb { background:var(--raised); border-radius:3px; }
+
+/* ─── UTILITIES ────────────────────────────────────────────── */
+.separator { height:1px; background:var(--b0); margin:0; }
+.mt14 { margin-top:14px; }
+
+/* ─── RESPONSIVE ───────────────────────────────────────────── */
+@media(max-width:1100px) { .kpi-row { grid-template-columns:repeat(2,1fr); } }
+@media(max-width:900px) {
+  :root { --sidebar-w:0px; }
+  .sidebar { display:none; }
+  .topbar { padding:0 20px; }
+  .content { padding:24px 20px 60px; }
+  .kpi-row { grid-template-columns:1fr 1fr; }
+  .dash-grid { grid-template-columns:1fr; }
+  .fin-grid { grid-template-columns:1fr; }
+  .db-grid  { grid-template-columns:1fr; }
+}
+@media(max-width:600px) {
+  .cards-grid { grid-template-columns:1fr; }
+  .hist-row { grid-template-columns:1fr auto; }
+  .hist-method, .hist-date { display:none; }
+}
+</style>
+</head>
+<body>
+<div id="atm"></div>
+<div id="grain"></div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SIDEBAR
+     ════════════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sb-head">
+    <span class="sb-eyebrow">Sistema Inmobiliario Pro</span>
+    <div class="sb-logo">
+      <div class="sb-gem">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+          <polygon points="12 2 2 7 12 12 22 7"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
+        </svg>
+      </div>
+      <div>
+        <span class="sb-brand" style="font-size:22px;letter-spacing:0.04em">Francisco Mateo</span>
+        <span class="sb-tagline">Jiménez — Sistema Inmobiliario</span>
+      </div>
+    </div>
+  </div>
+
+  <nav class="sb-nav">
+    <span class="nav-group-label">Módulos</span>
+
+    <div class="nav-item active" onclick="switchPage('dashboard',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/>
+        <rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
+      </svg>
+      Dashboard
+    </div>
+    <div class="nav-item" onclick="switchPage('contratos',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+      Contratos
+      <span class="nav-badge" id="nb-total">—</span>
+    </div>
+    <div class="nav-item" onclick="switchPage('finanzas',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <line x1="12" y1="1" x2="12" y2="23"/>
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      </svg>
+      Finanzas
+      <span class="nav-badge alert" id="nb-morosos">—</span>
+    </div>
+    <div class="nav-item" onclick="switchPage('sistema',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+      </svg>
+      Base de Datos
+    </div>
+  </nav>
+
+  <div class="sb-sep"></div>
+
+  <div class="sb-fin">
+    <span class="sb-fin-title">Resumen Financiero</span>
+    <span class="sb-fin-total" id="sb-monthly">—</span>
+    <span class="sb-fin-sublabel">ingresos mensuales esperados</span>
+    <div class="sb-mini-row">
+      <span class="sb-mini-k">Proyección anual</span>
+      <span class="sb-mini-v em" id="sb-annual">—</span>
+    </div>
+    <div class="sb-mini-row">
+      <span class="sb-mini-k">Depósitos retenidos</span>
+      <span class="sb-mini-v" id="sb-deposits">—</span>
+    </div>
+    <div class="sb-mini-row">
+      <span class="sb-mini-k">Pagos este mes</span>
+      <span class="sb-mini-v em" id="sb-paid-count">—</span>
+    </div>
+    <div class="sb-mini-row">
+      <span class="sb-mini-k">Pendientes / Morosos</span>
+      <span class="sb-mini-v rs" id="sb-late-count">—</span>
+    </div>
+  </div>
+
+  <div class="sb-footer">
+    <span class="sb-owner">Francisco Mateo Jiménez</span>
+    <span class="sb-location">Cumbres del Paraíso · Bayona · SDO</span>
+    <div class="live-pill">
+      <span class="live-dot"></span>
+      <span class="live-label">Sistema activo</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ════════════════════════════════════════════════════════════
+     MAIN
+     ════════════════════════════════════════════════════════════ -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="breadcrumb">
+        <span>Francisco Mateo Jiménez</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        <strong id="breadcrumb-page">Dashboard</strong>
+      </div>
+      <div class="topbar-actions">
+        <div class="search-field">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input type="text" id="search-input" placeholder="Buscar contrato, inquilino…" oninput="filterCards(this.value)">
+        </div>
+        <button class="topbar-btn" onclick="openModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+          Registrar Pago
+        </button>
+        <div class="clock-wrap">
+          <span class="clock-time" id="live-time">—</span>
+          <span class="clock-date" id="live-date">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══════════════════════════════════════════════
+         PAGE: DASHBOARD
+         ══════════════════════════════════════════════ -->
+    <div id="page-dashboard" class="page active">
+
+      <div class="kpi-row" id="kpi-row">
+        <!-- Filled by JS -->
+      </div>
+
+      <div class="dash-grid">
+        <!-- Revenue Chart -->
+        <div class="panel" style="animation-delay:0.1s">
+          <div class="panel-head">
+            <span class="panel-title">Ingresos Mensuales — Últimos 6 meses</span>
+            <span id="chart-total" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--t3)">—</span>
+          </div>
+          <div class="panel-body">
+            <div class="chart-container">
+              <canvas id="revenue-chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alerts -->
+        <div class="panel" style="animation-delay:0.15s">
+          <div class="panel-head">
+            <span class="panel-title">Alertas Activas</span>
+            <span class="nav-badge alert" id="alert-count">—</span>
+          </div>
+          <div class="panel-body" id="alerts-panel">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         PAGE: CONTRATOS
+         ══════════════════════════════════════════════ -->
+    <div id="page-contratos" class="page">
+      <div class="sec-hdr">
+        <span class="sec-title">Estado de Contratos</span>
+        <span class="sec-sub" id="card-count">— contratos</span>
+      </div>
+      <div class="contracts-toolbar">
+        <button class="filter-btn active" onclick="filterStatus('all',this)">Todos</button>
+        <button class="filter-btn" onclick="filterStatus('em',this)">Activos</button>
+        <button class="filter-btn" onclick="filterStatus('am',this)">Por Renovar</button>
+        <button class="filter-btn" onclick="filterStatus('rs',this)">Urgentes</button>
+      </div>
+      <div class="cards-grid" id="cards-grid"><!-- Filled by JS --></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         PAGE: FINANZAS
+         ══════════════════════════════════════════════ -->
+    <div id="page-finanzas" class="page">
+
+      <div class="sec-hdr" style="margin-bottom:14px">
+        <span class="sec-title" id="fin-month-title">Pagos — Mes Actual</span>
+        <button class="topbar-btn" style="font-size:12px" onclick="openModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+          Registrar Pago
+        </button>
+      </div>
+
+      <!-- Month payment status -->
+      <div class="panel fin-full" style="animation-delay:0.05s">
+        <div class="panel-head">
+          <span class="panel-title">Estado de Pagos del Mes</span>
+          <span id="fin-summary" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--t3)">—</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="month-table" id="month-table">
+            <thead>
+              <tr>
+                <th>Apartamento</th>
+                <th>Inquilino</th>
+                <th>Renta</th>
+                <th>Día pago</th>
+                <th>Estado</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="month-tbody"><!-- Filled by JS --></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="fin-grid">
+        <!-- Debt breakdown -->
+        <div class="panel" style="animation-delay:0.1s">
+          <div class="panel-head">
+            <span class="panel-title">Deuda Acumulada por Apartamento</span>
+            <span id="total-debt" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--rs)">—</span>
+          </div>
+          <div id="debt-list"><!-- Filled by JS --></div>
+        </div>
+
+        <!-- Monthly totals -->
+        <div class="panel" style="animation-delay:0.12s">
+          <div class="panel-head">
+            <span class="panel-title">Resumen por Mes</span>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="month-table" id="monthly-totals-table">
+              <thead>
+                <tr>
+                  <th>Mes</th>
+                  <th>Esperado</th>
+                  <th>Cobrado</th>
+                  <th>Diferencia</th>
+                </tr>
+              </thead>
+              <tbody id="monthly-totals-tbody"><!-- Filled by JS --></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment history -->
+      <div class="panel fin-full" style="animation-delay:0.16s">
+        <div class="panel-head">
+          <span class="panel-title">Historial Completo de Pagos</span>
+          <span id="hist-count" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--t3)">—</span>
+        </div>
+        <div id="payment-history"><!-- Filled by JS --></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         PAGE: SISTEMA DB
+         ══════════════════════════════════════════════ -->
+    <div id="page-sistema" class="page">
+      <div class="sec-hdr">
+        <span class="sec-title">Base de Datos — PostgreSQL Live</span>
+        <span class="api-status" id="api-status-badge">
+          <span class="api-dot" id="api-dot"></span>
+          <span id="api-status-text">Conectando…</span>
+        </span>
+      </div>
+
+      <!-- Stat cards row -->
+      <div class="kpi-row" style="margin-bottom:14px" id="db-kpi-row">
+        <div class="kpi-card">
+          <span class="kpi-label">Total Pagos en BD</span>
+          <span class="kpi-num gold" id="db-total-pagos">—</span>
+          <span class="kpi-meta">registros en tabla pagos</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Total Cobrado Histórico</span>
+          <span class="kpi-num em" id="db-total-cobrado">—</span>
+          <span class="kpi-meta">suma de todos los pagos</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Deuda Total Activa</span>
+          <span class="kpi-num rs" id="db-total-deuda">—</span>
+          <span class="kpi-meta">suma de deudas pendientes</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Contratos Activos</span>
+          <span class="kpi-num" id="db-contratos-count">—</span>
+          <span class="kpi-meta">en tabla contratos</span>
+        </div>
+      </div>
+
+      <div class="db-grid">
+
+        <!-- Panel: Estado financiero desde PostgreSQL -->
+        <div class="panel" style="animation:cardIn 0.5s ease both; grid-column: 1 / -1">
+          <div class="panel-head">
+            <span class="panel-title">Estado Financiero por Contrato — Datos en Tiempo Real</span>
+            <button onclick="loadDBData()" style="font-family:'JetBrains Mono',monospace;font-size:9px;padding:4px 12px;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:6px;color:var(--gold);cursor:pointer">↻ Actualizar</button>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="month-table" id="db-estado-table">
+              <thead>
+                <tr>
+                  <th>Contrato</th>
+                  <th>Apartamento</th>
+                  <th>Inquilino</th>
+                  <th>Renta</th>
+                  <th>Total Esperado</th>
+                  <th>Total Cobrado</th>
+                  <th>Deuda</th>
+                  <th>Último Pago</th>
+                </tr>
+              </thead>
+              <tbody id="db-estado-tbody">
+                <tr><td colspan="8" style="text-align:center;padding:20px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t3)">Cargando desde PostgreSQL…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Panel: Morosos este mes -->
+        <div class="panel" style="animation:cardIn 0.5s ease 0.1s both">
+          <div class="panel-head">
+            <span class="panel-title">Morosos — Mes Actual</span>
+            <span id="db-morosos-count" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--rs)">—</span>
+          </div>
+          <div id="db-morosos-list" style="padding:0 22px 16px">
+            <p style="font-size:12px;color:var(--t3);padding:16px 0">Cargando…</p>
+          </div>
+        </div>
+
+        <!-- Panel: Últimos 10 pagos reales -->
+        <div class="panel" style="animation:cardIn 0.5s ease 0.15s both">
+          <div class="panel-head">
+            <span class="panel-title">Últimos Pagos Registrados en BD</span>
+            <span id="db-pagos-count" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--t3)">—</span>
+          </div>
+          <div id="db-pagos-list">
+            <p style="font-size:12px;color:var(--t3);padding:16px 22px">Cargando…</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+
+  </div><!-- /content -->
+
+</main>
+
+<!-- ════════════════════════════════════════════════════════════
+     MODAL: REGISTRAR PAGO
+     ════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <span class="modal-title">Registrar Pago</span>
+    <span class="modal-sub">Francisco Mateo Jiménez · Sistema Inmobiliario</span>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Apartamento</label>
+        <select class="form-select" id="f-apt">
+          <option value="">Seleccionar…</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Período</label>
+        <select class="form-select" id="f-period">
+          <!-- Filled by JS -->
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Monto Pagado (RD$)</label>
+        <input type="number" class="form-input" id="f-monto" placeholder="15,000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fecha de Pago</label>
+        <input type="date" class="form-input" id="f-fecha">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Método de Pago</label>
+      <select class="form-select" id="f-metodo">
+        <option value="transferencia">Transferencia Bancaria</option>
+        <option value="efectivo">Efectivo</option>
+        <option value="cheque">Cheque</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Notas (opcional)</label>
+      <textarea class="form-textarea" id="f-notas" placeholder="Observaciones sobre este pago…"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-confirm" onclick="submitPayment()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;display:inline;margin-right:6px">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Confirmar Pago
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px">
+    <circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/>
+  </svg>
+  <span class="toast-text" id="toast-text">Pago registrado exitosamente</span>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     JAVASCRIPT — SISTEMA COMPLETO
+     ════════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+// ══════════════════════════════════════════════════════════════
+// API CONFIG
+// ══════════════════════════════════════════════════════════════
+const API = 'http://localhost:3000';
+
+// ══════════════════════════════════════════════════════════════
+// DATA STORE — CARGADO DESDE POSTGRESQL VÍA API
+// ══════════════════════════════════════════════════════════════
+let CONTRATOS = [];
+let PAGOS_HISTORICOS = [];
+let DB_ESTADO = [];
+
+async function cargarDatosAPI() {
+  try {
+    const [contratos, pagos, estado] = await Promise.all([
+      fetch(API+'/contratos').then(r=>r.json()),
+      fetch(API+'/pagos').then(r=>r.json()),
+      fetch(API+'/estado').then(r=>r.json())
+    ]);
+    CONTRATOS = contratos.map(c => ({
+      ...c,
+      rent: parseFloat(c.rent),
+      deposit: parseFloat(c.deposit),
+      startBase: new Date(c.start_base),
+      payDay: c.pay_day,
+      aptNombre: c.apt_nombre,
+      tenant: c.tenant,
+      address: c.address,
+      apt: c.apt,
+      notary: c.notary || '',
+      notes: c.notes || ''
+    }));
+    PAGOS_HISTORICOS = pagos.map(p => ({
+      id: p.id,
+      contratoId: p.contrato_id,
+      monto: parseFloat(p.monto),
+      fechaPago: new Date(p.fecha_pago),
+      mes: parseInt(p.mes),
+      año: parseInt(p.anio),
+      metodo: p.metodo,
+      notas: p.notas || '',
+      auto: p.auto
+    }));
+    DB_ESTADO = estado.map(e => ({
+      ...e,
+      rent: parseFloat(e.rent),
+      deposit: parseFloat(e.deposit),
+      total_cobrado: parseFloat(e.total_cobrado),
+      total_esperado: parseFloat(e.total_esperado),
+      deuda: parseFloat(e.deuda)
+    }));
+    const dot = document.getElementById('api-dot');
+    const txt = document.getElementById('api-status-text');
+    if(dot) { dot.className='api-dot ok'; txt.textContent='PostgreSQL conectado'; }
+    return true;
+  } catch(e) {
+    const dot = document.getElementById('api-dot');
+    const txt = document.getElementById('api-status-text');
+    if(dot) { dot.className='api-dot err'; txt.textContent='Sin conexión a API'; }
+    console.warn('API no disponible:', e.message);
+    return false;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const now = () => new Date();
+
+function getActiveCycle(startBase) {
+  let start = new Date(startBase);
+  while(true) {
+    const end = new Date(start); end.setFullYear(end.getFullYear()+1);
+    if(end > now()) return {start, end};
+    start = end;
+  }
+}
+
+function msToDhms(ms) {
+  const t = Math.max(0, Math.floor(ms/1000));
+  return {d:Math.floor(t/86400), h:Math.floor((t%86400)/3600), m:Math.floor((t%3600)/60), s:t%60};
+}
+
+function fmt(d) {
+  return d.toLocaleDateString('es-DO',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
+}
+
+function cur(n, short=false) {
+  if(short && n >= 1000) return 'RD$' + (n/1000).toFixed(0) + 'K';
+  return 'RD$' + Number(n).toLocaleString('es-DO');
+}
+
+function pad(n, l=2) { return String(n).padStart(l,'0'); }
+
+function getStatus(c) {
+  const {end} = getActiveCycle(c.startBase);
+  const days = Math.ceil((end - now()) / 864e5);
+  if(days < 0) return 'rs';
+  if(days <= 45) return 'am';
+  return 'em';
+}
+
+function getProgress(c) {
+  const {start, end} = getActiveCycle(c.startBase);
+  return Math.min(100, Math.max(0, ((now()-start)/(end-start))*100));
+}
+
+function nextPay(day) {
+  const n = now();
+  let d = new Date(n.getFullYear(), n.getMonth(), day);
+  if(d <= n) d = new Date(n.getFullYear(), n.getMonth()+1, day);
+  return d;
+}
+
+function daysUntil(d) { return Math.ceil((d - now())/864e5); }
+
+function alertMsg(c) {
+  const {end} = getActiveCycle(c.startBase);
+  const rem = msToDhms(end - now());
+  const s = getStatus(c);
+  if(s==='rs') return `Renovación crítica — contrato próximo a vencer`;
+  if(s==='am') return `Renovación próxima — ${rem.d} días restantes`;
+  return `Vigente — ${rem.d} días hasta la renovación`;
+}
+
+const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MONTHS_ES_LONG = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function initials(name) {
+  return name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+}
+
+// ── Financial functions
+function CalcularIngresosMensuales(mes, año) {
+  return PAGOS_HISTORICOS
+    .filter(p => p.mes === mes && p.año === año)
+    .reduce((s,p) => s + p.monto, 0);
+}
+
+function DetectarMorosos(mes, año) {
+  return CONTRATOS.filter(c => {
+    const start = new Date(c.startBase);
+    const contractActive = (start.getFullYear() < año) || (start.getFullYear()===año && start.getMonth()<=mes);
+    if(!contractActive) return false;
+    const paid = PAGOS_HISTORICOS.some(p => p.contratoId===c.id && p.mes===mes && p.año===año);
+    return !paid;
+  });
+}
+
+function CalcularDeudaPorApartamento(c) {
+  const start = new Date(c.startBase);
+  const n = now();
+  const mesesActivos = Math.max(0,
+    (n.getFullYear()-start.getFullYear())*12 + (n.getMonth()-start.getMonth()));
+  const esperado = mesesActivos * c.rent;
+  const cobrado = PAGOS_HISTORICOS.filter(p=>p.contratoId===c.id).reduce((s,p)=>s+p.monto,0);
+  return {esperado, cobrado, deuda: Math.max(0, esperado-cobrado), meses: mesesActivos};
+}
+
+function AnalizarSubidaRenta(c, pct=5) {
+  const start = new Date(c.startBase);
+  const años = Math.max(1, now().getFullYear() - start.getFullYear());
+  const nueva = c.rent * Math.pow(1+pct/100, años);
+  return Math.round(nueva/500)*500;
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER: CONTRACT CARDS
+// ══════════════════════════════════════════════════════════════
+function renderCard(c, i) {
+  const s = getStatus(c);
+  const {start, end} = getActiveCycle(c.startBase);
+  const prog = getProgress(c);
+  const rem = msToDhms(end - now());
+  const np = nextPay(c.payDay);
+  const dpay = daysUntil(np);
+  const lines = c.tenant.split('\n');
+  const badgeLabel = s==='em'?'Activo':s==='am'?'Por Renovar':'Urgente';
+  const icon = s==='em'?'✓':s==='am'?'⚡':'!';
+
+  return `
+  <div class="ccard s-${s}" style="animation-delay:${i*0.06}s"
+       data-search="${c.tenant.toLowerCase()} ${c.address.toLowerCase()} ${c.id.toLowerCase()}"
+       data-status="${s}">
+    <div class="ccard-head">
+      <div>
+        <span class="ccard-id">${c.id} · ${c.aptNombre}</span>
+        <div class="ccard-name">${lines.join('<br>')}</div>
+        <span class="ccard-addr">${c.address.replace(/\n/g,'<br>')}</span>
+        <span class="ccard-unit">${c.apt}</span>
+      </div>
+      <span class="sbadge ${s}">
+        <span class="sdot"></span>${badgeLabel}
+      </span>
+    </div>
+    <div class="ccard-body">
+      <div class="rent-hero">
+        <div>
+          <span class="rent-lbl">Renta mensual</span>
+          <span class="rent-num">${cur(c.rent)}</span>
+          <span class="rent-sub">Día de pago: ${c.payDay} de cada mes</span>
+        </div>
+        <div class="dep-blk">
+          <span class="dep-lbl">Depósito</span>
+          <span class="dep-num">${cur(c.deposit)}</span>
+        </div>
+      </div>
+
+      <div class="info-cells">
+        <div class="ic"><span class="ik">Ciclo desde</span><span class="iv dm">${fmt(start)}</span></div>
+        <div class="ic"><span class="ik">Renovación</span><span class="iv dm">${fmt(end)}</span></div>
+        <div class="ic"><span class="ik">Inicio original</span><span class="iv dm">${fmt(c.startBase)}</span></div>
+        <div class="ic span3"><span class="ik">Notario</span><span class="iv notary">${c.notary}</span></div>
+      </div>
+
+      <div class="countdown">
+        <span class="cd-lbl">Tiempo hasta próxima renovación</span>
+        <div class="cd-row">
+          <div class="cd-unit"><span class="cd-n" id="d-${c.id}">${pad(rem.d,3)}</span><span class="cd-u">días</span></div>
+          <span class="cd-sep">:</span>
+          <div class="cd-unit"><span class="cd-n" id="h-${c.id}">${pad(rem.h)}</span><span class="cd-u">hrs</span></div>
+          <span class="cd-sep">:</span>
+          <div class="cd-unit"><span class="cd-n" id="m-${c.id}">${pad(rem.m)}</span><span class="cd-u">min</span></div>
+          <span class="cd-sep">:</span>
+          <div class="cd-unit"><span class="cd-n" id="s-${c.id}">${pad(rem.s)}</span><span class="cd-u">seg</span></div>
+        </div>
+      </div>
+
+      <div class="prog-wrap">
+        <div class="prog-meta">
+          <span>${fmt(start)}</span>
+          <span>${Math.round(prog)}% del ciclo</span>
+          <span>${fmt(end)}</span>
+        </div>
+        <div class="prog-track"><div class="prog-fill" style="width:${prog}%"></div></div>
+      </div>
+
+      <div class="abar"><span>${icon}</span><span id="al-${c.id}">${alertMsg(c)}</span></div>
+
+      <div class="pay-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:10px;height:10px">
+          <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+        </svg>
+        Próximo pago: ${fmt(np)} · en ${dpay} día${dpay===1?'':'s'} · ${cur(c.rent)}
+      </div>
+
+      <div class="notes-box">
+        <span class="notes-lbl">Notas</span>
+        <span class="notes-txt">${c.notes}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderAllCards() {
+  $('cards-grid').innerHTML = CONTRATOS.map((c,i)=>renderCard(c,i)).join('');
+  $('card-count').textContent = CONTRATOS.length + ' contratos';
+}
+
+function filterCards(q) {
+  const cards = document.querySelectorAll('.ccard');
+  let vis = 0;
+  cards.forEach(card => {
+    const match = !q || card.dataset.search.includes(q.toLowerCase());
+    card.style.display = match ? '' : 'none';
+    if(match) vis++;
+  });
+  $('card-count').textContent = vis + ' contratos';
+}
+
+function filterStatus(status, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.ccard').forEach(card => {
+    card.style.display = (status==='all' || card.dataset.status===status) ? '' : 'none';
+  });
+  const vis = [...document.querySelectorAll('.ccard')].filter(c=>c.style.display!=='none').length;
+  $('card-count').textContent = vis + ' contratos';
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER: DASHBOARD
+// ══════════════════════════════════════════════════════════════
+function renderDashboard() {
+  const n = now();
+  const mes = n.getMonth(), año = n.getFullYear();
+
+  const totalMonthly = CONTRATOS.reduce((s,c)=>s+c.rent,0);
+  const morosos = DetectarMorosos(mes, año);
+  const totalDeposits = CONTRATOS.reduce((s,c)=>s+c.deposit,0);
+  const ocupados = CONTRATOS.length;
+  const ingresosEste = CalcularIngresosMensuales(mes, año);
+  const paidThisMonth = PAGOS_HISTORICOS.filter(p=>p.mes===mes&&p.año===año).length;
+
+  // KPI row
+  $('kpi-row').innerHTML = `
+    <div class="kpi-card" style="animation-delay:0s">
+      <span class="kpi-label">Ingresos Esperados / Mes</span>
+      <span class="kpi-num gold">${cur(totalMonthly, true)}</span>
+      <span class="kpi-meta">≡ ${cur(totalMonthly*12, true)} proyección anual</span>
+    </div>
+    <div class="kpi-card" style="animation-delay:0.04s">
+      <span class="kpi-label">Cobrado Este Mes</span>
+      <span class="kpi-num em">${cur(ingresosEste, true)}</span>
+      <span class="kpi-meta">${paidThisMonth} de ${CONTRATOS.length} pagos recibidos</span>
+    </div>
+    <div class="kpi-card" style="animation-delay:0.08s">
+      <span class="kpi-label">Morosos / Pendientes</span>
+      <span class="kpi-num ${morosos.length>0?'rs':'em'}">${morosos.length}</span>
+      <span class="kpi-meta">${morosos.length>0 ? cur(morosos.reduce((s,c)=>s+c.rent,0)) + ' sin cobrar' : 'Todo al día este mes'}</span>
+    </div>
+    <div class="kpi-card" style="animation-delay:0.12s">
+      <span class="kpi-label">Depósitos Retenidos</span>
+      <span class="kpi-num">${cur(totalDeposits, true)}</span>
+      <span class="kpi-meta">${ocupados} contratos activos</span>
+    </div>`;
+
+  // Alerts
+  const alerts = [];
+  morosos.forEach(c => {
+    alerts.push({type:'rs', text:`Pago pendiente — ${c.tenant.split('\n')[0]}`, sub:`${c.id} · ${MONTHS_ES[mes]} ${año} · ${cur(c.rent)}`});
+  });
+  CONTRATOS.forEach(c => {
+    const s = getStatus(c);
+    if(s==='am') {
+      const {end} = getActiveCycle(c.startBase);
+      const d = Math.ceil((end-now())/864e5);
+      alerts.push({type:'am', text:`Renovación en ${d} días — ${c.tenant.split('\n')[0]}`, sub:`${c.id} · Vence ${fmt(end)}`});
+    }
+    if(s==='rs') {
+      alerts.push({type:'rs', text:`Contrato próximo a vencer — ${c.tenant.split('\n')[0]}`, sub:`${c.id} · Requiere renovación`});
+    }
+  });
+  $('alert-count').textContent = alerts.length;
+  $('alerts-panel').innerHTML = alerts.length > 0
+    ? alerts.map((a,i) => `
+      <div class="alert-item" style="animation-delay:${i*0.05}s">
+        <span class="alert-dot ${a.type}"></span>
+        <div>
+          <span class="alert-text">${a.text}</span>
+          <span class="alert-time">${a.sub}</span>
+        </div>
+      </div>`).join('')
+    : '<p style="font-size:12px;color:var(--t3);padding:10px 0">Sin alertas activas.</p>';
+
+  // Recent payments (last 8)
+  const recent = [...PAGOS_HISTORICOS].sort((a,b)=>b.fechaPago-a.fechaPago).slice(0,8);
+  const totalCollected = PAGOS_HISTORICOS.reduce((s,p)=>s+p.monto,0);
+  $('total-collected').textContent = 'Total histórico: ' + cur(totalCollected, true);
+  $('recent-payments').innerHTML = recent.map(p => {
+    const c = CONTRATOS.find(x=>x.id===p.contratoId);
+    const name = c ? c.tenant.split('\n')[0] : '—';
+    return `
+      <div class="pay-row">
+        <div class="pay-avatar">${initials(name)}</div>
+        <div>
+          <span class="pay-tenant">${name}</span>
+          <span class="pay-apt">${p.contratoId} · ${MONTHS_ES[p.mes]} ${p.año}</span>
+        </div>
+        <span class="hist-method">${p.metodo}</span>
+        <div>
+          <span class="pay-amount">${cur(p.monto)}</span>
+          <span class="pay-date">${fmt(p.fechaPago)}</span>
+        </div>
+      </div>`;
+  }).join('<div class="separator"></div>');
+
+  // Chart
+  drawRevenueChart();
+
+  // Sidebar
+  $('sb-monthly').textContent = cur(totalMonthly);
+  $('sb-annual').textContent = cur(totalMonthly*12, true);
+  $('sb-deposits').textContent = cur(totalDeposits, true);
+  $('sb-paid-count').textContent = paidThisMonth + ' de ' + CONTRATOS.length;
+  $('sb-late-count').textContent = morosos.length;
+  $('nb-total').textContent = CONTRATOS.length;
+  $('nb-morosos').textContent = morosos.length;
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER: FINANZAS
+// ══════════════════════════════════════════════════════════════
+function renderFinanzas() {
+  const n = now();
+  const mes = n.getMonth(), año = n.getFullYear();
+
+  $('fin-month-title').textContent = `Finanzas — ${MONTHS_ES_LONG[mes]} ${año}`;
+
+  // Month payment status table
+  let paidCount = 0, pendCount = 0;
+  $('month-tbody').innerHTML = CONTRATOS.map(c => {
+    const paid = PAGOS_HISTORICOS.find(p=>p.contratoId===c.id&&p.mes===mes&&p.año===año);
+    const estado = paid ? 'pagado' : (n.getDate()>c.payDay+3?'atrasado':'pendiente');
+    if(paid) paidCount++; else pendCount++;
+    const label = paid ? 'Pagado' : (estado==='atrasado' ? 'Atrasado' : 'Pendiente');
+    return `
+      <tr>
+        <td><span class="td-apt">${c.id}</span></td>
+        <td><span class="td-name">${c.tenant.split('\n')[0]}</span></td>
+        <td><span class="td-monto">${cur(c.rent)}</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t2)">Día ${c.payDay}</td>
+        <td><span class="td-estado ${estado}">${label}</span></td>
+        <td>${!paid ? `<button class="td-btn" onclick="openModalFor('${c.id}')">Registrar</button>` : '—'}</td>
+      </tr>`;
+  }).join('');
+  $('fin-summary').textContent = `${paidCount} pagados · ${pendCount} pendientes`;
+
+  // Debt breakdown
+  let totalDebt = 0;
+  $('debt-list').innerHTML = CONTRATOS.map(c => {
+    const {deuda, cobrado, meses} = CalcularDeudaPorApartamento(c);
+    totalDebt += deuda;
+    const pct = meses > 0 ? Math.min(100, (cobrado/(meses*c.rent))*100) : 100;
+    const barColor = deuda===0 ? 'var(--em)' : (deuda > c.rent*2 ? 'var(--rs)' : 'var(--am)');
+    return `
+      <div class="debt-item">
+        <span class="debt-apt-id">${c.id}</span>
+        <div class="debt-name">
+          <span class="debt-tenant">${c.tenant.split('\n')[0]}</span>
+          <span class="debt-detail">${meses} meses · ${cur(c.rent)}/mes</span>
+          <div class="debt-bar-track"><div class="debt-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+        </div>
+        <div>
+          ${deuda===0
+            ? `<span class="debt-amount zero">✓ Al día</span>`
+            : `<span class="debt-amount positive">${cur(deuda)}</span>`}
+        </div>
+      </div>`;
+  }).join('');
+  $('total-debt').textContent = totalDebt > 0 ? 'Deuda total: ' + cur(totalDebt) : '✓ Sin deudas';
+
+  // Monthly totals (last 6 months)
+  let rows = '';
+  for(let i=5; i>=0; i--) {
+    let m = mes - i, y = año;
+    if(m < 0) { m += 12; y--; }
+    const esp = CONTRATOS.filter(c => {
+      const cs = new Date(c.startBase);
+      return (cs.getFullYear() < y) || (cs.getFullYear()===y && cs.getMonth()<=m);
+    }).reduce((s,c)=>s+c.rent,0);
+    const cob = CalcularIngresosMensuales(m, y);
+    const diff = cob - esp;
+    const diffColor = diff >= 0 ? 'var(--em)' : 'var(--rs)';
+    rows += `
+      <tr>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t2)">${MONTHS_ES_LONG[m]} ${y}</td>
+        <td><span class="td-monto">${cur(esp)}</span></td>
+        <td><span class="td-monto">${cur(cob)}</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:${diffColor}">${diff>=0?'+':''}${cur(diff)}</td>
+      </tr>`;
+  }
+  $('monthly-totals-tbody').innerHTML = rows;
+
+  // Payment history (all, sorted desc)
+  const sorted = [...PAGOS_HISTORICOS].sort((a,b)=>b.fechaPago-a.fechaPago);
+  $('hist-count').textContent = sorted.length + ' registros';
+  $('payment-history').innerHTML = sorted.map(p => {
+    const c = CONTRATOS.find(x=>x.id===p.contratoId);
+    const name = c ? c.tenant.split('\n')[0] : '—';
+    return `
+      <div class="hist-row">
+        <span class="hist-id">${p.contratoId}</span>
+        <div>
+          <span class="hist-tenant">${name}</span>
+          <span class="hist-apt">${MONTHS_ES[p.mes]} ${p.año}</span>
+        </div>
+        <span class="hist-method">${p.metodo}</span>
+        <span class="hist-monto">${cur(p.monto)}</span>
+        <span class="hist-date">${fmt(p.fechaPago)}</span>
+      </div>`;
+  }).join('<div class="separator"></div>');
+}
+
+// ══════════════════════════════════════════════════════════════
+// CHART: MONTHLY REVENUE (Canvas)
+// ══════════════════════════════════════════════════════════════
+function drawRevenueChart() {
+  const canvas = $('revenue-chart');
+  if(!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth * dpr;
+  canvas.height = canvas.offsetHeight * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+  const pad = {top:20, right:24, bottom:44, left:70};
+  const cW = W - pad.left - pad.right;
+  const cH = H - pad.top - pad.bottom;
+
+  ctx.clearRect(0,0,W,H);
+
+  // Build 6-month data
+  const n = now();
+  const months = [], values = [];
+  for(let i=5; i>=0; i--) {
+    let m = n.getMonth()-i, y = n.getFullYear();
+    if(m<0){m+=12;y--;}
+    months.push(MONTHS_ES[m]);
+    values.push(CalcularIngresosMensuales(m,y));
+  }
+
+  const maxVal = Math.max(...values, 1) * 1.18;
+  const barW = (cW / values.length) * 0.52;
+  const barSpace = cW / values.length;
+
+  // Grid
+  ctx.setLineDash([1,4]);
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  for(let i=0; i<=4; i++) {
+    const y = pad.top + cH * (1 - i/4);
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W-pad.right, y); ctx.stroke();
+    ctx.fillStyle = '#3C3C58';
+    ctx.font = `10px 'JetBrains Mono', monospace`;
+    ctx.textAlign = 'right';
+    ctx.fillText('RD$'+(maxVal*i/4/1000).toFixed(0)+'K', pad.left-10, y+3.5);
+  }
+  ctx.setLineDash([]);
+
+  // Bars
+  values.forEach((val, i) => {
+    const x = pad.left + i * barSpace + (barSpace - barW) / 2;
+    const bH = val > 0 ? (val / maxVal) * cH : 0;
+    const y = pad.top + cH - bH;
+    const r = Math.min(5, bH/2);
+
+    // Shadow
+    ctx.shadowColor = 'rgba(201,147,74,0.35)';
+    ctx.shadowBlur = 16;
+
+    // Gradient fill
+    const grad = ctx.createLinearGradient(0, y, 0, y+bH);
+    grad.addColorStop(0, 'rgba(201,147,74,0.95)');
+    grad.addColorStop(0.6, 'rgba(201,147,74,0.65)');
+    grad.addColorStop(1, 'rgba(201,147,74,0.15)');
+    ctx.fillStyle = grad;
+
+    if(bH > 0) {
+      ctx.beginPath();
+      ctx.moveTo(x+r, y);
+      ctx.lineTo(x+barW-r, y);
+      ctx.quadraticCurveTo(x+barW, y, x+barW, y+r);
+      ctx.lineTo(x+barW, y+bH);
+      ctx.lineTo(x, y+bH);
+      ctx.lineTo(x, y+r);
+      ctx.quadraticCurveTo(x, y, x+r, y);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.shadowBlur = 0;
+
+    // Value label
+    if(val > 0) {
+      ctx.fillStyle = 'rgba(201,147,74,0.85)';
+      ctx.font = `bold 9px 'JetBrains Mono', monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillText(cur(val,true), x+barW/2, y-8);
+    }
+
+    // Month label
+    ctx.fillStyle = '#44445A';
+    ctx.font = `9px 'JetBrains Mono', monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillText(months[i], x+barW/2, H-pad.bottom+18);
+  });
+
+  const totalSemestre = values.reduce((s,v)=>s+v,0);
+  $('chart-total').textContent = '6 meses: ' + cur(totalSemestre, true);
+}
+
+// ══════════════════════════════════════════════════════════════
+// COUNTDOWN + CLOCK
+// ══════════════════════════════════════════════════════════════
+function updateCountdowns() {
+  CONTRATOS.forEach(c => {
+    const {end} = getActiveCycle(c.startBase);
+    const rem = msToDhms(end - now());
+    const set = (id,v) => { const el=$(id); if(el) el.textContent=v; };
+    set(`d-${c.id}`, pad(rem.d,3));
+    set(`h-${c.id}`, pad(rem.h));
+    set(`m-${c.id}`, pad(rem.m));
+    set(`s-${c.id}`, pad(rem.s));
+    const al = $(`al-${c.id}`);
+    if(al) al.textContent = alertMsg(c);
+  });
+}
+
+function updateClock() {
+  const n = now();
+  $('live-time').textContent = n.toLocaleTimeString('es-DO',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  $('live-date').textContent = n.toLocaleDateString('es-DO',{weekday:'short',year:'numeric',month:'short',day:'numeric'}).toUpperCase();
+}
+
+// ══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════════
+const PAGES = {
+  dashboard: 'Dashboard', contratos: 'Contratos',
+  finanzas: 'Finanzas', sistema: 'Base de Datos'
+};
+
+function switchPage(page, navEl) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  $('page-'+page).classList.add('active');
+  navEl.classList.add('active');
+  $('breadcrumb-page').textContent = PAGES[page];
+
+  if(page==='contratos') renderAllCards();
+  if(page==='finanzas') renderFinanzas();
+  if(page==='sistema') loadDBData();
+}
+
+// ══════════════════════════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════════════════════════
+function openModal(preselect) {
+  // Populate apartment dropdown
+  const sel = $('f-apt');
+  sel.innerHTML = '<option value="">Seleccionar apartamento…</option>' +
+    CONTRATOS.map(c=>`<option value="${c.id}" ${preselect===c.id?'selected':''}>${c.id} — ${c.tenant.split('\n')[0].substring(0,30)}</option>`).join('');
+
+  // Populate period dropdown
+  const n = now();
+  const pSel = $('f-period');
+  pSel.innerHTML = '';
+  for(let i=0; i<=5; i++) {
+    let m = n.getMonth()-i, y = n.getFullYear();
+    if(m<0){m+=12;y--;}
+    const opt = document.createElement('option');
+    opt.value = `${y}_${m}`;
+    opt.textContent = `${MONTHS_ES_LONG[m]} ${y}`;
+    if(i===0) opt.selected = true;
+    pSel.appendChild(opt);
+  }
+
+  // Set today as default date
+  $('f-fecha').value = n.toISOString().split('T')[0];
+
+  // Auto-fill amount if apt selected
+  if(preselect) {
+    const c = CONTRATOS.find(x=>x.id===preselect);
+    if(c) $('f-monto').value = c.rent;
+  }
+
+  $('modal-overlay').classList.add('open');
+}
+
+function openModalFor(aptId) { openModal(aptId); }
+
+function closeModal() { $('modal-overlay').classList.remove('open'); }
+
+function closeModalOutside(e) { if(e.target===$('modal-overlay')) closeModal(); }
+
+async function submitPayment() {
+  const aptId = $('f-apt').value;
+  const montoVal = parseFloat($('f-monto').value);
+  const fechaVal = $('f-fecha').value;
+  const metodo = $('f-metodo').value;
+  const notas = $('f-notas').value;
+  const [periodoAño, periodoMes] = $('f-period').value.split('_').map(Number);
+
+  if(!aptId || !montoVal || !fechaVal) {
+    $('toast-text').textContent = '⚠ Completa todos los campos requeridos';
+    showToast();
+    return;
+  }
+
+  const c = CONTRATOS.find(x=>x.id===aptId);
+  // POST to PostgreSQL via API
+  try {
+    const resp = await fetch(API+'/pagos', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        contrato_id: aptId,
+        monto: montoVal,
+        fecha_pago: fechaVal,
+        mes: periodoMes,
+        anio: periodoAño,
+        metodo, notas
+      })
+    });
+    if(!resp.ok) throw new Error('Error al guardar');
+
+    // Reload data from API
+    await cargarDatosAPI();
+
+    closeModal();
+    $('f-apt').value = '';
+    $('f-monto').value = '';
+    $('f-notas').value = '';
+
+    const activePage = document.querySelector('.page.active').id.replace('page-','');
+    if(activePage==='dashboard') renderDashboard();
+    if(activePage==='finanzas') renderFinanzas();
+
+    $('toast-text').textContent = `Pago de ${cur(montoVal)} registrado para ${c?.tenant.split('\n')[0]}`;
+    showToast();
+  } catch(e) {
+    $('toast-text').textContent = '⚠ Error al guardar: asegúrate que el servidor está corriendo';
+    showToast();
+  }
+}
+
+function showToast() {
+  const toast = $('toast');
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'), 3200);
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// LOAD DB DATA (Sistema page)
+// ══════════════════════════════════════════════════════════════
+async function loadDBData() {
+  await cargarDatosAPI();
+  const MONTHS_LONG = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  // KPI stats
+  const totalPagos = PAGOS_HISTORICOS.length;
+  const totalCobrado = PAGOS_HISTORICOS.reduce((s,p)=>s+p.monto,0);
+  const totalDeuda = DB_ESTADO.reduce((s,e)=>s+e.deuda,0);
+  const contratosCount = CONTRATOS.length;
+
+  const el = id => document.getElementById(id);
+  if(el('db-total-pagos')) el('db-total-pagos').textContent = totalPagos;
+  if(el('db-total-cobrado')) el('db-total-cobrado').textContent = cur(totalCobrado, true);
+  if(el('db-total-deuda')) el('db-total-deuda').textContent = totalDeuda > 0 ? cur(totalDeuda) : '✓ RD$0';
+  if(el('db-contratos-count')) el('db-contratos-count').textContent = contratosCount;
+
+  // Estado financiero table
+  if(el('db-estado-tbody')) {
+    el('db-estado-tbody').innerHTML = DB_ESTADO.map(e => {
+      const deudaColor = e.deuda === 0 ? 'var(--em)' : (e.deuda > e.rent*2 ? 'var(--rs)' : 'var(--am)');
+      const ultimoPago = e.ultimo_pago ? new Date(e.ultimo_pago).toLocaleDateString('es-DO',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase() : '— Sin pagos';
+      return `<tr>
+        <td><span class="td-apt">${e.id}</span></td>
+        <td><span style="font-size:12px;color:var(--t2)">${e.apt_nombre}</span></td>
+        <td><span class="td-name" style="font-size:12px">${e.tenant.split('&')[0].trim()}</span></td>
+        <td><span class="td-monto">${cur(e.rent)}</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t2)">${cur(e.total_esperado)}</td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--em)">${cur(e.total_cobrado)}</td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:${deudaColor};font-weight:600">${e.deuda===0?'✓ Al día':cur(e.deuda)}</td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--t3)">${ultimoPago}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Morosos
+  const n = new Date();
+  const mes = n.getMonth(), anio = n.getFullYear();
+  try {
+    const morosos = await fetch(`${API}/morosos?mes=${mes}&anio=${anio}`).then(r=>r.json());
+    if(el('db-morosos-count')) el('db-morosos-count').textContent = morosos.length > 0 ? morosos.length + ' morosos' : '✓ Todos pagaron';
+    if(el('db-morosos-list')) {
+      el('db-morosos-list').innerHTML = morosos.length === 0
+        ? '<p style="font-size:12px;color:var(--em);padding:12px 0">✓ Todos los inquilinos pagaron este mes</p>'
+        : morosos.map(m => `
+          <div class="debt-item" style="padding:12px 0;border-bottom:1px solid var(--b0)">
+            <span class="debt-apt-id">${m.id}</span>
+            <div class="debt-name">
+              <span class="debt-tenant">${m.tenant.split('&')[0].trim()}</span>
+              <span class="debt-detail">${m.apt_nombre}</span>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--rs);font-weight:600">${cur(parseFloat(m.rent))}</span>
+          </div>`).join('');
+    }
+  } catch(e) { console.warn('morosos error', e); }
+
+  // Últimos 10 pagos reales
+  const ultimos = [...PAGOS_HISTORICOS].sort((a,b)=>b.fechaPago-a.fechaPago).slice(0,10);
+  if(el('db-pagos-count')) el('db-pagos-count').textContent = PAGOS_HISTORICOS.length + ' registros totales';
+  if(el('db-pagos-list')) {
+    el('db-pagos-list').innerHTML = ultimos.length === 0
+      ? '<p style="font-size:12px;color:var(--t3);padding:16px 22px">No hay pagos registrados aún.</p>'
+      : ultimos.map(p => {
+          const c = CONTRATOS.find(x=>x.id===p.contratoId);
+          const name = c ? c.tenant.split('&')[0].trim() : p.contratoId;
+          return `<div class="hist-row">
+            <span class="hist-id">${p.contratoId}</span>
+            <div><span class="hist-tenant">${name}</span>
+            <span class="hist-apt">${MONTHS_LONG[p.mes] || p.mes} ${p.año}</span></div>
+            <span class="hist-method">${p.metodo}</span>
+            <span class="hist-monto">${cur(p.monto)}</span>
+            <span class="hist-date">${p.fechaPago.toLocaleDateString('es-DO',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase()}</span>
+          </div><div class="separator"></div>`;
+        }).join('');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+async function init() {
+  updateClock();
+  await cargarDatosAPI();
+  renderDashboard();
+  setInterval(()=>{ updateClock(); updateCountdowns(); }, 1000);
+  // Auto-refresh data every 60 seconds
+  setInterval(async ()=>{
+    await cargarDatosAPI();
+    const activePage = document.querySelector('.page.active').id.replace('page-','');
+    if(activePage==='dashboard') renderDashboard();
+    if(activePage==='finanzas') renderFinanzas();
+    if(activePage==='sistema') loadDBData();
+  }, 60000);
+  window.addEventListener('resize', ()=>{
+    if(document.querySelector('.page.active').id==='page-dashboard') drawRevenueChart();
+  });
+}
+
+init();
+</script>
+</body>
+</html>
