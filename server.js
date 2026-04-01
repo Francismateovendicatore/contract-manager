@@ -15,6 +15,26 @@ app.get('/expulsiones/:contrato_id', async (req, res) => { try { const r = await
 app.post('/expulsiones', async (req, res) => { const { contrato_id, motivo } = req.body; try { await pool.query('DELETE FROM expulsiones WHERE contrato_id = ', [contrato_id]); const r = await pool.query('INSERT INTO expulsiones (contrato_id, motivo) VALUES (,) RETURNING *', [contrato_id, motivo]); res.json(r.rows[0]); } catch(e) { res.status(500).json({ error: e.message }); } });
 app.delete('/expulsiones/:contrato_id', async (req, res) => { try { await pool.query('DELETE FROM expulsiones WHERE contrato_id = ', [req.params.contrato_id]); res.json({ ok: true }); } catch(e) { res.status(500).json({ error: e.message }); } });
 app.get('/', (req, res) => res.sendFile(require('path').join(__dirname, 'onyx_realty.html')));
+
+app.get('/estado', async (req, res) => {
+  try {
+    const contratos = await pool.query('SELECT * FROM contratos WHERE activo = true ORDER BY id');
+    const pagos = await pool.query('SELECT * FROM pagos ORDER BY fecha_pago DESC');
+    res.json({ contratos: contratos.rows, pagos: pagos.rows });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/morosos', async (req, res) => {
+  try {
+    const { mes, anio } = req.query;
+    const r = await pool.query(
+      'SELECT c.* FROM contratos c WHERE c.activo = true AND NOT EXISTS (SELECT 1 FROM pagos p WHERE p.contrato_id = c.id AND p.mes = $1 AND p.anio = $2)',
+      [mes, anio]
+    );
+    res.json(r.rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/health', (req, res) => res.json({ ok: true }));
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log('Onyx API running on port ' + PORT));
