@@ -218,6 +218,45 @@
       /* ── TOAST ERROR VARIANT ─────────────────────────────────────────── */
       .toast.err { border-color: var(--rs-border); }
       .toast.err .toast-icon { color: var(--rs); }
+
+      /* ── COUNTDOWN ALERT BANNERS ─────────────────────────────────────── */
+      .sa-countdown-banner {
+        display: flex; align-items: flex-start; gap: 10px;
+        padding: 11px 14px; border-radius: var(--rsm);
+        margin-bottom: 14px; border: 1px solid;
+      }
+      .sa-countdown-banner.critical {
+        background: var(--rs-dim); border-color: var(--rs-border);
+      }
+      .sa-countdown-banner.warning {
+        background: var(--am-dim); border-color: var(--am-border);
+      }
+      .sa-cdb-icon { font-size: 16px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+      .sa-cdb-title {
+        font-size: 11.5px; font-weight: 600; display: block;
+        color: var(--t1); margin-bottom: 2px;
+      }
+      .sa-cdb-sub {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9.5px; color: var(--t2); display: block;
+      }
+      .sa-exp-dates {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+        margin-bottom: 12px;
+        padding: 10px 12px;
+        background: rgba(242,65,90,0.06);
+        border-radius: var(--rxs);
+        border: 1px solid rgba(242,65,90,0.15);
+      }
+      .sa-exp-dt-label {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 8.5px; letter-spacing: 0.12em;
+        text-transform: uppercase; color: var(--rs); display: block; margin-bottom: 3px;
+      }
+      .sa-exp-dt-val {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11.5px; color: var(--t1); font-weight: 500;
+      }
       *,
       *::before,
       *::after {
@@ -1952,6 +1991,20 @@
           0 0 0 1px var(--rs-border),
           0 0 40px rgba(242, 65, 90, 0.06);
       }
+      /* 🔴 Critical: ≤30 days remaining — pulsing red border */
+      .sa-card.critical-alert {
+        border-color: var(--rs-border);
+        animation: cardIn 0.5s cubic-bezier(0.22,0.68,0,1.1) both, criticalPulse 2.4s ease-in-out infinite;
+      }
+      @keyframes criticalPulse {
+        0%,100% { box-shadow: inset 0 1px 0 var(--b1), 0 20px 50px rgba(0,0,0,0.45), 0 0 0 1px var(--rs-border), 0 0 20px rgba(242,65,90,0.04); }
+        50%      { box-shadow: inset 0 1px 0 var(--b1), 0 20px 50px rgba(0,0,0,0.45), 0 0 0 1px var(--rs-border), 0 0 50px rgba(242,65,90,0.18); }
+      }
+      /* 🟡 Warning: ≤60 days remaining */
+      .sa-card.warning-alert {
+        border-color: var(--am-border);
+        box-shadow: inset 0 1px 0 var(--b1), 0 20px 50px rgba(0,0,0,0.45), 0 0 30px rgba(236,175,66,0.07);
+      }
       .sa-card-head {
         display: flex;
         align-items: flex-start;
@@ -2853,13 +2906,26 @@
 
       function getActiveCycle(startBase) {
         let start = startBase instanceof Date ? new Date(startBase) : new Date(startBase);
-        if (isNaN(start.getTime())) start = new Date(); // fallback to today if invalid
-        while (true) {
+        if (isNaN(start.getTime())) start = new Date();
+        // If startBase is in the future, first cycle is startBase → startBase+1yr
+        const n = now();
+        if (start > n) {
           const end = new Date(start);
           end.setFullYear(end.getFullYear() + 1);
-          if (end > now()) return { start, end };
+          return { start, end };
+        }
+        // Walk annual cycles forward until we find the active one
+        let iterations = 0;
+        while (iterations++ < 50) {
+          const end = new Date(start);
+          end.setFullYear(end.getFullYear() + 1);
+          if (end > n) return { start, end };
           start = end;
         }
+        // Fallback (should never reach here)
+        const end = new Date(start);
+        end.setFullYear(end.getFullYear() + 1);
+        return { start, end };
       }
       function msToDhms(ms) {
         const t = Math.max(0, Math.floor(ms / 1000));
@@ -2895,14 +2961,14 @@
           .toUpperCase();
       }
 
+      /* ── STATUS THRESHOLDS (single source of truth) ──────────────────── */
+      const THRESH_CRITICAL = 30;  // days — 🔴 red alert (countdown active)
+      const THRESH_WARNING  = 60;  // days — 🟡 amber warning
+
       function getStatus(c) {
         const { end } = getActiveCycle(c.startBase);
         const d = Math.ceil((end - now()) / 864e5);
-        return (
-          d < 0 ? "rs"
-          : d <= 45 ? "am"
-          : "em"
-        );
+        return d < 0 ? "rs" : d <= THRESH_CRITICAL ? "rs" : d <= THRESH_WARNING ? "am" : "em";
       }
       function getProgress(c) {
         const { start, end } = getActiveCycle(c.startBase);
@@ -2924,10 +2990,10 @@
         const { end } = getActiveCycle(c.startBase);
         const rem = msToDhms(end - now());
         const s = getStatus(c);
-        if (s === "rs") return "Renovación crítica — contrato próximo a vencer";
-        if (s === "am")
-          return "Renovación próxima — " + rem.d + " días restantes";
-        return "Vigente — " + rem.d + " días hasta la renovación";
+        if (s === "rs" && rem.d < 0) return "Renovación crítica — contrato vencido";
+        if (s === "rs") return "🚨 Renovación crítica — " + rem.d + " días restantes";
+        if (s === "am") return "⚡ Renovación próxima — " + rem.d + " días restantes";
+        return "✓ Vigente — " + rem.d + " días hasta la renovación";
       }
 
       const MONTHS_ES = [
@@ -2980,15 +3046,22 @@
         const cobrado = PAGOS_HISTORICOS.filter(
           (p) => p.contratoId === c.id,
         ).reduce((s, p) => s + p.monto, 0);
-        const meses = PAGOS_HISTORICOS.filter(
+        const mesesRegistrados = PAGOS_HISTORICOS.filter(
           (p) => p.contratoId === c.id,
         ).length;
-        const esperado = meses * c.rent;
+        // Real elapsed months since contract start
+        const n = now();
+        const start = new Date(c.startBase);
+        const mesesTranscurridos = Math.max(0,
+          (n.getFullYear() - start.getFullYear()) * 12 + (n.getMonth() - start.getMonth()) + 1
+        );
+        const esperado = mesesTranscurridos * c.rent;
         return {
           esperado,
           cobrado,
           deuda: Math.max(0, esperado - cobrado),
-          meses,
+          meses: mesesRegistrados,
+          mesesTranscurridos,
         };
       }
 
@@ -3702,7 +3775,8 @@
    ═══════════════════════════════════════════════════════════════════════ */
       function saGetState(id) {
         if (!SA_STATE[id])
-          SA_STATE[id] = { notes: [], expulsion: false, expMotivo: "" };
+          SA_STATE[id] = { notes: [], expulsion: false, expMotivo: "", fechaExpulsion: null };
+        if (!("fechaExpulsion" in SA_STATE[id])) SA_STATE[id].fechaExpulsion = null;
         return SA_STATE[id];
       }
 
@@ -3751,7 +3825,12 @@
       async function saToggleExpulsion(id) {
         const st = saGetState(id);
         st.expulsion = !st.expulsion;
-        if (!st.expulsion) st.expMotivo = "";
+        if (st.expulsion) {
+          if (!st.fechaExpulsion) st.fechaExpulsion = new Date().toISOString();
+        } else {
+          st.expMotivo = "";
+          st.fechaExpulsion = null;
+        }
         renderSACard(id);
         lsSaveSA();
 
@@ -3792,10 +3871,10 @@
       function saContractStatus(c) {
         const { end } = getActiveCycle(c.startBase);
         const days = Math.ceil((end - now()) / 864e5);
-        if (days < 0) return { label: "Vencido", cls: "rs" };
-        if (days <= 30) return { label: "Próximo a vencer", cls: "rs" };
-        if (days <= 90) return { label: "Por renovar", cls: "am" };
-        return { label: "Vigente", cls: "em" };
+        if (days < 0)                 return { label: "Vencido",          cls: "rs" };
+        if (days <= THRESH_CRITICAL)  return { label: "Próximo a vencer", cls: "rs" };
+        if (days <= THRESH_WARNING)   return { label: "Por renovar",      cls: "am" };
+        return                               { label: "Vigente",           cls: "em" };
       }
 
       function renderSACard(id) {
@@ -3806,6 +3885,8 @@
         const status = saContractStatus(c);
         const exp = st.expulsion;
         const rem = msToDhms(end - now());
+        const daysLeft = Math.ceil((end - now()) / 864e5);
+        const alertClass = exp ? "" : daysLeft <= THRESH_CRITICAL ? " critical-alert" : daysLeft <= THRESH_WARNING ? " warning-alert" : "";
         const cdColor =
           status.cls === "em" ? "var(--em)"
           : status.cls === "am" ? "var(--am)"
@@ -3829,15 +3910,20 @@
               .join("")
           : '<span style="font-size:10px;color:var(--t3)">Sin observaciones.</span>';
 
+        const expFechaInicio = st.fechaExpulsion ? fmt(new Date(st.fechaExpulsion)) : "—";
         const expBlock =
           exp ?
             `<div class="sa-expulsion-block">
+        <div class="sa-exp-dates">
+          <div><span class="sa-exp-dt-label">Inicio proceso</span><span class="sa-exp-dt-val">${expFechaInicio}</span></div>
+          <div><span class="sa-exp-dt-label">Fin de contrato</span><span class="sa-exp-dt-val">${fmt(end)}</span></div>
+        </div>
         <span class="sa-exp-title">Motivo de expulsión</span>
         <textarea class="sa-exp-input" placeholder="Detalla el motivo..." oninput="saUpdateMotivo('${id}',this.value)">${st.expMotivo}</textarea>
        </div>`
           : "";
 
-        const html = `<div class="sa-card${exp ? " expulsion" : ""}" id="sa-card-${id}">
+        const html = `<div class="sa-card${exp ? " expulsion" : ""}${alertClass}" id="sa-card-${id}">
     <div class="sa-card-head">
       <div>
         <span class="sa-apt">${c.id} - ${c.aptNombre}</span>
@@ -3855,6 +3941,13 @@
           </div>
         </div>
       </div>
+      ${!exp && daysLeft <= THRESH_CRITICAL ? `<div class="sa-countdown-banner critical">
+        <span class="sa-cdb-icon">🚨</span>
+        <div><span class="sa-cdb-title">Cuenta Regresiva Activa</span><span class="sa-cdb-sub">El contrato vence en menos de ${THRESH_CRITICAL} días — requiere acción inmediata</span></div>
+      </div>` : !exp && daysLeft <= THRESH_WARNING ? `<div class="sa-countdown-banner warning">
+        <span class="sa-cdb-icon">⚡</span>
+        <div><span class="sa-cdb-title">Renovación Próxima</span><span class="sa-cdb-sub">Restan ${daysLeft} días para el vencimiento del contrato</span></div>
+      </div>` : ""}
       <div class="sa-notes-section">
         <span class="sa-notes-title">Observaciones</span>
         <div id="sa-notes-list-${id}">${notesHTML}</div>
@@ -3986,7 +4079,7 @@
               aptId: p.contrato_id,
               monto: parseFloat(p.monto),
               fechaPago: new Date(p.fecha_pago),
-              mes: p.mes - 1, // API is 1-indexed; internal is 0-indexed
+              mes: Math.max(0, (p.mes || 1) - 1), // API 1-indexed → 0-indexed; clamp to avoid -1
               año: p.anio,
               metodo: p.metodo,
               notas: p.notas || "",
