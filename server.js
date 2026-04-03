@@ -4,16 +4,71 @@ const cors = require('cors');
 const app = express();
 app.use(cors());
 app.use(express.json());
+
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
-app.get('/contratos', async (req, res) => { try { const r = await pool.query('SELECT * FROM contratos WHERE activo = true ORDER BY id'); res.json(r.rows); } catch(e) { res.status(500).json({ error: e.message }); } });
-app.get('/pagos', async (req, res) => { try { const r = await pool.query('SELECT * FROM pagos ORDER BY fecha_pago DESC'); res.json(r.rows); } catch(e) { res.status(500).json({ error: e.message }); } });
-app.post('/pagos', async (req, res) => { const { contrato_id, monto, fecha_pago, mes, anio, metodo, notas } = req.body; try { const r = await pool.query('INSERT INTO pagos (contrato_id, monto, fecha_pago, mes, anio, metodo, notas) VALUES (,,,,,,) RETURNING *', [contrato_id, monto, fecha_pago, mes, anio, metodo||'transferencia', notas||null]); res.json(r.rows[0]); } catch(e) { res.status(500).json({ error: e.message }); } });
-app.get('/notas/:contrato_id', async (req, res) => { try { const r = await pool.query('SELECT * FROM notas_inquilino WHERE contrato_id =  ORDER BY created_at DESC', [req.params.contrato_id]); res.json(r.rows); } catch(e) { res.status(500).json({ error: e.message }); } });
-app.post('/notas', async (req, res) => { const { contrato_id, nota } = req.body; try { const r = await pool.query('INSERT INTO notas_inquilino (contrato_id, nota) VALUES (,) RETURNING *', [contrato_id, nota]); res.json(r.rows[0]); } catch(e) { res.status(500).json({ error: e.message }); } });
-app.delete('/notas/:id', async (req, res) => { try { await pool.query('DELETE FROM notas_inquilino WHERE id = ', [req.params.id]); res.json({ ok: true }); } catch(e) { res.status(500).json({ error: e.message }); } });
-app.get('/expulsiones/:contrato_id', async (req, res) => { try { const r = await pool.query('SELECT * FROM expulsiones WHERE contrato_id = ', [req.params.contrato_id]); res.json(r.rows[0] || null); } catch(e) { res.status(500).json({ error: e.message }); } });
-app.post('/expulsiones', async (req, res) => { const { contrato_id, motivo } = req.body; try { await pool.query('DELETE FROM expulsiones WHERE contrato_id = ', [contrato_id]); const r = await pool.query('INSERT INTO expulsiones (contrato_id, motivo) VALUES (,) RETURNING *', [contrato_id, motivo]); res.json(r.rows[0]); } catch(e) { res.status(500).json({ error: e.message }); } });
-app.delete('/expulsiones/:contrato_id', async (req, res) => { try { await pool.query('DELETE FROM expulsiones WHERE contrato_id = ', [req.params.contrato_id]); res.json({ ok: true }); } catch(e) { res.status(500).json({ error: e.message }); } });
+
+app.get('/contratos', async (req, res) => {
+  try { const r = await pool.query('SELECT * FROM contratos WHERE activo = true ORDER BY id'); res.json(r.rows); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/pagos', async (req, res) => {
+  try { const r = await pool.query('SELECT * FROM pagos ORDER BY fecha_pago DESC'); res.json(r.rows); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/pagos', async (req, res) => {
+  const { contrato_id, monto, fecha_pago, mes, anio, metodo, notas } = req.body;
+  try {
+    const r = await pool.query(
+      'INSERT INTO pagos (contrato_id, monto, fecha_pago, mes, anio, metodo, notas) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+      [contrato_id, monto, fecha_pago, mes, anio, metodo||'transferencia', notas||null]
+    );
+    res.json(r.rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/notas/:contrato_id', async (req, res) => {
+  try {
+    const r = await pool.query('SELECT * FROM notas_inquilino WHERE contrato_id = $1 ORDER BY created_at DESC', [req.params.contrato_id]);
+    res.json(r.rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/notas', async (req, res) => {
+  const { contrato_id, nota } = req.body;
+  try {
+    const r = await pool.query('INSERT INTO notas_inquilino (contrato_id, nota) VALUES ($1,$2) RETURNING *', [contrato_id, nota]);
+    res.json(r.rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/notas/:id', async (req, res) => {
+  try { await pool.query('DELETE FROM notas_inquilino WHERE id = $1', [req.params.id]); res.json({ ok: true }); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/expulsiones/:contrato_id', async (req, res) => {
+  try {
+    const r = await pool.query('SELECT * FROM expulsiones WHERE contrato_id = $1', [req.params.contrato_id]);
+    res.json(r.rows[0] || null);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/expulsiones', async (req, res) => {
+  const { contrato_id, motivo } = req.body;
+  try {
+    await pool.query('DELETE FROM expulsiones WHERE contrato_id = $1', [contrato_id]);
+    const r = await pool.query('INSERT INTO expulsiones (contrato_id, motivo) VALUES ($1,$2) RETURNING *', [contrato_id, motivo]);
+    res.json(r.rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/expulsiones/:contrato_id', async (req, res) => {
+  try { await pool.query('DELETE FROM expulsiones WHERE contrato_id = $1', [req.params.contrato_id]); res.json({ ok: true }); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/', (req, res) => res.sendFile(require('path').join(__dirname, 'onyx_realty.html')));
 
 app.get('/estado', async (req, res) => {
@@ -21,18 +76,10 @@ app.get('/estado', async (req, res) => {
     const contratos = await pool.query('SELECT * FROM contratos WHERE activo = true ORDER BY id');
     const pagos = await pool.query('SELECT * FROM pagos ORDER BY fecha_pago DESC');
     const mapped = contratos.rows.map(c => ({
-      id: c.id,
-      aptNombre: c.apt_nombre,
-      tenant: c.tenant,
-      address: c.address,
-      apt: c.apt,
-      rent: parseFloat(c.rent),
-      deposit: parseFloat(c.deposit),
-      startBase: c.start_base,
-      payDay: c.pay_day,
-      notary: c.notary,
-      notes: c.notes,
-      activo: c.activo
+      id: c.id, aptNombre: c.apt_nombre, tenant: c.tenant,
+      address: c.address, apt: c.apt, rent: parseFloat(c.rent),
+      deposit: parseFloat(c.deposit), startBase: c.start_base,
+      payDay: c.pay_day, notary: c.notary, notes: c.notes, activo: c.activo
     }));
     res.json({ contratos: mapped, pagos: pagos.rows });
   } catch(e) { res.status(500).json({ error: e.message }); }
@@ -50,5 +97,6 @@ app.get('/morosos', async (req, res) => {
 });
 
 app.get('/health', (req, res) => res.json({ ok: true }));
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log('Onyx API running on port ' + PORT));
