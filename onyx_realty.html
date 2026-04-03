@@ -2632,6 +2632,8 @@
           <div class="pin-dot" id="pd-1"></div>
           <div class="pin-dot" id="pd-2"></div>
           <div class="pin-dot" id="pd-3"></div>
+          <div class="pin-dot" id="pd-4"></div>
+          <div class="pin-dot" id="pd-5"></div>
         </div>
         <div class="pin-grid">
           <button class="pin-key" onclick="pinKey('1')">1</button>
@@ -2848,7 +2850,8 @@
       const now = () => new Date();
 
       function getActiveCycle(startBase) {
-        let start = new Date(startBase);
+        let start = startBase instanceof Date ? new Date(startBase) : new Date(startBase);
+        if (isNaN(start.getTime())) start = new Date(); // fallback to today if invalid
         while (true) {
           const end = new Date(start);
           end.setFullYear(end.getFullYear() + 1);
@@ -3884,6 +3887,11 @@
         const saCount = $("sa-count");
         if (saCount) saCount.textContent = CONTRATOS.length + " inquilinos";
 
+        if (CONTRATOS.length === 0) {
+          grid.innerHTML = '<p style="font-size:13px;color:var(--t3);padding:20px 0">Cargando contratos…</p>';
+          return;
+        }
+
         // Show cached content instantly, then refresh from API
         let html = "";
         CONTRATOS.forEach((c) => {
@@ -3987,6 +3995,9 @@
 
           // Re-render dashboard with live data
           renderDashboard();
+          // Also re-render Situación Actual if it's the active page
+          const activePage = document.querySelector(".page.active");
+          if (activePage && activePage.id === "page-sistema") renderSituacionActual();
         } catch (e) {
           console.error(
             "[API] Initial load failed — running on local/fallback data:",
@@ -4006,7 +4017,7 @@
    ═══════════════════════════════════════════════════════════════════════ */
       const PIN_HASH_KEY = "onyx_pin_hash";
       // Default PIN 1234 — user can change via UI
-      const DEFAULT_PIN_HASH = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4";
+      const DEFAULT_PIN_HASH = "6c3b182b897b9f5342deba66fc433ab2650a06409cee848d478de581db70f702";
       let _pinBuffer = "";
 
       async function sha256hex(str) {
@@ -4019,10 +4030,10 @@
       }
 
       function pinKey(k) {
-        if (_pinBuffer.length >= 4) return;
+        if (_pinBuffer.length >= 6) return;
         _pinBuffer += k;
         updatePinDots();
-        if (_pinBuffer.length === 4) setTimeout(checkPin, 120);
+        if (_pinBuffer.length === 6) setTimeout(checkPin, 120);
       }
 
       function pinDel() {
@@ -4036,7 +4047,7 @@
       }
 
       function updatePinDots() {
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 6; i++) {
           const d = document.getElementById("pd-" + i);
           if (d) {
             d.classList.remove("filled","error");
@@ -4049,7 +4060,7 @@
         const hash = await sha256hex(_pinBuffer);
         if (hash === getStoredPinHash()) {
           // Correct — animate success then hide
-          for (let i = 0; i < 4; i++) {
+          for (let i = 0; i < 6; i++) {
             const d = document.getElementById("pd-" + i);
             if (d) { d.classList.add("filled"); }
           }
@@ -4059,14 +4070,14 @@
           }, 300);
         } else {
           // Wrong — shake animation
-          for (let i = 0; i < 4; i++) {
+          for (let i = 0; i < 6; i++) {
             const d = document.getElementById("pd-" + i);
             if (d) { d.classList.remove("filled"); d.classList.add("error"); }
           }
           document.getElementById("pin-error").textContent = "PIN incorrecto. Intenta de nuevo.";
           setTimeout(() => {
             _pinBuffer = "";
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < 6; i++) {
               const d = document.getElementById("pd-" + i);
               if (d) { d.classList.remove("error"); }
             }
