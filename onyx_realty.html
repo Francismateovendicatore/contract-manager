@@ -44,6 +44,180 @@
         --rsm: 11px;
         --rxs: 8px;
       }
+
+      /* ── PIN LOGIN SCREEN ─────────────────────────────────────────────── */
+      #pin-screen {
+        position: fixed; inset: 0; z-index: 9999;
+        background: var(--void);
+        display: flex; align-items: center; justify-content: center;
+        flex-direction: column; gap: 0;
+      }
+      #pin-screen.hidden { display: none; }
+      .pin-wrap {
+        display: flex; flex-direction: column; align-items: center; gap: 32px;
+        animation: pinIn 0.5s cubic-bezier(0.22,0.68,0,1.1) both;
+      }
+      @keyframes pinIn { from { opacity:0; transform: translateY(30px) scale(0.97); } to { opacity:1; transform:none; } }
+      .pin-logo {
+        display: flex; align-items: center; gap: 14px;
+      }
+      .pin-gem {
+        width: 52px; height: 52px;
+        background: linear-gradient(135deg, rgba(201,147,74,0.18), rgba(201,147,74,0.06));
+        border: 1px solid var(--gold-border);
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 0 40px rgba(201,147,74,0.18), inset 0 1px 0 rgba(201,147,74,0.25);
+      }
+      .pin-gem svg { width: 24px; height: 24px; color: var(--gold); }
+      .pin-brand {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 42px; font-weight: 400; color: var(--t1);
+        letter-spacing: 0.1em; line-height: 1;
+      }
+      .pin-subtitle {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9px; color: var(--t3); letter-spacing: 0.2em;
+        text-transform: uppercase; text-align: center; display: block;
+        margin-top: -20px;
+      }
+      .pin-dots {
+        display: flex; gap: 14px; justify-content: center;
+      }
+      .pin-dot {
+        width: 14px; height: 14px; border-radius: 50%;
+        border: 1.5px solid var(--t3);
+        background: transparent;
+        transition: all 0.15s ease;
+      }
+      .pin-dot.filled {
+        background: var(--gold);
+        border-color: var(--gold);
+        box-shadow: 0 0 12px rgba(201,147,74,0.5);
+      }
+      .pin-dot.error {
+        border-color: var(--rs);
+        background: var(--rs);
+        box-shadow: 0 0 12px rgba(242,65,90,0.5);
+        animation: shake 0.4s ease;
+      }
+      @keyframes shake {
+        0%,100%{transform:translateX(0)}
+        20%{transform:translateX(-6px)}
+        40%{transform:translateX(6px)}
+        60%{transform:translateX(-4px)}
+        80%{transform:translateX(4px)}
+      }
+      .pin-grid {
+        display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 10px; width: 240px;
+      }
+      .pin-key {
+        height: 64px; border-radius: 14px;
+        border: 1px solid var(--b2);
+        background: var(--high);
+        color: var(--t1);
+        font-family: "Cormorant Garamond", serif;
+        font-size: 26px; font-weight: 400;
+        cursor: pointer;
+        transition: all 0.12s ease;
+        display: flex; align-items: center; justify-content: center;
+        user-select: none;
+      }
+      .pin-key:hover { background: var(--raised); border-color: var(--b3); transform: scale(1.04); }
+      .pin-key:active { transform: scale(0.97); }
+      .pin-key.del { font-size: 18px; color: var(--t2); }
+      .pin-key.zero { grid-column: 2; }
+      .pin-error {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px; color: var(--rs); letter-spacing: 0.1em;
+        text-align: center; min-height: 16px;
+        transition: opacity 0.3s;
+      }
+
+      /* ── HAMBURGER (MOBILE) ────────────────────────────────────────────── */
+      .hamburger {
+        display: none; flex-direction: column; gap: 4px;
+        cursor: pointer; padding: 8px; border-radius: 8px;
+        border: 1px solid var(--b1); background: var(--high);
+        transition: all 0.18s;
+      }
+      .hamburger span {
+        display: block; width: 18px; height: 2px;
+        background: var(--t2); border-radius: 2px;
+        transition: all 0.3s ease;
+      }
+      .hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+      .hamburger.open span:nth-child(2) { opacity: 0; }
+      .hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+      .sidebar-overlay {
+        display: none; position: fixed; inset: 0; z-index: 199;
+        background: rgba(3,3,5,0.7); backdrop-filter: blur(4px);
+      }
+      .sidebar-overlay.open { display: block; }
+
+      /* ── ADD/EDIT CONTRACT MODAL ──────────────────────────────────────── */
+      .modal-overlay-2 {
+        position: fixed; inset: 0; z-index: 1100;
+        background: rgba(3,3,5,0.88); backdrop-filter: blur(20px) saturate(180%);
+        display: none; align-items: center; justify-content: center;
+      }
+      .modal-overlay-2.open { display: flex; animation: ovIn 0.2s ease both; }
+      .modal-wide {
+        background: linear-gradient(150deg, var(--high) 0%, var(--mid) 100%);
+        border: 1px solid var(--b2); border-radius: 22px;
+        width: 640px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+        padding: 38px;
+        box-shadow: 0 0 0 1px var(--gold-border), 0 50px 100px rgba(0,0,0,0.85), inset 0 1px 0 var(--b2);
+        animation: modIn 0.3s cubic-bezier(0.22,0.68,0,1.2) both;
+      }
+      .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+      /* ── PDF EXPORT BUTTON ────────────────────────────────────────────── */
+      .export-bar {
+        display: flex; align-items: center; justify-content: flex-end;
+        gap: 10px; margin-bottom: 16px;
+      }
+      .btn-export {
+        display: flex; align-items: center; gap: 7px;
+        padding: 9px 18px; border-radius: var(--rsm);
+        background: var(--em-dim); border: 1px solid var(--em-border);
+        color: var(--em); font-size: 12px; font-weight: 600;
+        cursor: pointer; transition: all 0.18s;
+      }
+      .btn-export:hover { background: rgba(46,189,142,0.15); }
+      .btn-export svg { width: 13px; height: 13px; }
+
+      /* ── VALIDATION ERROR STATES ─────────────────────────────────────── */
+      .form-input.err, .form-select.err, .form-textarea.err {
+        border-color: var(--rs) !important;
+        background: rgba(242,65,90,0.04) !important;
+      }
+      .field-err {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9px; color: var(--rs); margin-top: 4px;
+        display: none;
+      }
+      .field-err.show { display: block; }
+
+      /* ── PAGINATION ───────────────────────────────────────────────────── */
+      .pagination {
+        display: flex; align-items: center; justify-content: center;
+        gap: 6px; padding: 16px 0 4px;
+      }
+      .pg-btn {
+        padding: 6px 12px; border-radius: var(--rxs);
+        border: 1px solid var(--b2); background: var(--high);
+        color: var(--t2); font-family: "JetBrains Mono", monospace;
+        font-size: 10px; cursor: pointer; transition: all 0.15s;
+      }
+      .pg-btn:hover { background: var(--raised); color: var(--t1); }
+      .pg-btn.active { background: var(--gold-dim); border-color: var(--gold-border); color: var(--gold); }
+      .pg-btn:disabled { opacity: 0.3; cursor: default; }
+
+      /* ── TOAST ERROR VARIANT ─────────────────────────────────────────── */
+      .toast.err { border-color: var(--rs-border); }
+      .toast.err .toast-icon { color: var(--rs); }
       *,
       *::before,
       *::after {
@@ -1719,8 +1893,15 @@
           --sidebar-w: 0px;
         }
         .sidebar {
-          display: none;
+          transform: translateX(-100%);
+          transition: transform 0.3s cubic-bezier(0.22,0.68,0,1.1);
+          width: 258px;
         }
+        .sidebar.open {
+          transform: translateX(0);
+          display: flex;
+        }
+        .hamburger { display: flex; }
         .topbar {
           padding: 0 20px;
         }
@@ -2093,6 +2274,9 @@
             <strong id="breadcrumb-page">Dashboard</strong>
           </div>
           <div class="topbar-actions">
+            <button class="hamburger" id="hamburger-btn" onclick="toggleSidebar()">
+              <span></span><span></span><span></span>
+            </button>
             <div class="search-field">
               <svg
                 viewBox="0 0 24 24"
@@ -2185,6 +2369,16 @@
           <div class="sec-hdr">
             <span class="sec-title">Estado de Contratos</span
             ><span class="sec-sub" id="card-count">— contratos</span>
+          </div>
+          <div class="export-bar">
+            <button class="btn-export" onclick="exportFinancialPDF()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Exportar Reporte PDF
+            </button>
+            <button class="topbar-btn" onclick="openContractModal()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              Nuevo Contrato
+            </button>
           </div>
           <div class="contracts-toolbar">
             <button
@@ -2309,10 +2503,7 @@
               >
             </div>
             <div id="payment-history"></div>
-          </div>
-        </div>
-
-        <!-- SITUACION ACTUAL -->
+            <div id="payment-pagination" class="pagination"></div>
         <div id="page-sistema" class="page">
           <div class="sec-hdr">
             <span class="sec-title">Situación Actual de Inquilinos</span>
@@ -2420,6 +2611,125 @@
       <span class="toast-text" id="toast-text"
         >Pago registrado exitosamente</span
       >
+    </div>
+
+    <!-- PIN LOGIN SCREEN -->
+    <div id="pin-screen">
+      <div id="atm" style="position:absolute"></div>
+      <div id="grain" style="position:absolute"></div>
+      <div class="pin-wrap">
+        <div class="pin-logo">
+          <div class="pin-gem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </div>
+          <span class="pin-brand">Onyx</span>
+        </div>
+        <span class="pin-subtitle">Sistema de Gestión Inmobiliaria · Acceso Privado</span>
+        <div class="pin-dots" id="pin-dots">
+          <div class="pin-dot" id="pd-0"></div>
+          <div class="pin-dot" id="pd-1"></div>
+          <div class="pin-dot" id="pd-2"></div>
+          <div class="pin-dot" id="pd-3"></div>
+        </div>
+        <div class="pin-grid">
+          <button class="pin-key" onclick="pinKey('1')">1</button>
+          <button class="pin-key" onclick="pinKey('2')">2</button>
+          <button class="pin-key" onclick="pinKey('3')">3</button>
+          <button class="pin-key" onclick="pinKey('4')">4</button>
+          <button class="pin-key" onclick="pinKey('5')">5</button>
+          <button class="pin-key" onclick="pinKey('6')">6</button>
+          <button class="pin-key" onclick="pinKey('7')">7</button>
+          <button class="pin-key" onclick="pinKey('8')">8</button>
+          <button class="pin-key" onclick="pinKey('9')">9</button>
+          <button class="pin-key del" onclick="pinDel()">⌫</button>
+          <button class="pin-key zero" onclick="pinKey('0')">0</button>
+          <button class="pin-key del" onclick="pinClear()">✕</button>
+        </div>
+        <div class="pin-error" id="pin-error"></div>
+      </div>
+    </div>
+
+    <!-- SIDEBAR OVERLAY (mobile) -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <!-- ADD/EDIT CONTRACT MODAL -->
+    <div class="modal-overlay-2" id="contract-overlay" onclick="closeContractModalOutside(event)">
+      <div class="modal-wide">
+        <span class="modal-title" id="contract-modal-title">Nuevo Contrato</span>
+        <span class="modal-sub">Sistema de Gestión Onyx · Contratos</span>
+        <input type="hidden" id="cm-id">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">ID Contrato *</label>
+            <input type="text" class="form-input" id="cm-ref" placeholder="C-007">
+            <span class="field-err" id="cm-ref-err">Campo requerido</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nombre Apartamento *</label>
+            <input type="text" class="form-input" id="cm-nombre" placeholder="Apto 5-A">
+            <span class="field-err" id="cm-nombre-err">Campo requerido</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Inquilino Principal *</label>
+          <input type="text" class="form-input" id="cm-tenant1" placeholder="Nombre completo">
+          <span class="field-err" id="cm-tenant1-err">Campo requerido</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Co-Inquilino (opcional)</label>
+          <input type="text" class="form-input" id="cm-tenant2" placeholder="Nombre del co-inquilino">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dirección *</label>
+          <input type="text" class="form-input" id="cm-address" placeholder="Calle Las Trinitarias No. 07...">
+          <span class="field-err" id="cm-address-err">Campo requerido</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Descripción del Apto</label>
+          <input type="text" class="form-input" id="cm-apt" placeholder="Apto 5-A · 1er Piso · 2 hab.">
+        </div>
+        <div class="form-row-3">
+          <div class="form-group">
+            <label class="form-label">Renta Mensual (RD$) *</label>
+            <input type="number" class="form-input" id="cm-rent" placeholder="14000">
+            <span class="field-err" id="cm-rent-err">Monto inválido</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Depósito (RD$) *</label>
+            <input type="number" class="form-input" id="cm-deposit" placeholder="14000">
+            <span class="field-err" id="cm-deposit-err">Monto inválido</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Día de Pago *</label>
+            <input type="number" class="form-input" id="cm-payday" placeholder="1-31" min="1" max="31">
+            <span class="field-err" id="cm-payday-err">Día inválido</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Fecha Inicio *</label>
+            <input type="date" class="form-input" id="cm-start">
+            <span class="field-err" id="cm-start-err">Fecha requerida</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notario</label>
+            <input type="text" class="form-input" id="cm-notary" placeholder="Dr. César S. Alcantara">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notas del Contrato</label>
+          <textarea class="form-textarea" id="cm-notes" placeholder="Observaciones, restricciones, condiciones..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="closeContractModal()">Cancelar</button>
+          <button class="btn-confirm" onclick="submitContract()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;display:inline;margin-right:6px"><polyline points="20 6 9 17 4 12"/></svg>
+            Guardar Contrato
+          </button>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -2772,13 +3082,6 @@
    TOAST NOTIFICATIONS
    ═══════════════════════════════════════════════════════════════════════ */
       let _toastTimer = null;
-      function showToastMsg(msg) {
-        $("toast-text").textContent = msg;
-        const toast = $("toast");
-        toast.classList.add("show");
-        clearTimeout(_toastTimer);
-        _toastTimer = setTimeout(() => toast.classList.remove("show"), 3400);
-      }
 
       /* ═══════════════════════════════════════════════════════════════════════
    CONTRACT CARDS
@@ -2852,6 +3155,9 @@
         Próximo pago: ${fmt(np)} · en ${dpay} día${dpay === 1 ? "" : "s"} · ${cur(c.rent)}
       </div>
       <div class="notes-box"><span class="notes-lbl">Notas</span><span class="notes-txt">${c.notes}</span></div>
+      <div style="padding:0 0 4px;text-align:right">
+        <button class="td-btn" style="margin-top:8px" onclick="openContractModal('${c.id}')">✎ Editar contrato</button>
+      </div>
     </div>
   </div>`;
       }
@@ -3233,24 +3539,9 @@
         }
         $("monthly-totals-tbody").innerHTML = rows;
 
-        // Full payment history
-        const sorted = [...PAGOS_HISTORICOS].sort(
-          (a, b) => b.fechaPago - a.fechaPago,
-        );
-        $("hist-count").textContent = sorted.length + " registros";
-        $("payment-history").innerHTML = sorted
-          .map((p) => {
-            const c = CONTRATOS.find((x) => x.id === p.contratoId);
-            const name = c ? c.tenant.split("\n")[0] : "—";
-            return `<div class="hist-row">
-      <span class="hist-id">${p.contratoId}</span>
-      <div><span class="hist-tenant">${name}</span><span class="hist-apt">${MONTHS_ES[p.mes]} ${p.año}</span></div>
-      <span class="hist-method">${p.metodo}</span>
-      <span class="hist-monto">${cur(p.monto)}</span>
-      <span class="hist-date">${fmt(p.fechaPago)}</span>
-    </div>`;
-          })
-          .join('<div class="separator"></div>');
+        // Full payment history — paged
+        _histPage = 0;
+        renderPaymentHistoryPaged();
       }
 
       /* ═══════════════════════════════════════════════════════════════════════
@@ -3707,6 +3998,399 @@
       }
 
       loadAndInit();
+
+      /* ═══════════════════════════════════════════════════════════════════════
+   🔐  PIN LOGIN
+   PIN is stored as a SHA-256 hash. Default PIN: 1234
+   To change: run btoa(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('NEWPIN')))
+   ═══════════════════════════════════════════════════════════════════════ */
+      const PIN_HASH_KEY = "onyx_pin_hash";
+      // Default PIN 1234 — user can change via UI
+      const DEFAULT_PIN_HASH = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4";
+      let _pinBuffer = "";
+
+      async function sha256hex(str) {
+        const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+      }
+
+      function getStoredPinHash() {
+        return localStorage.getItem(PIN_HASH_KEY) || DEFAULT_PIN_HASH;
+      }
+
+      function pinKey(k) {
+        if (_pinBuffer.length >= 4) return;
+        _pinBuffer += k;
+        updatePinDots();
+        if (_pinBuffer.length === 4) setTimeout(checkPin, 120);
+      }
+
+      function pinDel() {
+        _pinBuffer = _pinBuffer.slice(0, -1);
+        updatePinDots();
+      }
+
+      function pinClear() {
+        _pinBuffer = "";
+        updatePinDots();
+      }
+
+      function updatePinDots() {
+        for (let i = 0; i < 4; i++) {
+          const d = document.getElementById("pd-" + i);
+          if (d) {
+            d.classList.remove("filled","error");
+            if (i < _pinBuffer.length) d.classList.add("filled");
+          }
+        }
+      }
+
+      async function checkPin() {
+        const hash = await sha256hex(_pinBuffer);
+        if (hash === getStoredPinHash()) {
+          // Correct — animate success then hide
+          for (let i = 0; i < 4; i++) {
+            const d = document.getElementById("pd-" + i);
+            if (d) { d.classList.add("filled"); }
+          }
+          setTimeout(() => {
+            document.getElementById("pin-screen").classList.add("hidden");
+            sessionStorage.setItem("onyx_auth", "1");
+          }, 300);
+        } else {
+          // Wrong — shake animation
+          for (let i = 0; i < 4; i++) {
+            const d = document.getElementById("pd-" + i);
+            if (d) { d.classList.remove("filled"); d.classList.add("error"); }
+          }
+          document.getElementById("pin-error").textContent = "PIN incorrecto. Intenta de nuevo.";
+          setTimeout(() => {
+            _pinBuffer = "";
+            for (let i = 0; i < 4; i++) {
+              const d = document.getElementById("pd-" + i);
+              if (d) { d.classList.remove("error"); }
+            }
+            document.getElementById("pin-error").textContent = "";
+          }, 1000);
+        }
+      }
+
+      // Keyboard support for PIN
+      document.addEventListener("keydown", (e) => {
+        const pinVisible = !document.getElementById("pin-screen").classList.contains("hidden");
+        if (pinVisible) {
+          if (e.key >= "0" && e.key <= "9") pinKey(e.key);
+          if (e.key === "Backspace") pinDel();
+          if (e.key === "Escape") pinClear();
+        }
+      });
+
+      // Check if already authenticated this session
+      (function checkAuth() {
+        if (sessionStorage.getItem("onyx_auth") === "1") {
+          document.getElementById("pin-screen").classList.add("hidden");
+        }
+      })();
+
+      /* ═══════════════════════════════════════════════════════════════════════
+   📱  MOBILE SIDEBAR TOGGLE
+   ═══════════════════════════════════════════════════════════════════════ */
+      function toggleSidebar() {
+        const sb = document.querySelector(".sidebar");
+        const btn = document.getElementById("hamburger-btn");
+        const overlay = document.getElementById("sidebar-overlay");
+        const isOpen = sb.classList.contains("open");
+        sb.classList.toggle("open", !isOpen);
+        btn.classList.toggle("open", !isOpen);
+        overlay.classList.toggle("open", !isOpen);
+      }
+
+      function closeSidebar() {
+        document.querySelector(".sidebar").classList.remove("open");
+        document.getElementById("hamburger-btn").classList.remove("open");
+        document.getElementById("sidebar-overlay").classList.remove("open");
+      }
+
+      // Close sidebar when nav item clicked on mobile
+      document.querySelectorAll(".nav-item").forEach(el => {
+        el.addEventListener("click", () => {
+          if (window.innerWidth <= 900) closeSidebar();
+        });
+      });
+
+      /* ═══════════════════════════════════════════════════════════════════════
+   📋  CONTRACT MODAL — ADD / EDIT
+   ═══════════════════════════════════════════════════════════════════════ */
+      function openContractModal(contratoId) {
+        const overlay = document.getElementById("contract-overlay");
+        const title = document.getElementById("contract-modal-title");
+        // Clear form
+        ["cm-id","cm-ref","cm-nombre","cm-tenant1","cm-tenant2","cm-address",
+         "cm-apt","cm-rent","cm-deposit","cm-payday","cm-start","cm-notary","cm-notes"]
+          .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+        document.querySelectorAll(".field-err").forEach(e => e.classList.remove("show"));
+        document.querySelectorAll(".form-input, .form-select, .form-textarea").forEach(e => e.classList.remove("err"));
+
+        if (contratoId) {
+          const c = CONTRATOS.find(x => x.id === contratoId);
+          if (!c) return;
+          title.textContent = "Editar Contrato";
+          document.getElementById("cm-id").value = c.id;
+          document.getElementById("cm-ref").value = c.id;
+          document.getElementById("cm-ref").disabled = true;
+          document.getElementById("cm-nombre").value = c.aptNombre || "";
+          const lines = c.tenant.split("\n");
+          document.getElementById("cm-tenant1").value = lines[0] || "";
+          document.getElementById("cm-tenant2").value = lines[1] ? lines[1].replace(/^& /, "") : "";
+          document.getElementById("cm-address").value = c.address.replace(/\n/g, ", ");
+          document.getElementById("cm-apt").value = c.apt || "";
+          document.getElementById("cm-rent").value = c.rent || "";
+          document.getElementById("cm-deposit").value = c.deposit || "";
+          document.getElementById("cm-payday").value = c.payDay || "";
+          if (c.startBase) document.getElementById("cm-start").value = new Date(c.startBase).toISOString().split("T")[0];
+          document.getElementById("cm-notary").value = c.notary || "";
+          document.getElementById("cm-notes").value = c.notes || "";
+        } else {
+          title.textContent = "Nuevo Contrato";
+          document.getElementById("cm-ref").disabled = false;
+          document.getElementById("cm-start").value = new Date().toISOString().split("T")[0];
+        }
+        overlay.classList.add("open");
+      }
+
+      function closeContractModal() {
+        document.getElementById("contract-overlay").classList.remove("open");
+      }
+
+      function closeContractModalOutside(e) {
+        if (e.target === document.getElementById("contract-overlay")) closeContractModal();
+      }
+
+      function _cmRequired(id, errId) {
+        const el = document.getElementById(id);
+        const val = el ? el.value.trim() : "";
+        if (!val) {
+          el.classList.add("err");
+          document.getElementById(errId).classList.add("show");
+          return false;
+        }
+        el.classList.remove("err");
+        document.getElementById(errId).classList.remove("show");
+        return true;
+      }
+
+      function _cmNumber(id, errId, min = 0) {
+        const el = document.getElementById(id);
+        const val = parseFloat(el ? el.value : "");
+        if (isNaN(val) || val < min) {
+          el.classList.add("err");
+          document.getElementById(errId).classList.add("show");
+          return false;
+        }
+        el.classList.remove("err");
+        document.getElementById(errId).classList.remove("show");
+        return true;
+      }
+
+      async function submitContract() {
+        // Validate
+        let valid = true;
+        valid = _cmRequired("cm-ref","cm-ref-err") && valid;
+        valid = _cmRequired("cm-nombre","cm-nombre-err") && valid;
+        valid = _cmRequired("cm-tenant1","cm-tenant1-err") && valid;
+        valid = _cmRequired("cm-address","cm-address-err") && valid;
+        valid = _cmNumber("cm-rent","cm-rent-err", 1) && valid;
+        valid = _cmNumber("cm-deposit","cm-deposit-err", 0) && valid;
+        valid = _cmNumber("cm-payday","cm-payday-err", 1) && valid;
+        valid = _cmRequired("cm-start","cm-start-err") && valid;
+        if (!valid) return;
+
+        const isEdit = !!document.getElementById("cm-id").value;
+        const tenant2 = document.getElementById("cm-tenant2").value.trim();
+        const tenantStr = tenant2 ? document.getElementById("cm-tenant1").value.trim() + "\n& " + tenant2 : document.getElementById("cm-tenant1").value.trim();
+
+        const payload = {
+          id: document.getElementById("cm-ref").value.trim().toUpperCase(),
+          apt_nombre: document.getElementById("cm-nombre").value.trim(),
+          tenant: tenantStr,
+          address: document.getElementById("cm-address").value.trim(),
+          apt: document.getElementById("cm-apt").value.trim(),
+          rent: parseFloat(document.getElementById("cm-rent").value),
+          deposit: parseFloat(document.getElementById("cm-deposit").value),
+          pay_day: parseInt(document.getElementById("cm-payday").value),
+          start_base: document.getElementById("cm-start").value,
+          notary: document.getElementById("cm-notary").value.trim(),
+          notes: document.getElementById("cm-notes").value.trim(),
+          activo: true,
+        };
+
+        const btn = document.querySelector("#contract-overlay .btn-confirm");
+        const orig = btn.innerHTML;
+        btn.disabled = true; btn.textContent = "Guardando…";
+
+        try {
+          if (isEdit) {
+            await apiFetch("/contratos/" + payload.id, { method: "PUT", body: JSON.stringify(payload) });
+            // Update locally
+            const idx = CONTRATOS.findIndex(c => c.id === payload.id);
+            if (idx >= 0) {
+              CONTRATOS[idx] = { ...CONTRATOS[idx], aptNombre: payload.apt_nombre, tenant: payload.tenant,
+                address: payload.address, apt: payload.apt, rent: payload.rent, deposit: payload.deposit,
+                payDay: payload.pay_day, startBase: new Date(payload.start_base), notary: payload.notary, notes: payload.notes };
+            }
+            showToastMsg("Contrato actualizado — " + payload.id);
+          } else {
+            await apiFetch("/contratos", { method: "POST", body: JSON.stringify(payload) });
+            CONTRATOS.push({ id: payload.id, aptNombre: payload.apt_nombre, tenant: payload.tenant,
+              address: payload.address, apt: payload.apt, rent: payload.rent, deposit: payload.deposit,
+              payDay: payload.pay_day, startBase: new Date(payload.start_base), notary: payload.notary, notes: payload.notes });
+            showToastMsg("Contrato creado — " + payload.id);
+          }
+          closeContractModal();
+          renderAllCards();
+          updateSidebarFinances();
+        } catch (e) {
+          showToastMsg("⚠ Error al guardar: " + e.message, true);
+        }
+        btn.disabled = false; btn.innerHTML = orig;
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════════
+   📄  PDF EXPORT — financial report
+   Uses browser print dialog with a clean print stylesheet
+   ═══════════════════════════════════════════════════════════════════════ */
+      function exportFinancialPDF() {
+        const n = now();
+        const mes = n.getMonth(), año = n.getFullYear();
+        const totalMonthly = CONTRATOS.reduce((s,c) => s + c.rent, 0);
+        const totalDeposits = CONTRATOS.reduce((s,c) => s + c.deposit, 0);
+        const morosos = DetectarMorosos(mes, año);
+        const ingresosEste = CalcularIngresosMensuales(mes, año);
+        const paidCount = CONTRATOS.length - morosos.length;
+
+        const rows = CONTRATOS.map(c => {
+          const paid = PAGOS_HISTORICOS.find(p => p.contratoId === c.id && p.mes === mes && p.año === año);
+          const {deuda} = CalcularDeudaPorApartamento(c);
+          const {end} = getActiveCycle(c.startBase);
+          const dRen = Math.ceil((end - n) / 864e5);
+          return `<tr>
+            <td>${c.id}</td>
+            <td>${c.aptNombre}</td>
+            <td>${c.tenant.split("\n")[0]}</td>
+            <td>RD$${Number(c.rent).toLocaleString("es-DO")}</td>
+            <td style="color:${paid?"#2ebd8e":"#f2415a"};font-weight:600">${paid ? "Pagado" : "Pendiente"}</td>
+            <td>${deuda > 0 ? "RD$"+Number(deuda).toLocaleString("es-DO") : "—"}</td>
+            <td style="color:${dRen < 0?"#f2415a":dRen<=45?"#ecaf42":"#2ebd8e"}">${dRen < 0 ? "VENCIDO" : dRen + "d"}</td>
+          </tr>`;
+        }).join("");
+
+        const histRows = [...PAGOS_HISTORICOS]
+          .sort((a,b) => b.fechaPago - a.fechaPago)
+          .slice(0, 30)
+          .map(p => {
+            const c = CONTRATOS.find(x => x.id === p.contratoId);
+            return `<tr>
+              <td>${p.contratoId}</td>
+              <td>${c ? c.tenant.split("\n")[0] : "—"}</td>
+              <td>${MONTHS_ES_LONG[p.mes]} ${p.año}</td>
+              <td>RD$${Number(p.monto).toLocaleString("es-DO")}</td>
+              <td>${p.metodo}</td>
+              <td>${fmt(p.fechaPago)}</td>
+            </tr>`;
+          }).join("");
+
+        const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+          <title>Onyx Realty — Reporte ${MONTHS_ES_LONG[mes]} ${año}</title>
+          <style>
+            *{margin:0;padding:0;box-sizing:border-box}
+            body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a2e;padding:32px;font-size:12px}
+            h1{font-size:28px;font-weight:300;letter-spacing:0.08em;color:#1a1a2e;margin-bottom:4px}
+            .sub{font-size:10px;color:#666;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:24px}
+            .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+            .kpi{border:1px solid #e0e0e8;border-radius:10px;padding:14px;background:#fafafa}
+            .kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:#888;display:block;margin-bottom:6px}
+            .kpi-num{font-size:20px;font-weight:700;display:block}
+            .kpi-num.gold{color:#c9934a} .kpi-num.em{color:#2ebd8e} .kpi-num.rs{color:#f2415a}
+            h2{font-size:13px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:#444;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid #eee}
+            table{width:100%;border-collapse:collapse;margin-bottom:24px}
+            th{background:#f0f0f6;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;padding:8px 10px;text-align:left;color:#555}
+            td{padding:8px 10px;border-bottom:1px solid #f0f0f0;font-size:11px}
+            tr:last-child td{border-bottom:none}
+            .footer{margin-top:24px;font-size:9px;color:#aaa;text-align:right;padding-top:12px;border-top:1px solid #eee}
+            @media print{body{padding:20px}@page{margin:1.5cm}}
+          </style></head><body>
+          <h1>Onyx Realty</h1>
+          <div class="sub">Reporte Financiero — ${MONTHS_ES_LONG[mes]} ${año} · Arelis Mateo Jiménez</div>
+          <div class="kpis">
+            <div class="kpi"><span class="kpi-label">Ingresos Esperados / Mes</span><span class="kpi-num gold">RD$${Number(totalMonthly).toLocaleString("es-DO")}</span></div>
+            <div class="kpi"><span class="kpi-label">Cobrado Este Mes</span><span class="kpi-num em">RD$${Number(ingresosEste).toLocaleString("es-DO")}</span></div>
+            <div class="kpi"><span class="kpi-label">Morosos Este Mes</span><span class="kpi-num ${morosos.length>0?"rs":"em"}">${morosos.length} de ${CONTRATOS.length}</span></div>
+            <div class="kpi"><span class="kpi-label">Depósitos Retenidos</span><span class="kpi-num">RD$${Number(totalDeposits).toLocaleString("es-DO")}</span></div>
+          </div>
+          <h2>Estado de Contratos — ${MONTHS_ES_LONG[mes]} ${año}</h2>
+          <table><thead><tr><th>ID</th><th>Apartamento</th><th>Inquilino</th><th>Renta</th><th>Estado Pago</th><th>Deuda</th><th>Renovación</th></tr></thead>
+          <tbody>${rows}</tbody></table>
+          <h2>Últimos 30 Pagos Registrados</h2>
+          <table><thead><tr><th>ID</th><th>Inquilino</th><th>Período</th><th>Monto</th><th>Método</th><th>Fecha</th></tr></thead>
+          <tbody>${histRows}</tbody></table>
+          <div class="footer">Generado por Onyx Realty · ${n.toLocaleDateString("es-DO",{day:"2-digit",month:"long",year:"numeric"})} · ${n.toLocaleTimeString("es-DO",{hour:"2-digit",minute:"2-digit"})}</div>
+          </body></html>`;
+
+        const w = window.open("", "_blank", "width=900,height=700");
+        w.document.write(html);
+        w.document.close();
+        w.onload = () => w.print();
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════════
+   📊  PAYMENT HISTORY PAGINATION
+   ═══════════════════════════════════════════════════════════════════════ */
+      let _histPage = 0;
+      const HIST_PAGE_SIZE = 25;
+
+      function renderPaymentHistoryPaged() {
+        const sorted = [...PAGOS_HISTORICOS].sort((a,b) => b.fechaPago - a.fechaPago);
+        const totalPages = Math.ceil(sorted.length / HIST_PAGE_SIZE);
+        const start = _histPage * HIST_PAGE_SIZE;
+        const page = sorted.slice(start, start + HIST_PAGE_SIZE);
+
+        document.getElementById("hist-count").textContent = sorted.length + " registros";
+        document.getElementById("payment-history").innerHTML = page.map(p => {
+          const c = CONTRATOS.find(x => x.id === p.contratoId);
+          const name = c ? c.tenant.split("\n")[0] : "—";
+          return `<div class="hist-row">
+            <span class="hist-id">${p.contratoId}</span>
+            <div><span class="hist-tenant">${name}</span><span class="hist-apt">${MONTHS_ES[p.mes]} ${p.año}</span></div>
+            <span class="hist-method">${p.metodo}</span>
+            <span class="hist-monto">${cur(p.monto)}</span>
+            <span class="hist-date">${fmt(p.fechaPago)}</span>
+          </div>`;
+        }).join('<div class="separator"></div>');
+
+        // Pagination controls
+        if (totalPages > 1) {
+          let pHtml = `<button class="pg-btn" onclick="_histPage=Math.max(0,_histPage-1);renderPaymentHistoryPaged()" ${_histPage===0?"disabled":""}>‹ Anterior</button>`;
+          for (let i = 0; i < totalPages; i++) {
+            pHtml += `<button class="pg-btn ${i===_histPage?"active":""}" onclick="_histPage=${i};renderPaymentHistoryPaged()">${i+1}</button>`;
+          }
+          pHtml += `<button class="pg-btn" onclick="_histPage=Math.min(${totalPages-1},_histPage+1);renderPaymentHistoryPaged()" ${_histPage===totalPages-1?"disabled":""}>Siguiente ›</button>`;
+          document.getElementById("payment-pagination").innerHTML = pHtml;
+        } else {
+          document.getElementById("payment-pagination").innerHTML = "";
+        }
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════════
+   🔔  TOAST — add error variant support
+   ═══════════════════════════════════════════════════════════════════════ */
+      function showToastMsg(msg, isError = false) {
+        const toast = document.getElementById("toast");
+        document.getElementById("toast-text").textContent = msg;
+        toast.classList.toggle("err", isError);
+        toast.classList.add("show");
+        clearTimeout(_toastTimer);
+        _toastTimer = setTimeout(() => toast.classList.remove("show"), 3400);
+      }
     </script>
   </body>
 </html>

@@ -12,6 +12,30 @@ app.get('/contratos', async (req, res) => {
   catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+app.post('/contratos', async (req, res) => {
+  const { id, apt_nombre, tenant, address, apt, rent, deposit, pay_day, start_base, notary, notes } = req.body;
+  if (!id || !tenant || !rent) return res.status(400).json({ error: 'Faltan campos requeridos' });
+  try {
+    const r = await pool.query(
+      'INSERT INTO contratos (id, apt_nombre, tenant, address, apt, rent, deposit, pay_day, start_base, notary, notes, activo) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,true) RETURNING *',
+      [id, apt_nombre, tenant, address, apt, parseFloat(rent), parseFloat(deposit||0), parseInt(pay_day), start_base, notary||'', notes||'']
+    );
+    res.json(r.rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/contratos/:id', async (req, res) => {
+  const { apt_nombre, tenant, address, apt, rent, deposit, pay_day, start_base, notary, notes } = req.body;
+  try {
+    const r = await pool.query(
+      'UPDATE contratos SET apt_nombre=$1,tenant=$2,address=$3,apt=$4,rent=$5,deposit=$6,pay_day=$7,start_base=$8,notary=$9,notes=$10 WHERE id=$11 RETURNING *',
+      [apt_nombre, tenant, address, apt, parseFloat(rent), parseFloat(deposit||0), parseInt(pay_day), start_base, notary||'', notes||'', req.params.id]
+    );
+    if (r.rowCount === 0) return res.status(404).json({ error: 'Contrato no encontrado' });
+    res.json(r.rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/pagos', async (req, res) => {
   try { const r = await pool.query('SELECT * FROM pagos ORDER BY fecha_pago DESC'); res.json(r.rows); }
   catch(e) { res.status(500).json({ error: e.message }); }
@@ -19,7 +43,16 @@ app.get('/pagos', async (req, res) => {
 
 app.post('/pagos', async (req, res) => {
   const { contrato_id, monto, fecha_pago, mes, anio, metodo, notas } = req.body;
+  if (!contrato_id || !monto || !fecha_pago || mes == null || !anio)
+    return res.status(400).json({ error: 'Faltan campos requeridos: contrato_id, monto, fecha_pago, mes, anio' });
+  if (isNaN(parseFloat(monto)) || parseFloat(monto) <= 0)
+    return res.status(400).json({ error: 'Monto inválido' });
+  if (mes < 1 || mes > 12)
+    return res.status(400).json({ error: 'Mes inválido (1-12)' });
   try {
+    // Verify contract exists
+    const chk = await pool.query('SELECT id FROM contratos WHERE id = $1 AND activo = true', [contrato_id]);
+    if (chk.rowCount === 0) return res.status(400).json({ error: 'Contrato no encontrado o inactivo' });
     const r = await pool.query(
       'INSERT INTO pagos (contrato_id, monto, fecha_pago, mes, anio, metodo, notas) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
       [contrato_id, monto, fecha_pago, mes, anio, metodo||'transferencia', notas||null]
