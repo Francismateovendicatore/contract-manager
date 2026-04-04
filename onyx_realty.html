@@ -3638,30 +3638,55 @@
         ).reduce((s, p) => s + p.monto, 0);
       }
       function DetectarMorosos(mes, año) {
-        // REGLA: moroso = contrato activo este mes
-        //                 + payDay de este mes YA pasó (hoy >= payDay)
-        //                 + NO existe pago registrado para este mes
-        // Sin deuda acumulada de meses anteriores. Solo el mes actual.
+        // REGLA DEFINITIVA:
+        // Un inquilino es moroso si tiene AL MENOS UN período vencido sin pago:
+        //   - Meses ANTERIORES al actual → siempre vencidos (payDay ya pasó)
+        //   - Mes ACTUAL → solo si hoy >= payDay
+        // Se escanean todos los meses desde el inicio del contrato.
         const n = now();
+        const todayDay = n.getDate();
+
         return CONTRATOS.filter((c) => {
-          // 1. Contrato debe estar activo este mes
           const cs =
             c.startBase instanceof Date ? c.startBase : new Date(c.startBase);
-          const active =
-            cs.getFullYear() < año ||
-            (cs.getFullYear() === año && cs.getMonth() <= mes);
-          if (!active) return false;
+          const startY = cs.getFullYear();
+          const startM = cs.getMonth(); // 0-indexed
 
-          // 2. El payDay de este mes debe haber pasado
-          //    (solo aplica cuando revisamos el mes actual)
-          if (mes === n.getMonth() && año === n.getFullYear()) {
-            if (n.getDate() < (c.payDay || 1)) return false; // fecha aún no llega
+          // Scan every month from contract start → current month
+          let scanY = startY;
+          let scanM = startM;
+
+          while (
+            scanY < año ||
+            (scanY === año && scanM <= mes)
+          ) {
+            const isPast = scanY < año || (scanY === año && scanM < mes);
+            const isCurrent = scanY === año && scanM === mes;
+
+            // Is this period's payment now due?
+            const due =
+              isPast ||
+              (isCurrent && todayDay >= (c.payDay || 1));
+
+            if (due) {
+              const hasPaid = PAGOS_HISTORICOS.some(
+                (p) =>
+                  p.contratoId === c.id &&
+                  p.mes === scanM &&
+                  p.año === scanY,
+              );
+              if (!hasPaid) return true; // Found unpaid due period → moroso
+            }
+
+            // Advance to next month
+            scanM++;
+            if (scanM > 11) {
+              scanM = 0;
+              scanY++;
+            }
           }
 
-          // 3. No debe existir pago registrado para este mes
-          return !PAGOS_HISTORICOS.some(
-            (p) => p.contratoId === c.id && p.mes === mes && p.año === año,
-          );
+          return false;
         });
       }
       function CalcularDeudaPorApartamento(c) {
@@ -3696,12 +3721,13 @@
           (p) => p.contratoId === c.id,
         ).length;
 
-        // DEUDA = solo el mes actual.
-        // Si hoy >= payDay y no pagó este mes → debe la renta de este mes.
-        // Nunca se acumula deuda de meses anteriores en este cálculo.
+        // DEUDA = c.rent si este inquilino tiene algún período vencido sin pagar.
+        // Usa la misma lógica que DetectarMorosos (multi-mes) pero limitada
+        // al monto de UN mes (sin acumular deuda histórica enorme).
+        const esMoroso = DetectarMorosos(mes, año).some((x) => x.id === c.id);
         const payDayPassed = n.getDate() >= pd;
 
-        const deuda = payDayPassed && !paidThisMonth ? c.rent : 0;
+        const deuda = esMoroso ? c.rent : 0;
         const cobrado = paidThisMonth ? c.rent : 0;
         const esperado = payDayPassed ? c.rent : 0;
         const mesesTranscurridos = payDayPassed ? 1 : 0;
