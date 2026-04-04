@@ -3638,24 +3638,37 @@
         ).reduce((s, p) => s + p.monto, 0);
       }
       function DetectarMorosos(mes, año) {
+        // A contract is moroso if it has ANY overdue unpaid period.
+        // Logic per period: payDay passed for that month + no payment recorded.
+        // For the current month: compare today vs payDay.
+        // For past months: payDay always considered passed.
         const n = now();
         return CONTRATOS.filter((c) => {
-          const cs = new Date(c.startBase);
-          // Contract must be active this month
-          const active =
-            cs.getFullYear() < año ||
-            (cs.getFullYear() === año && cs.getMonth() <= mes);
-          if (!active) return false;
+          const cs = c.startBase instanceof Date ? c.startBase : new Date(c.startBase);
+          const pd = c.payDay || 1;
 
-          // payDay grace applies every month for ALL contracts:
-          // if today < payDay, the payment is not yet due → not moroso.
-          if (mes === n.getMonth() && año === n.getFullYear()) {
-            if (n.getDate() < (c.payDay || 1)) return false;
+          // Scan every month from contract start up to the requested (mes, año)
+          let chkM = cs.getMonth();
+          let chkY = cs.getFullYear();
+
+          while (chkY < año || (chkY === año && chkM <= mes)) {
+            const isCurrent = chkM === n.getMonth() && chkY === n.getFullYear();
+            // For current month → payDay must have passed; for past months → always overdue
+            const overdueThisMonth = isCurrent ? n.getDate() >= pd : true;
+
+            if (overdueThisMonth) {
+              const paid = PAGOS_HISTORICOS.some(
+                (p) => p.contratoId === c.id && p.mes === chkM && p.año === chkY,
+              );
+              if (!paid) return true; // found at least one unpaid overdue period
+            }
+
+            // Advance to next month
+            chkM++;
+            if (chkM > 11) { chkM = 0; chkY++; }
           }
 
-          return !PAGOS_HISTORICOS.some(
-            (p) => p.contratoId === c.id && p.mes === mes && p.año === año,
-          );
+          return false;
         });
       }
       function CalcularDeudaPorApartamento(c) {
@@ -3690,13 +3703,27 @@
           (p) => p.contratoId === c.id,
         ).length;
 
-        // payDay grace applies every month: if today < payDay, payment not yet due.
-        const payDayPassed = n.getDate() >= pd;
-
-        const deuda = payDayPassed && !paidThisMonth ? c.rent : 0;
+        // Scan all months from startBase to now and accumulate total debt
+        const csM = cs.getMonth(), csY = cs.getFullYear();
+        let totalDeuda = 0, totalEsperado = 0, totalMesesTranscurridos = 0;
+        let chkM = csM, chkY = csY;
+        while (chkY < año || (chkY === año && chkM <= mes)) {
+          const isCurrent = chkM === n.getMonth() && chkY === n.getFullYear();
+          const overdueThisMonth = isCurrent ? n.getDate() >= pd : true;
+          if (overdueThisMonth) {
+            totalMesesTranscurridos++;
+            totalEsperado += c.rent;
+            const hasPaid = PAGOS_HISTORICOS.some(
+              (p) => p.contratoId === c.id && p.mes === chkM && p.año === chkY,
+            );
+            if (!hasPaid) totalDeuda += c.rent;
+          }
+          chkM++; if (chkM > 11) { chkM = 0; chkY++; }
+        }
+        const deuda = totalDeuda;
         const cobrado = paidThisMonth ? c.rent : 0;
-        const esperado = payDayPassed ? c.rent : 0;
-        const mesesTranscurridos = payDayPassed ? 1 : 0;
+        const esperado = totalEsperado;
+        const mesesTranscurridos = totalMesesTranscurridos;
 
         return {
           esperado,
