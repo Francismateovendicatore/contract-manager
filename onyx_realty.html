@@ -3649,8 +3649,10 @@
         return CONTRATOS.filter((c) => {
           const cs =
             c.startBase instanceof Date ? c.startBase : new Date(c.startBase);
-          const startY = cs.getFullYear();
-          const startM = cs.getMonth(); // 0-indexed
+          // Use UTC methods — ISO date strings ("2026-04-01") are UTC midnight,
+          // so getUTCMonth() gives the CORRECT month regardless of local timezone.
+          const startY = cs.getUTCFullYear();
+          const startM = cs.getUTCMonth(); // 0-indexed
 
           // Scan every month from contract start → current month
           let scanY = startY;
@@ -3698,8 +3700,8 @@
         // Contract must have started on or before this month
         const cs = new Date(c.startBase);
         const contratoActivo =
-          cs.getFullYear() < año ||
-          (cs.getFullYear() === año && cs.getMonth() <= mes);
+          cs.getUTCFullYear() < año ||
+          (cs.getUTCFullYear() === año && cs.getUTCMonth() <= mes);
         if (!contratoActivo) {
           return {
             esperado: 0,
@@ -4310,8 +4312,8 @@
           const esp = CONTRATOS.filter((c) => {
             const cs = new Date(c.startBase);
             return (
-              cs.getFullYear() < y ||
-              (cs.getFullYear() === y && cs.getMonth() <= m)
+              cs.getUTCFullYear() < y ||
+              (cs.getUTCFullYear() === y && cs.getUTCMonth() <= m)
             );
           }).reduce((s, c) => s + c.rent, 0);
           const diff = cob - esp;
@@ -5040,7 +5042,7 @@
               apt: c.apt,
               rent: parseFloat(c.rent),
               deposit: parseFloat(c.deposit),
-              startBase: new Date((c.start_base || "").includes("T") ? c.start_base : c.start_base + "T12:00:00"),
+              startBase: new Date(String(c.start_base || "2000-01-01").substring(0, 10)),
               payDay: c.pay_day,
               notary: c.notary || "",
               notes: c.notes || "",
@@ -5440,7 +5442,7 @@
                 rent: payload.rent,
                 deposit: payload.deposit,
                 payDay: payload.pay_day,
-                startBase: new Date((payload.start_base || "").includes("T") ? payload.start_base : payload.start_base + "T12:00:00"),
+                startBase: new Date(String(payload.start_base || "2000-01-01").substring(0, 10)),
                 notary: payload.notary,
                 notes: payload.notes,
               };
@@ -5474,7 +5476,7 @@
               rent: payload.rent,
               deposit: payload.deposit,
               payDay: payload.pay_day,
-              startBase: new Date((payload.start_base || "").includes("T") ? payload.start_base : payload.start_base + "T12:00:00"),
+              startBase: new Date(String(payload.start_base || "2000-01-01").substring(0, 10)),
               notary: payload.notary,
               notes: payload.notes,
             });
