@@ -3134,8 +3134,8 @@
    LOCAL-STORAGE FALLBACK
    Keys are versioned so stale data doesn't cause parse errors.
    ═══════════════════════════════════════════════════════════════════════ */
-      const LS_PAGOS = "onyx_pagos_v3";
-      const LS_SA = "onyx_sa_v3";
+      const LS_PAGOS = "onyx_pagos_v4";
+      const LS_SA = "onyx_sa_v4";
 
       function lsSavePagos() {
         try {
@@ -3399,14 +3399,17 @@
 
         // Alerts
         const alerts = [];
-        morosos.forEach((c) =>
+        morosos.forEach((c) => {
+          // Only alert if this contract has at least 1 recorded payment
+          const hasHistory = PAGOS_HISTORICOS.some(p => p.contratoId === c.id);
+          if (!hasHistory) return;
           alerts.push({
             type: "rs",
             text: "Pago pendiente — " + c.tenant.split("\n")[0],
             sub:
               c.id + " · " + MONTHS_ES[mes] + " " + año + " · " + cur(c.rent),
-          }),
-        );
+          });
+        });
         CONTRATOS.forEach((c) => {
           const s = getStatus(c);
           if (s === "am") {
@@ -3647,9 +3650,10 @@
         $("fin-summary").textContent =
           paidCount + " pagados · " + pendCount + " pendientes";
 
-        // Debt per apartment
+        // Debt per apartment — only show contracts with at least 1 payment recorded
         let totalDebt = 0;
-        $("debt-list").innerHTML = CONTRATOS.map((c) => {
+        const contratosConPagos = CONTRATOS.filter(c => PAGOS_HISTORICOS.some(p => p.contratoId === c.id));
+        $("debt-list").innerHTML = contratosConPagos.length === 0 ? '<p style="font-size:12px;color:var(--t3);padding:10px 0">Sin deudas registradas.</p>' : contratosConPagos.map((c) => {
           const { deuda, cobrado, esperado, mesesTranscurridos } = CalcularDeudaPorApartamento(c);
           totalDebt += deuda;
           const pct = esperado > 0 ? Math.min(100, Math.round((cobrado / esperado) * 100)) : 100;
@@ -3671,6 +3675,7 @@
     </div>`;
         }).join("");
         $("total-debt").textContent =
+          contratosConPagos.length === 0 ? "" :
           totalDebt > 0 ? "Deuda total: " + cur(totalDebt) : "✓ Sin deudas";
 
         // Monthly summary — only show months with actual payments recorded
@@ -4228,10 +4233,10 @@
 
         // 3. Fetch live data from server
         try {
-          const [cr, pr] = await Promise.all([
+          const [cr] = await Promise.all([
             apiFetch("/contratos"),
-            apiFetch("/pagos"),
           ]);
+          const pr = []; // pagos loaded from localStorage only
 
           if (Array.isArray(cr) && cr.length > 0) {
             CONTRATOS = cr.map((c) => ({
@@ -4249,24 +4254,11 @@
             }));
           }
 
-          if (Array.isArray(pr) && pr.length > 0) {
-            // API has real data — use it, replacing seed
-            PAGOS_HISTORICOS = pr.map((p) => ({
-              id: p.id,
-              contratoId: p.contrato_id,
-              aptId: p.contrato_id,
-              monto: parseFloat(p.monto),
-              fechaPago: new Date(p.fecha_pago),
-              mes: Math.max(0, (p.mes || 1) - 1),
-              año: p.anio,
-              metodo: p.metodo,
-              notas: p.notas || "",
-              auto: true,
-            }));
-            lsSavePagos();
-          } else if (lsPagos.length === 0) {
-            // API returned empty and localStorage was empty — keep seed but don't persist it
-            // (seed will be replaced once real payments are registered)
+          // NOTE: API pagos are NOT loaded — PAGOS_HISTORICOS is managed
+          // exclusively via localStorage + SEED to avoid displaying dev/test
+          // entries from the database.  New payments registered through the UI
+          // are persisted to both the API and localStorage as normal.
+          if (lsPagos.length === 0) {
             PAGOS_HISTORICOS = SEED_PAGOS;
           }
 
