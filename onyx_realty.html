@@ -3645,7 +3645,8 @@
         const n = now();
         return CONTRATOS.filter((c) => {
           // 1. Contrato debe estar activo este mes
-          const cs = c.startBase instanceof Date ? c.startBase : new Date(c.startBase);
+          const cs =
+            c.startBase instanceof Date ? c.startBase : new Date(c.startBase);
           const active =
             cs.getFullYear() < año ||
             (cs.getFullYear() === año && cs.getMonth() <= mes);
