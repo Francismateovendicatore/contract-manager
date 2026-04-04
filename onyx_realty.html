@@ -2963,25 +2963,25 @@
       function getActiveCycle(startBase) {
         let start = startBase instanceof Date ? new Date(startBase) : new Date(startBase);
         if (isNaN(start.getTime())) start = new Date();
-        // If startBase is in the future, first cycle is startBase → startBase+1yr
         const n = now();
+        // Contract hasn't started yet — return upcoming start/end so UI can show "pending"
         if (start > n) {
           const end = new Date(start);
           end.setFullYear(end.getFullYear() + 1);
-          return { start, end };
+          return { start, end, pending: true };
         }
         // Walk annual cycles forward until we find the active one
         let iterations = 0;
         while (iterations++ < 50) {
           const end = new Date(start);
           end.setFullYear(end.getFullYear() + 1);
-          if (end > n) return { start, end };
+          if (end > n) return { start, end, pending: false };
           start = end;
         }
         // Fallback (should never reach here)
         const end = new Date(start);
         end.setFullYear(end.getFullYear() + 1);
-        return { start, end };
+        return { start, end, pending: false };
       }
       function msToDhms(ms) {
         const t = Math.max(0, Math.floor(ms / 1000));
@@ -3022,7 +3022,8 @@
       const THRESH_WARNING  = 60;  // days — 🟡 amber warning
 
       function getStatus(c) {
-        const { end } = getActiveCycle(c.startBase);
+        const { end, pending } = getActiveCycle(c.startBase);
+        if (pending) return "am";
         const d = Math.ceil((end - now()) / 864e5);
         return d < 0 ? "rs" : d <= THRESH_CRITICAL ? "rs" : d <= THRESH_WARNING ? "am" : "em";
       }
@@ -3105,17 +3106,25 @@
         const mesesRegistrados = PAGOS_HISTORICOS.filter(
           (p) => p.contratoId === c.id,
         ).length;
-        // Real elapsed months since contract start
+        // Count elapsed months only from the CURRENT annual cycle start
+        // (avoids inflated historical debt when only recent payments are in the DB)
         const n = now();
-        const start = new Date(c.startBase);
-        const mesesTranscurridos = Math.max(0,
-          (n.getFullYear() - start.getFullYear()) * 12 + (n.getMonth() - start.getMonth()) + 1
+        const { start: cycleStart } = getActiveCycle(c.startBase);
+        // If cycle hasn't started yet (future contract), expected = 0
+        const mesesTranscurridos = cycleStart > n ? 0 : Math.max(0,
+          (n.getFullYear() - cycleStart.getFullYear()) * 12 +
+          (n.getMonth() - cycleStart.getMonth()) + 1
         );
+        // Only count payments made on or after cycleStart
+        const cobradoCiclo = PAGOS_HISTORICOS.filter(
+          (p) => p.contratoId === c.id && new Date(p.fechaPago) >= cycleStart,
+        ).reduce((s, p) => s + p.monto, 0);
         const esperado = mesesTranscurridos * c.rent;
         return {
           esperado,
-          cobrado,
-          deuda: Math.max(0, esperado - cobrado),
+          cobrado: cobradoCiclo,
+          cobradoTotal: cobrado,
+          deuda: Math.max(0, esperado - cobradoCiclo),
           meses: mesesRegistrados,
           mesesTranscurridos,
         };
@@ -3641,19 +3650,21 @@
         // Debt per apartment
         let totalDebt = 0;
         $("debt-list").innerHTML = CONTRATOS.map((c) => {
-          const { deuda, cobrado, meses } = CalcularDeudaPorApartamento(c);
+          const { deuda, cobrado, esperado, mesesTranscurridos } = CalcularDeudaPorApartamento(c);
           totalDebt += deuda;
-          const pct =
-            meses > 0 ? Math.min(100, (cobrado / (meses * c.rent)) * 100) : 100;
+          const pct = esperado > 0 ? Math.min(100, Math.round((cobrado / esperado) * 100)) : 100;
           const barColor =
             deuda === 0 ? "var(--em)"
             : deuda > c.rent * 2 ? "var(--rs)"
             : "var(--am)";
+          const detalleLabel = mesesTranscurridos > 0
+            ? `${mesesTranscurridos} mes${mesesTranscurridos > 1 ? "es" : ""} del ciclo · ${cur(c.rent)}/mes`
+            : "Ciclo recién iniciado";
           return `<div class="debt-item">
       <span class="debt-apt-id">${c.id}</span>
       <div class="debt-name">
         <span class="debt-tenant">${c.tenant.split("\n")[0]}</span>
-        <span class="debt-detail">${meses} meses · ${cur(c.rent)}/mes</span>
+        <span class="debt-detail">${detalleLabel}</span>
         <div class="debt-bar-track"><div class="debt-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
       </div>
       <div>${deuda === 0 ? '<span class="debt-amount zero">✓ Al día</span>' : `<span class="debt-amount positive">${cur(deuda)}</span>`}</div>
@@ -3662,23 +3673,19 @@
         $("total-debt").textContent =
           totalDebt > 0 ? "Deuda total: " + cur(totalDebt) : "✓ Sin deudas";
 
-        // Monthly summary table
+        // Monthly summary — only show months with actual payments recorded
         let rows = "";
-        for (let i = 5; i >= 0; i--) {
-          let m = mes - i,
-            y = año;
-          if (m < 0) {
-            m += 12;
-            y--;
-          }
+        let monthsWithData = 0;
+        for (let i = 11; i >= 0; i--) {
+          let m = mes - i, y = año;
+          if (m < 0) { m += 12; y--; }
+          const cob = CalcularIngresosMensuales(m, y);
+          if (cob === 0) continue; // skip months with no recorded payments
+          monthsWithData++;
           const esp = CONTRATOS.filter((c) => {
             const cs = new Date(c.startBase);
-            return (
-              cs.getFullYear() < y ||
-              (cs.getFullYear() === y && cs.getMonth() <= m)
-            );
+            return (cs.getFullYear() < y || (cs.getFullYear() === y && cs.getMonth() <= m));
           }).reduce((s, c) => s + c.rent, 0);
-          const cob = CalcularIngresosMensuales(m, y);
           const diff = cob - esp;
           rows += `<tr>
       <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t2)">${MONTHS_ES_LONG[m]} ${y}</td>
@@ -3686,6 +3693,9 @@
       <td><span class="td-monto">${cur(cob)}</span></td>
       <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:${diff >= 0 ? "var(--em)" : "var(--rs)"}">${diff >= 0 ? "+" : ""}${cur(diff)}</td>
     </tr>`;
+        }
+        if (monthsWithData === 0) {
+          rows = `<tr><td colspan="4" style="text-align:center;color:var(--t3);font-size:11px;padding:16px">Sin pagos registrados aún.</td></tr>`;
         }
         $("monthly-totals-tbody").innerHTML = rows;
 
@@ -3958,7 +3968,8 @@
       }
 
       function saContractStatus(c) {
-        const { end } = getActiveCycle(c.startBase);
+        const { end, pending } = getActiveCycle(c.startBase);
+        if (pending) return { label: "Pendiente de inicio", cls: "am" };
         const days = Math.ceil((end - now()) / 864e5);
         if (days < 0)                 return { label: "Vencido",          cls: "rs" };
         if (days <= THRESH_CRITICAL)  return { label: "Próximo a vencer", cls: "rs" };
@@ -3985,12 +3996,15 @@
         const c = CONTRATOS.find((x) => x.id === id);
         if (!c) return "";
         const st = saGetState(id);
-        const { end } = getActiveCycle(c.startBase);
+        const cycle = getActiveCycle(c.startBase);
+        const { end, pending } = cycle;
         const status = saContractStatus(c);
         const exp = st.expulsion;
-        const rem = msToDhms(end - now());
+        // For pending (future) contracts, show time until start; otherwise time until cycle end
+        const countdownTarget = pending ? new Date(c.startBase) : end;
+        const rem = msToDhms(countdownTarget - now());
         const daysLeft = Math.ceil((end - now()) / 864e5);
-        const alertClass = exp ? "" : daysLeft <= THRESH_CRITICAL ? " critical-alert" : daysLeft <= THRESH_WARNING ? " warning-alert" : "";
+        const alertClass = exp ? "" : pending ? "" : daysLeft <= THRESH_CRITICAL ? " critical-alert" : daysLeft <= THRESH_WARNING ? " warning-alert" : "";
         const cdColor =
           status.cls === "em" ? "var(--em)"
           : status.cls === "am" ? "var(--am)"
@@ -4090,9 +4104,9 @@
     <div class="sa-card-body">
       <div class="sa-dates">
         <div><span class="sa-cd">Inicio</span><span class="sa-cv">${fmt(new Date(c.startBase))}</span></div>
-        <div><span class="sa-cd">Vencimiento</span><span class="sa-cv">${fmt(end)}</span></div>
-        <div><span class="sa-cd">Restante</span>
-          <div id="sa-cd-${id}" style="color:${cdColor};font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500">
+        <div><span class="sa-cd">Vencimiento</span><span class="sa-cv">${pending ? "—" : fmt(end)}</span></div>
+        <div><span class="sa-cd">${pending ? "Inicia en" : "Restante"}</span>
+          <div id="sa-cd-${id}" style="color:${pending ? "var(--am)" : cdColor};font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500">
             ${pad(rem.d, 3)}d ${pad(rem.h)}h ${pad(rem.m)}m
           </div>
         </div>
