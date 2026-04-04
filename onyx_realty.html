@@ -2992,12 +2992,17 @@
         ).reduce((s, p) => s + p.monto, 0);
       }
       function DetectarMorosos(mes, año) {
+        const n = now();
         return CONTRATOS.filter((c) => {
           const cs = new Date(c.startBase);
           const active =
             cs.getFullYear() < año ||
             (cs.getFullYear() === año && cs.getMonth() <= mes);
           if (!active) return false;
+          // Si es el mes actual, solo contar como moroso si ya pasó el día de pago
+          if (mes === n.getMonth() && año === n.getFullYear()) {
+            if (n.getDate() < (c.payDay || 1)) return false;
+          }
           return !PAGOS_HISTORICOS.some(
             (p) => p.contratoId === c.id && p.mes === mes && p.año === año,
           );
@@ -3015,9 +3020,12 @@
         const n = now();
         const { start: cycleStart } = getActiveCycle(c.startBase);
         // If cycle hasn't started yet (future contract), expected = 0
+        // Solo contar el mes actual si ya llegó el día de pago de este contrato
+        const payDayPassed = n.getDate() >= (c.payDay || 1);
         const mesesTranscurridos = cycleStart > n ? 0 : Math.max(0,
           (n.getFullYear() - cycleStart.getFullYear()) * 12 +
-          (n.getMonth() - cycleStart.getMonth()) + 1
+          (n.getMonth() - cycleStart.getMonth()) +
+          (payDayPassed ? 1 : 0)
         );
         // Only count payments made on or after cycleStart
         const cobradoCiclo = PAGOS_HISTORICOS.filter(
@@ -4133,14 +4141,17 @@
         PAGOS_HISTORICOS = [];
         init();
 
-        // Cargar contratos Y pagos desde Supabase (fuente única de verdad)
+        // Cargar contratos, pagos Y expulsiones desde Supabase al inicio
         try {
-          const [cr, pr] = await Promise.all([
+          const [cr, pr, er] = await Promise.all([
             sbQuery(() =>
               _sb.from("contratos").select("*").eq("activo", true).order("id")
             ),
             sbQuery(() =>
               _sb.from("pagos").select("*").order("fecha_pago", { ascending: false })
+            ),
+            sbQuery(() =>
+              _sb.from("expulsiones").select("*")
             ),
           ]);
 
@@ -4173,6 +4184,18 @@
               notas: p.notas || "",
               auto: false,
             }));
+          }
+
+          // Poblar SA_STATE con expulsiones desde Supabase → persistencia garantizada
+          if (Array.isArray(er)) {
+            er.forEach((exp) => {
+              const st = saGetState(exp.contrato_id);
+              st.expulsion = true;
+              st.expMotivo = exp.motivo || "";
+              if (!st.fechaExpulsion) st.fechaExpulsion = exp.created_at || new Date().toISOString();
+              if (exp.motivo && exp.motivo.trim()) st.motivoGuardado = true;
+            });
+            lsSaveSA();
           }
 
           // Re-render con datos reales
