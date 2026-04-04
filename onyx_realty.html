@@ -3009,34 +3009,32 @@
         });
       }
       function CalcularDeudaPorApartamento(c) {
-        const cobrado = PAGOS_HISTORICOS.filter(
-          (p) => p.contratoId === c.id,
-        ).reduce((s, p) => s + p.monto, 0);
-        const mesesRegistrados = PAGOS_HISTORICOS.filter(
-          (p) => p.contratoId === c.id,
-        ).length;
-        // Count elapsed months only from the CURRENT annual cycle start
-        // (avoids inflated historical debt when only recent payments are in the DB)
+        // Deuda = solo el mes actual si ya pasó el día de pago y no se ha cobrado.
+        // No acumular meses históricos — el sistema se está configurando desde cero.
         const n = now();
-        const { start: cycleStart } = getActiveCycle(c.startBase);
-        // If cycle hasn't started yet (future contract), expected = 0
-        // Solo contar el mes actual si ya llegó el día de pago de este contrato
-        const payDayPassed = n.getDate() >= (c.payDay || 1);
-        const mesesTranscurridos = cycleStart > n ? 0 : Math.max(0,
-          (n.getFullYear() - cycleStart.getFullYear()) * 12 +
-          (n.getMonth() - cycleStart.getMonth()) +
-          (payDayPassed ? 1 : 0)
+        const mes = n.getMonth();
+        const año = n.getFullYear();
+        const pd = c.payDay || 1;
+        const payDayPassed = n.getDate() >= pd;
+
+        const paidThisMonth = PAGOS_HISTORICOS.some(
+          p => p.contratoId === c.id && p.mes === mes && p.año === año
         );
-        // Only count payments made on or after cycleStart
-        const cobradoCiclo = PAGOS_HISTORICOS.filter(
-          (p) => p.contratoId === c.id && new Date(p.fechaPago) >= cycleStart,
-        ).reduce((s, p) => s + p.monto, 0);
-        const esperado = mesesTranscurridos * c.rent;
+        const cobradoTotal = PAGOS_HISTORICOS.filter(p => p.contratoId === c.id)
+          .reduce((s, p) => s + p.monto, 0);
+        const mesesRegistrados = PAGOS_HISTORICOS.filter(p => p.contratoId === c.id).length;
+
+        // deuda = rent si payDay pasó y no pagó este mes; 0 si aún no vence o ya pagó
+        const deuda = (payDayPassed && !paidThisMonth) ? c.rent : 0;
+        const cobrado = paidThisMonth ? c.rent : 0;
+        const esperado = payDayPassed ? c.rent : 0;
+        const mesesTranscurridos = payDayPassed ? 1 : 0;
+
         return {
           esperado,
-          cobrado: cobradoCiclo,
-          cobradoTotal: cobrado,
-          deuda: Math.max(0, esperado - cobradoCiclo),
+          cobrado,
+          cobradoTotal,
+          deuda,
           meses: mesesRegistrados,
           mesesTranscurridos,
         };
@@ -3580,7 +3578,7 @@
         // Monthly summary — only show months with actual payments recorded
         let rows = "";
         let monthsWithData = 0;
-        for (let i = 11; i >= 0; i--) {
+        for (let i = 35; i >= 0; i--) { // 36-month lookback
           let m = mes - i, y = año;
           if (m < 0) { m += 12; y--; }
           const cob = CalcularIngresosMensuales(m, y);
