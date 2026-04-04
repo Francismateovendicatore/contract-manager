@@ -2986,6 +2986,27 @@
         "Diciembre",
       ];
 
+      /* ── MONTH NORMALIZATION ─────────────────────────────────────────────
+         Legacy records (via server.js API) stored mes as 0-indexed (0-11).
+         New Supabase-direct records store mes as 1-indexed (1-12).
+         We use fecha_pago's actual month as a tiebreaker to pick the
+         correct interpretation, falling back to 1-indexed (subtract 1).
+      ────────────────────────────────────────────────────────────────────── */
+      function normalizarMes(dbMes, fechaPagoStr) {
+        // Edge cases: only possible in one convention
+        if (dbMes === 0) return 0;   // 0-indexed January (impossible in 1-indexed)
+        if (dbMes === 12) return 11; // 1-indexed December (impossible in 0-indexed)
+        // For 1-11: use fecha_pago month as reference
+        const fpDate = new Date((fechaPagoStr || "") + "T12:00:00");
+        if (!isNaN(fpDate.getTime())) {
+          const fpMes = fpDate.getMonth(); // 0-indexed
+          if (dbMes - 1 === fpMes) return dbMes - 1; // 1-indexed interpretation matches
+          if (dbMes     === fpMes) return dbMes;       // 0-indexed interpretation matches
+        }
+        // Fallback: assume 1-indexed (current standard)
+        return dbMes - 1;
+      }
+
       function CalcularIngresosMensuales(mes, año) {
         return PAGOS_HISTORICOS.filter(
           (p) => p.mes === mes && p.año === año,
@@ -3719,16 +3740,16 @@
         // Recargar pagos desde Supabase para mantener sincronía
         try {
           const pr = await sbQuery(() =>
-            _sb.from("pagos").select("*").order("fecha_pago", { ascending: false })
-          );
+              _sb.from("pagos").select("*").order("fecha_pago", { ascending: false })
+            );
           if (Array.isArray(pr)) {
             PAGOS_HISTORICOS = pr.map((p) => ({
               id: p.id,
               contratoId: p.contrato_id,
               aptId: p.contrato_id,
               monto: parseFloat(p.monto),
-              fechaPago: new Date(p.fecha_pago),
-              mes: p.mes - 1,
+              fechaPago: new Date(p.fecha_pago + "T12:00:00"),
+              mes: normalizarMes(p.mes, p.fecha_pago),
               año: p.anio,
               metodo: p.metodo || "transferencia",
               notas: p.notas || "",
@@ -3843,8 +3864,10 @@
 
         try {
           if (st.expulsion) {
+            // DELETE first (handles missing unique constraint), then INSERT
+            await sbQuery(() => _sb.from("expulsiones").delete().eq("contrato_id", id));
             await sbQuery(() =>
-              _sb.from("expulsiones").upsert([{ contrato_id: id, motivo: st.expMotivo || "" }], { onConflict: "contrato_id" })
+              _sb.from("expulsiones").insert([{ contrato_id: id, motivo: st.expMotivo || "" }])
             );
           } else {
             await sbQuery(() => _sb.from("expulsiones").delete().eq("contrato_id", id));
@@ -3862,10 +3885,11 @@
         st.motivoGuardado = true;
         lsSaveSA();
         renderSACard(id);
-        // Sync to Supabase
+        // Sync to Supabase — DELETE + INSERT avoids unique-constraint dependency
         try {
+          await sbQuery(() => _sb.from("expulsiones").delete().eq("contrato_id", id));
           await sbQuery(() =>
-            _sb.from("expulsiones").upsert([{ contrato_id: id, motivo: st.expMotivo }], { onConflict: "contrato_id" })
+            _sb.from("expulsiones").insert([{ contrato_id: id, motivo: st.expMotivo }])
           );
         } catch (e) {
           console.warn("[Supabase] Motivo save failed:", e);
@@ -4080,33 +4104,23 @@
         });
         grid.innerHTML = html;
 
-        // Pull fresh notes + expulsions from API in parallel
+        // Pull fresh notes from API (expulsions already loaded at boot via loadAndInit)
         await Promise.allSettled(
           CONTRATOS.map(async (c) => {
             try {
-              const [notas, expRaw] = await Promise.all([
-                sbQuery(() => _sb.from("notas_inquilino").select("*").eq("contrato_id", c.id).order("created_at", { ascending: false })),
-                sbQuery(() => _sb.from("expulsiones").select("*").eq("contrato_id", c.id).maybeSingle()),
-              ]);
-              const expulsion = expRaw;
+              const notas = await sbQuery(() =>
+                _sb.from("notas_inquilino").select("*").eq("contrato_id", c.id).order("created_at", { ascending: false })
+              );
               const st = saGetState(c.id);
-              st.notes = notas.map((n) => ({ id: n.id, nota: n.nota }));
-              if (expulsion) {
-                st.expulsion = true;
-                st.expMotivo = expulsion.motivo || "";
-                // Preserve local fechaExpulsion — API doesn't store it
-                if (!st.fechaExpulsion) st.fechaExpulsion = new Date().toISOString();
-                // If motivo exists from API, mark as saved
-                if (expulsion.motivo && expulsion.motivo.trim()) st.motivoGuardado = true;
-              } else {
-                st.expulsion = false;
-                st.fechaExpulsion = null;
-                st.motivoGuardado = false;
-              }
+              st.notes = Array.isArray(notas) ? notas.map((n) => ({ id: n.id, nota: n.nota })) : st.notes;
+              // NOTE: expulsion state is intentionally NOT cleared here.
+              // It was already authoritative-loaded by loadAndInit from Supabase.
+              // Resetting it here on a null result caused state loss when upsert
+              // silently failed (e.g. missing UNIQUE constraint on contrato_id).
             } catch (e) {
-              /* keep localStorage data */
+              /* keep existing state */
             }
-            renderSACard(c.id); // re-render this card with fresh data
+            renderSACard(c.id); // re-render this card with fresh notes
           }),
         );
 
@@ -4175,8 +4189,8 @@
               contratoId: p.contrato_id,
               aptId: p.contrato_id,
               monto: parseFloat(p.monto),
-              fechaPago: new Date(p.fecha_pago),
-              mes: p.mes - 1,          // DB usa 1-indexed, app usa 0-indexed
+              fechaPago: new Date(p.fecha_pago + "T12:00:00"),
+              mes: normalizarMes(p.mes, p.fecha_pago),
               año: p.anio,
               metodo: p.metodo || "transferencia",
               notas: p.notas || "",
