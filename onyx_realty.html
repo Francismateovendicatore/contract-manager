@@ -47,45 +47,90 @@
 
       /* ── PIN LOGIN SCREEN ─────────────────────────────────────────────── */
       #pin-screen {
-        position: fixed; inset: 0; z-index: 9999;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
         background: var(--void);
-        display: flex; align-items: center; justify-content: center;
-        flex-direction: column; gap: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 0;
       }
-      #pin-screen.hidden { display: none; }
+      #pin-screen.hidden {
+        display: none;
+      }
       .pin-wrap {
-        display: flex; flex-direction: column; align-items: center; gap: 32px;
-        animation: pinIn 0.5s cubic-bezier(0.22,0.68,0,1.1) both;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 32px;
+        animation: pinIn 0.5s cubic-bezier(0.22, 0.68, 0, 1.1) both;
       }
-      @keyframes pinIn { from { opacity:0; transform: translateY(30px) scale(0.97); } to { opacity:1; transform:none; } }
+      @keyframes pinIn {
+        from {
+          opacity: 0;
+          transform: translateY(30px) scale(0.97);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
       .pin-logo {
-        display: flex; align-items: center; gap: 14px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
       }
       .pin-gem {
-        width: 52px; height: 52px;
-        background: linear-gradient(135deg, rgba(201,147,74,0.18), rgba(201,147,74,0.06));
+        width: 52px;
+        height: 52px;
+        background: linear-gradient(
+          135deg,
+          rgba(201, 147, 74, 0.18),
+          rgba(201, 147, 74, 0.06)
+        );
         border: 1px solid var(--gold-border);
         border-radius: 14px;
-        display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 0 40px rgba(201,147,74,0.18), inset 0 1px 0 rgba(201,147,74,0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow:
+          0 0 40px rgba(201, 147, 74, 0.18),
+          inset 0 1px 0 rgba(201, 147, 74, 0.25);
       }
-      .pin-gem svg { width: 24px; height: 24px; color: var(--gold); }
+      .pin-gem svg {
+        width: 24px;
+        height: 24px;
+        color: var(--gold);
+      }
       .pin-brand {
         font-family: "Cormorant Garamond", serif;
-        font-size: 42px; font-weight: 400; color: var(--t1);
-        letter-spacing: 0.1em; line-height: 1;
+        font-size: 42px;
+        font-weight: 400;
+        color: var(--t1);
+        letter-spacing: 0.1em;
+        line-height: 1;
       }
       .pin-subtitle {
         font-family: "JetBrains Mono", monospace;
-        font-size: 9px; color: var(--t3); letter-spacing: 0.2em;
-        text-transform: uppercase; text-align: center; display: block;
+        font-size: 9px;
+        color: var(--t3);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        text-align: center;
+        display: block;
         margin-top: -20px;
       }
       .pin-dots {
-        display: flex; gap: 14px; justify-content: center;
+        display: flex;
+        gap: 14px;
+        justify-content: center;
       }
       .pin-dot {
-        width: 14px; height: 14px; border-radius: 50%;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
         border: 1.5px solid var(--t3);
         background: transparent;
         transition: all 0.15s ease;
@@ -93,244 +138,465 @@
       .pin-dot.filled {
         background: var(--gold);
         border-color: var(--gold);
-        box-shadow: 0 0 12px rgba(201,147,74,0.5);
+        box-shadow: 0 0 12px rgba(201, 147, 74, 0.5);
       }
       .pin-dot.error {
         border-color: var(--rs);
         background: var(--rs);
-        box-shadow: 0 0 12px rgba(242,65,90,0.5);
+        box-shadow: 0 0 12px rgba(242, 65, 90, 0.5);
         animation: shake 0.4s ease;
       }
       @keyframes shake {
-        0%,100%{transform:translateX(0)}
-        20%{transform:translateX(-6px)}
-        40%{transform:translateX(6px)}
-        60%{transform:translateX(-4px)}
-        80%{transform:translateX(4px)}
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        20% {
+          transform: translateX(-6px);
+        }
+        40% {
+          transform: translateX(6px);
+        }
+        60% {
+          transform: translateX(-4px);
+        }
+        80% {
+          transform: translateX(4px);
+        }
       }
       .pin-grid {
-        display: grid; grid-template-columns: repeat(3, 1fr);
-        gap: 10px; width: 240px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        width: 240px;
       }
       .pin-key {
-        height: 64px; border-radius: 14px;
+        height: 64px;
+        border-radius: 14px;
         border: 1px solid var(--b2);
         background: var(--high);
         color: var(--t1);
         font-family: "Cormorant Garamond", serif;
-        font-size: 26px; font-weight: 400;
+        font-size: 26px;
+        font-weight: 400;
         cursor: pointer;
         transition: all 0.12s ease;
-        display: flex; align-items: center; justify-content: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         user-select: none;
       }
-      .pin-key:hover { background: var(--raised); border-color: var(--b3); transform: scale(1.04); }
-      .pin-key:active { transform: scale(0.97); }
-      .pin-key.del { font-size: 18px; color: var(--t2); }
-      .pin-key.zero { grid-column: 2; }
+      .pin-key:hover {
+        background: var(--raised);
+        border-color: var(--b3);
+        transform: scale(1.04);
+      }
+      .pin-key:active {
+        transform: scale(0.97);
+      }
+      .pin-key.del {
+        font-size: 18px;
+        color: var(--t2);
+      }
+      .pin-key.zero {
+        grid-column: 2;
+      }
       .pin-error {
         font-family: "JetBrains Mono", monospace;
-        font-size: 10px; color: var(--rs); letter-spacing: 0.1em;
-        text-align: center; min-height: 16px;
+        font-size: 10px;
+        color: var(--rs);
+        letter-spacing: 0.1em;
+        text-align: center;
+        min-height: 16px;
         transition: opacity 0.3s;
       }
 
       /* ── HAMBURGER (MOBILE) ────────────────────────────────────────────── */
       .hamburger {
-        display: none; flex-direction: column; gap: 4px;
-        cursor: pointer; padding: 8px; border-radius: 8px;
-        border: 1px solid var(--b1); background: var(--high);
+        display: none;
+        flex-direction: column;
+        gap: 4px;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 8px;
+        border: 1px solid var(--b1);
+        background: var(--high);
         transition: all 0.18s;
       }
       .hamburger span {
-        display: block; width: 18px; height: 2px;
-        background: var(--t2); border-radius: 2px;
+        display: block;
+        width: 18px;
+        height: 2px;
+        background: var(--t2);
+        border-radius: 2px;
         transition: all 0.3s ease;
       }
-      .hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
-      .hamburger.open span:nth-child(2) { opacity: 0; }
-      .hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
-      .sidebar-overlay {
-        display: none; position: fixed; inset: 0; z-index: 199;
-        background: rgba(3,3,5,0.7); backdrop-filter: blur(4px);
+      .hamburger.open span:nth-child(1) {
+        transform: translateY(6px) rotate(45deg);
       }
-      .sidebar-overlay.open { display: block; }
+      .hamburger.open span:nth-child(2) {
+        opacity: 0;
+      }
+      .hamburger.open span:nth-child(3) {
+        transform: translateY(-6px) rotate(-45deg);
+      }
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 199;
+        background: rgba(3, 3, 5, 0.7);
+        backdrop-filter: blur(4px);
+      }
+      .sidebar-overlay.open {
+        display: block;
+      }
 
       /* ── ADD/EDIT CONTRACT MODAL ──────────────────────────────────────── */
       .modal-overlay-2 {
-        position: fixed; inset: 0; z-index: 1100;
-        background: rgba(3,3,5,0.88); backdrop-filter: blur(20px) saturate(180%);
-        display: none; align-items: center; justify-content: center;
+        position: fixed;
+        inset: 0;
+        z-index: 1100;
+        background: rgba(3, 3, 5, 0.88);
+        backdrop-filter: blur(20px) saturate(180%);
+        display: none;
+        align-items: center;
+        justify-content: center;
       }
-      .modal-overlay-2.open { display: flex; animation: ovIn 0.2s ease both; }
+      .modal-overlay-2.open {
+        display: flex;
+        animation: ovIn 0.2s ease both;
+      }
       .modal-wide {
         background: linear-gradient(150deg, var(--high) 0%, var(--mid) 100%);
-        border: 1px solid var(--b2); border-radius: 22px;
-        width: 640px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+        border: 1px solid var(--b2);
+        border-radius: 22px;
+        width: 640px;
+        max-width: 95vw;
+        max-height: 90vh;
+        overflow-y: auto;
         padding: 38px;
-        box-shadow: 0 0 0 1px var(--gold-border), 0 50px 100px rgba(0,0,0,0.85), inset 0 1px 0 var(--b2);
-        animation: modIn 0.3s cubic-bezier(0.22,0.68,0,1.2) both;
+        box-shadow:
+          0 0 0 1px var(--gold-border),
+          0 50px 100px rgba(0, 0, 0, 0.85),
+          inset 0 1px 0 var(--b2);
+        animation: modIn 0.3s cubic-bezier(0.22, 0.68, 0, 1.2) both;
       }
-      .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+      .form-row-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+      }
 
       /* ── PDF EXPORT BUTTON ────────────────────────────────────────────── */
       .export-bar {
-        display: flex; align-items: center; justify-content: flex-end;
-        gap: 10px; margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-bottom: 16px;
       }
       .btn-export {
-        display: flex; align-items: center; gap: 7px;
-        padding: 9px 18px; border-radius: var(--rsm);
-        background: var(--em-dim); border: 1px solid var(--em-border);
-        color: var(--em); font-size: 12px; font-weight: 600;
-        cursor: pointer; transition: all 0.18s;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 18px;
+        border-radius: var(--rsm);
+        background: var(--em-dim);
+        border: 1px solid var(--em-border);
+        color: var(--em);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.18s;
       }
-      .btn-export:hover { background: rgba(46,189,142,0.15); }
-      .btn-export svg { width: 13px; height: 13px; }
+      .btn-export:hover {
+        background: rgba(46, 189, 142, 0.15);
+      }
+      .btn-export svg {
+        width: 13px;
+        height: 13px;
+      }
 
       /* ── VALIDATION ERROR STATES ─────────────────────────────────────── */
-      .form-input.err, .form-select.err, .form-textarea.err {
+      .form-input.err,
+      .form-select.err,
+      .form-textarea.err {
         border-color: var(--rs) !important;
-        background: rgba(242,65,90,0.04) !important;
+        background: rgba(242, 65, 90, 0.04) !important;
       }
       .field-err {
         font-family: "JetBrains Mono", monospace;
-        font-size: 9px; color: var(--rs); margin-top: 4px;
+        font-size: 9px;
+        color: var(--rs);
+        margin-top: 4px;
         display: none;
       }
-      .field-err.show { display: block; }
+      .field-err.show {
+        display: block;
+      }
 
       /* ── PAGINATION ───────────────────────────────────────────────────── */
       .pagination {
-        display: flex; align-items: center; justify-content: center;
-        gap: 6px; padding: 16px 0 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 16px 0 4px;
       }
       .pg-btn {
-        padding: 6px 12px; border-radius: var(--rxs);
-        border: 1px solid var(--b2); background: var(--high);
-        color: var(--t2); font-family: "JetBrains Mono", monospace;
-        font-size: 10px; cursor: pointer; transition: all 0.15s;
+        padding: 6px 12px;
+        border-radius: var(--rxs);
+        border: 1px solid var(--b2);
+        background: var(--high);
+        color: var(--t2);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        cursor: pointer;
+        transition: all 0.15s;
       }
-      .pg-btn:hover { background: var(--raised); color: var(--t1); }
-      .pg-btn.active { background: var(--gold-dim); border-color: var(--gold-border); color: var(--gold); }
-      .pg-btn:disabled { opacity: 0.3; cursor: default; }
+      .pg-btn:hover {
+        background: var(--raised);
+        color: var(--t1);
+      }
+      .pg-btn.active {
+        background: var(--gold-dim);
+        border-color: var(--gold-border);
+        color: var(--gold);
+      }
+      .pg-btn:disabled {
+        opacity: 0.3;
+        cursor: default;
+      }
 
       /* ── TOAST ERROR VARIANT ─────────────────────────────────────────── */
-      .toast.err { border-color: var(--rs-border); }
-      .toast.err .toast-icon { color: var(--rs); }
+      .toast.err {
+        border-color: var(--rs-border);
+      }
+      .toast.err .toast-icon {
+        color: var(--rs);
+      }
 
       /* ── COUNTDOWN ALERT BANNERS ─────────────────────────────────────── */
       .sa-countdown-banner {
-        display: flex; align-items: flex-start; gap: 10px;
-        padding: 11px 14px; border-radius: var(--rsm);
-        margin-bottom: 14px; border: 1px solid;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 11px 14px;
+        border-radius: var(--rsm);
+        margin-bottom: 14px;
+        border: 1px solid;
       }
       .sa-countdown-banner.critical {
-        background: var(--rs-dim); border-color: var(--rs-border);
+        background: var(--rs-dim);
+        border-color: var(--rs-border);
       }
       .sa-countdown-banner.warning {
-        background: var(--am-dim); border-color: var(--am-border);
+        background: var(--am-dim);
+        border-color: var(--am-border);
       }
-      .sa-cdb-icon { font-size: 16px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+      .sa-cdb-icon {
+        font-size: 16px;
+        line-height: 1;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
       .sa-cdb-title {
-        font-size: 11.5px; font-weight: 600; display: block;
-        color: var(--t1); margin-bottom: 2px;
+        font-size: 11.5px;
+        font-weight: 600;
+        display: block;
+        color: var(--t1);
+        margin-bottom: 2px;
       }
       .sa-cdb-sub {
         font-family: "JetBrains Mono", monospace;
-        font-size: 9.5px; color: var(--t2); display: block;
+        font-size: 9.5px;
+        color: var(--t2);
+        display: block;
       }
       .sa-exp-dates {
-        display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
         margin-bottom: 12px;
         padding: 10px 12px;
-        background: rgba(242,65,90,0.06);
+        background: rgba(242, 65, 90, 0.06);
         border-radius: var(--rxs);
-        border: 1px solid rgba(242,65,90,0.15);
+        border: 1px solid rgba(242, 65, 90, 0.15);
       }
       .sa-exp-dt-label {
         font-family: "JetBrains Mono", monospace;
-        font-size: 8.5px; letter-spacing: 0.12em;
-        text-transform: uppercase; color: var(--rs); display: block; margin-bottom: 3px;
+        font-size: 8.5px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--rs);
+        display: block;
+        margin-bottom: 3px;
       }
       .sa-exp-dt-val {
         font-family: "JetBrains Mono", monospace;
-        font-size: 11.5px; color: var(--t1); font-weight: 500;
+        font-size: 11.5px;
+        color: var(--t1);
+        font-weight: 500;
       }
       /* ── EXPULSION COUNTDOWN ─────────────────────────────────────────── */
       .sa-exp-countdown {
-        display: flex; align-items: flex-start; gap: 10px;
-        padding: 12px 14px; border-radius: var(--rsm);
-        margin-bottom: 12px; border: 1px solid;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 14px;
+        border-radius: var(--rsm);
+        margin-bottom: 12px;
+        border: 1px solid;
       }
-      .sa-exp-countdown.active { background: var(--rs-dim); border-color: var(--rs-border); }
-      .sa-exp-countdown.passed { background: rgba(236,175,66,0.08); border-color: var(--am-border); }
-      .sa-exp-cd-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
-      .sa-exp-cd-title { font-size: 11.5px; font-weight: 600; color: var(--t1); display: block; margin-bottom: 3px; }
-      .sa-exp-cd-sub { font-family: "JetBrains Mono", monospace; font-size: 9px; color: var(--t2); display: block; margin-bottom: 6px; }
+      .sa-exp-countdown.active {
+        background: var(--rs-dim);
+        border-color: var(--rs-border);
+      }
+      .sa-exp-countdown.passed {
+        background: rgba(236, 175, 66, 0.08);
+        border-color: var(--am-border);
+      }
+      .sa-exp-cd-icon {
+        font-size: 18px;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+      .sa-exp-cd-title {
+        font-size: 11.5px;
+        font-weight: 600;
+        color: var(--t1);
+        display: block;
+        margin-bottom: 3px;
+      }
+      .sa-exp-cd-sub {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9px;
+        color: var(--t2);
+        display: block;
+        margin-bottom: 6px;
+      }
       .sa-exp-cd-timer {
         font-family: "JetBrains Mono", monospace;
-        font-size: 20px; font-weight: 600; color: var(--rs);
-        letter-spacing: 0.04em; text-shadow: 0 0 20px rgba(242,65,90,0.4);
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--rs);
+        letter-spacing: 0.04em;
+        text-shadow: 0 0 20px rgba(242, 65, 90, 0.4);
       }
       /* ── PAYMENT ROW EDIT/DELETE ACTIONS ───────────────────────────── */
       .hist-row {
         position: relative;
       }
       .hist-row-actions {
-        display: flex; gap: 6px; align-items: center;
-        opacity: 0; transition: opacity 0.15s;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.15s;
       }
-      .hist-row:hover .hist-row-actions { opacity: 1; }
+      .hist-row:hover .hist-row-actions {
+        opacity: 1;
+      }
       .hist-act-btn {
-        padding: 3px 9px; border-radius: var(--rxs);
+        padding: 3px 9px;
+        border-radius: var(--rxs);
         font-family: "JetBrains Mono", monospace;
-        font-size: 9px; cursor: pointer;
-        transition: all 0.15s; border: 1px solid;
+        font-size: 9px;
+        cursor: pointer;
+        transition: all 0.15s;
+        border: 1px solid;
         font-weight: 600;
       }
       .hist-act-btn.edit {
-        color: var(--gold); border-color: var(--gold-border);
+        color: var(--gold);
+        border-color: var(--gold-border);
         background: var(--gold-dim);
       }
-      .hist-act-btn.edit:hover { background: var(--gold-glow); }
+      .hist-act-btn.edit:hover {
+        background: var(--gold-glow);
+      }
       .hist-act-btn.del {
-        color: var(--rs); border-color: var(--rs-border);
+        color: var(--rs);
+        border-color: var(--rs-border);
         background: var(--rs-dim);
       }
-      .hist-act-btn.del:hover { background: rgba(242,65,90,0.15); }
+      .hist-act-btn.del:hover {
+        background: rgba(242, 65, 90, 0.15);
+      }
       /* Payment edit modal */
       .modal-overlay-3 {
-        position: fixed; inset: 0; z-index: 1200;
-        background: rgba(3,3,5,0.88); backdrop-filter: blur(20px) saturate(180%);
-        display: none; align-items: center; justify-content: center;
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+        background: rgba(3, 3, 5, 0.88);
+        backdrop-filter: blur(20px) saturate(180%);
+        display: none;
+        align-items: center;
+        justify-content: center;
       }
-      .modal-overlay-3.open { display: flex; animation: ovIn 0.2s ease both; }
+      .modal-overlay-3.open {
+        display: flex;
+        animation: ovIn 0.2s ease both;
+      }
 
       /* ── MOTIVO SAVED STATE ──────────────────────────────────────────── */
-      .sa-exp-motivo-saved { margin-top: 10px; }
-      .sa-exp-motivo-saved-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+      .sa-exp-motivo-saved {
+        margin-top: 10px;
+      }
+      .sa-exp-motivo-saved-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
       .sa-exp-motivo-text {
-        font-size: 13px; color: var(--t2); line-height: 1.6;
-        padding: 10px 12px; background: rgba(255,255,255,0.025);
-        border: 1px solid var(--b1); border-radius: var(--rxs);
+        font-size: 13px;
+        color: var(--t2);
+        line-height: 1.6;
+        padding: 10px 12px;
+        background: rgba(255, 255, 255, 0.025);
+        border: 1px solid var(--b1);
+        border-radius: var(--rxs);
       }
       .sa-exp-edit-btn {
-        font-family: "JetBrains Mono", monospace; font-size: 9.5px; color: var(--t3);
-        background: none; border: 1px solid var(--b2); border-radius: var(--rxs);
-        padding: 4px 10px; cursor: pointer; transition: all 0.15s;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9.5px;
+        color: var(--t3);
+        background: none;
+        border: 1px solid var(--b2);
+        border-radius: var(--rxs);
+        padding: 4px 10px;
+        cursor: pointer;
+        transition: all 0.15s;
       }
-      .sa-exp-edit-btn:hover { color: var(--gold); border-color: var(--gold-border); }
+      .sa-exp-edit-btn:hover {
+        color: var(--gold);
+        border-color: var(--gold-border);
+      }
       /* ── MOTIVO EDIT STATE ───────────────────────────────────────────── */
-      .sa-exp-motivo-edit { margin-top: 10px; }
-      .sa-exp-save-btn {
-        display: flex; align-items: center; justify-content: center;
-        width: 100%; margin-top: 10px; padding: 10px; border-radius: var(--rsm);
-        background: var(--rs-dim); border: 1px solid var(--rs-border);
-        color: var(--rs); font-size: 12px; font-weight: 600;
-        cursor: pointer; transition: all 0.18s;
+      .sa-exp-motivo-edit {
+        margin-top: 10px;
       }
-      .sa-exp-save-btn:hover { background: rgba(242,65,90,0.15); }
+      .sa-exp-save-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: var(--rsm);
+        background: var(--rs-dim);
+        border: 1px solid var(--rs-border);
+        color: var(--rs);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.18s;
+      }
+      .sa-exp-save-btn:hover {
+        background: rgba(242, 65, 90, 0.15);
+      }
       *,
       *::before,
       *::after {
@@ -2008,14 +2274,16 @@
         }
         .sidebar {
           transform: translateX(-100%);
-          transition: transform 0.3s cubic-bezier(0.22,0.68,0,1.1);
+          transition: transform 0.3s cubic-bezier(0.22, 0.68, 0, 1.1);
           width: 258px;
         }
         .sidebar.open {
           transform: translateX(0);
           display: flex;
         }
-        .hamburger { display: flex; }
+        .hamburger {
+          display: flex;
+        }
         .topbar {
           padding: 0 20px;
         }
@@ -2069,16 +2337,34 @@
       /* 🔴 Critical: ≤30 days remaining — pulsing red border */
       .sa-card.critical-alert {
         border-color: var(--rs-border);
-        animation: cardIn 0.5s cubic-bezier(0.22,0.68,0,1.1) both, criticalPulse 2.4s ease-in-out infinite;
+        animation:
+          cardIn 0.5s cubic-bezier(0.22, 0.68, 0, 1.1) both,
+          criticalPulse 2.4s ease-in-out infinite;
       }
       @keyframes criticalPulse {
-        0%,100% { box-shadow: inset 0 1px 0 var(--b1), 0 20px 50px rgba(0,0,0,0.45), 0 0 0 1px var(--rs-border), 0 0 20px rgba(242,65,90,0.04); }
-        50%      { box-shadow: inset 0 1px 0 var(--b1), 0 20px 50px rgba(0,0,0,0.45), 0 0 0 1px var(--rs-border), 0 0 50px rgba(242,65,90,0.18); }
+        0%,
+        100% {
+          box-shadow:
+            inset 0 1px 0 var(--b1),
+            0 20px 50px rgba(0, 0, 0, 0.45),
+            0 0 0 1px var(--rs-border),
+            0 0 20px rgba(242, 65, 90, 0.04);
+        }
+        50% {
+          box-shadow:
+            inset 0 1px 0 var(--b1),
+            0 20px 50px rgba(0, 0, 0, 0.45),
+            0 0 0 1px var(--rs-border),
+            0 0 50px rgba(242, 65, 90, 0.18);
+        }
       }
       /* 🟡 Warning: ≤60 days remaining */
       .sa-card.warning-alert {
         border-color: var(--am-border);
-        box-shadow: inset 0 1px 0 var(--b1), 0 20px 50px rgba(0,0,0,0.45), 0 0 30px rgba(236,175,66,0.07);
+        box-shadow:
+          inset 0 1px 0 var(--b1),
+          0 20px 50px rgba(0, 0, 0, 0.45),
+          0 0 30px rgba(236, 175, 66, 0.07);
       }
       .sa-card-head {
         display: flex;
@@ -2270,27 +2556,33 @@
       }
       /* CRUD mini buttons in SA card footer */
       .sa-crud-btn {
-        padding: 5px 11px; border-radius: var(--rxs);
-        font-size: 12px; cursor: pointer;
-        transition: all 0.15s; border: 1px solid;
-        background: none; font-weight: 600;
+        padding: 5px 11px;
+        border-radius: var(--rxs);
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.15s;
+        border: 1px solid;
+        background: none;
+        font-weight: 600;
       }
       .sa-crud-btn.edit {
-        color: var(--gold); border-color: var(--gold-border);
+        color: var(--gold);
+        border-color: var(--gold-border);
         background: var(--gold-dim);
       }
       .sa-crud-btn.edit:hover {
         background: var(--gold-glow);
-        box-shadow: 0 0 12px rgba(201,147,74,0.2);
+        box-shadow: 0 0 12px rgba(201, 147, 74, 0.2);
         transform: translateY(-1px);
       }
       .sa-crud-btn.del {
-        color: var(--rs); border-color: var(--rs-border);
+        color: var(--rs);
+        border-color: var(--rs-border);
         background: var(--rs-dim);
       }
       .sa-crud-btn.del:hover {
-        background: rgba(242,65,90,0.15);
-        box-shadow: 0 0 12px rgba(242,65,90,0.2);
+        background: rgba(242, 65, 90, 0.15);
+        box-shadow: 0 0 12px rgba(242, 65, 90, 0.2);
         transform: translateY(-1px);
       }
       /* Visual indicator: SA cards are editable/deletable */
@@ -2300,7 +2592,8 @@
       .sa-card::after {
         content: "✎ · 🗑";
         position: absolute;
-        top: 10px; right: 14px;
+        top: 10px;
+        right: 14px;
         font-size: 9px;
         color: var(--t3);
         font-family: "JetBrains Mono", monospace;
@@ -2309,7 +2602,9 @@
         transition: opacity 0.2s;
         pointer-events: none;
       }
-      .sa-card:hover::after { opacity: 0.5; }
+      .sa-card:hover::after {
+        opacity: 0.5;
+      }
       /* Subtle left accent strip on SA cards (shows edit/delete is available) */
       .sa-card-footer {
         position: relative;
@@ -2317,23 +2612,30 @@
       .sa-card-footer::before {
         content: "";
         position: absolute;
-        left: 0; top: 0; bottom: 0;
+        left: 0;
+        top: 0;
+        bottom: 0;
         width: 2px;
         background: linear-gradient(180deg, var(--gold) 0%, var(--rs) 100%);
         opacity: 0.18;
         border-radius: 0 0 0 var(--r);
         transition: opacity 0.2s;
       }
-      .sa-card:hover .sa-card-footer::before { opacity: 0.45; }
+      .sa-card:hover .sa-card-footer::before {
+        opacity: 0.45;
+      }
       /* CRUD action bar label */
       .sa-crud-label {
         font-family: "JetBrains Mono", monospace;
-        font-size: 8px; letter-spacing: 0.14em;
-        text-transform: uppercase; color: var(--t3);
-        display: block; margin-bottom: 4px;
+        font-size: 8px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--t3);
+        display: block;
+        margin-bottom: 4px;
       }
     </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </head>
   <body>
     <div id="atm"></div>
@@ -2467,7 +2769,11 @@
             <strong id="breadcrumb-page">Dashboard</strong>
           </div>
           <div class="topbar-actions">
-            <button class="hamburger" id="hamburger-btn" onclick="toggleSidebar()">
+            <button
+              class="hamburger"
+              id="hamburger-btn"
+              onclick="toggleSidebar()"
+            >
               <span></span><span></span><span></span>
             </button>
             <div class="search-field">
@@ -2565,11 +2871,30 @@
           </div>
           <div class="export-bar">
             <button class="btn-export" onclick="exportFinancialPDF()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
               Exportar Reporte PDF
             </button>
             <button class="topbar-btn" onclick="openContractModal()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                style="width: 13px; height: 13px"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="16" />
+                <line x1="8" y1="12" x2="16" y2="12" />
+              </svg>
               Nuevo Contrato
             </button>
           </div>
@@ -2697,8 +3022,10 @@
             </div>
             <div id="payment-history"></div>
             <div id="payment-pagination" class="pagination"></div>
-          </div><!-- /panel fin-full -->
-        </div><!-- /page-finanzas -->
+          </div>
+          <!-- /panel fin-full -->
+        </div>
+        <!-- /page-finanzas -->
         <div id="page-sistema" class="page">
           <div class="sec-hdr">
             <span class="sec-title">Situación Actual de Inquilinos</span>
@@ -2713,8 +3040,10 @@
               margin-top: 4px;
             "
           ></div>
-        </div><!-- /page-sistema -->
-      </div><!-- /main content -->
+        </div>
+        <!-- /page-sistema -->
+      </div>
+      <!-- /main content -->
     </main>
 
     <!-- MODAL -->
@@ -2810,18 +3139,27 @@
 
     <!-- PIN LOGIN SCREEN -->
     <div id="pin-screen">
-      <div id="atm" style="position:absolute"></div>
-      <div id="grain" style="position:absolute"></div>
+      <div id="atm" style="position: absolute"></div>
+      <div id="grain" style="position: absolute"></div>
       <div class="pin-wrap">
         <div class="pin-logo">
           <div class="pin-gem">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <polygon
+                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+              />
             </svg>
           </div>
           <span class="pin-brand">Onyx</span>
         </div>
-        <span class="pin-subtitle">Sistema de Gestión Inmobiliaria · Acceso Privado</span>
+        <span class="pin-subtitle"
+          >Sistema de Gestión Inmobiliaria · Acceso Privado</span
+        >
         <div class="pin-dots" id="pin-dots">
           <div class="pin-dot" id="pd-0"></div>
           <div class="pin-dot" id="pd-1"></div>
@@ -2849,14 +3187,24 @@
     </div>
 
     <!-- EDIT PAYMENT MODAL -->
-    <div class="modal-overlay-3" id="edit-pay-overlay" onclick="closeEditPayModal(event)">
-      <div class="modal" style="width:460px">
+    <div
+      class="modal-overlay-3"
+      id="edit-pay-overlay"
+      onclick="closeEditPayModal(event)"
+    >
+      <div class="modal" style="width: 460px">
         <span class="modal-title">Editar Pago</span>
         <span class="modal-sub">Modificar registro · Onyx Gestión</span>
-        <input type="hidden" id="ep-id">
+        <input type="hidden" id="ep-id" />
         <div class="form-group">
           <label class="form-label">Apartamento</label>
-          <input type="text" class="form-input" id="ep-apt" disabled style="opacity:0.5">
+          <input
+            type="text"
+            class="form-input"
+            id="ep-apt"
+            disabled
+            style="opacity: 0.5"
+          />
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -2865,13 +3213,18 @@
           </div>
           <div class="form-group">
             <label class="form-label">Monto (RD$)</label>
-            <input type="number" class="form-input" id="ep-monto" placeholder="15000">
+            <input
+              type="number"
+              class="form-input"
+              id="ep-monto"
+              placeholder="15000"
+            />
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Fecha de Pago</label>
-            <input type="date" class="form-input" id="ep-fecha">
+            <input type="date" class="form-input" id="ep-fecha" />
           </div>
           <div class="form-group">
             <label class="form-label">Método</label>
@@ -2884,12 +3237,38 @@
         </div>
         <div class="form-group">
           <label class="form-label">Notas</label>
-          <textarea class="form-textarea" id="ep-notas" placeholder="Observaciones..."></textarea>
+          <textarea
+            class="form-textarea"
+            id="ep-notas"
+            placeholder="Observaciones..."
+          ></textarea>
         </div>
         <div class="modal-actions">
-          <button class="btn-cancel" onclick="document.getElementById('edit-pay-overlay').classList.remove('open')">Cancelar</button>
+          <button
+            class="btn-cancel"
+            onclick="
+              document
+                .getElementById('edit-pay-overlay')
+                .classList.remove('open')
+            "
+          >
+            Cancelar
+          </button>
           <button class="btn-confirm" onclick="saveEditedPayment()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;display:inline;margin-right:6px"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              style="
+                width: 14px;
+                height: 14px;
+                display: inline;
+                margin-right: 6px;
+              "
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
             Guardar Cambios
           </button>
         </div>
@@ -2897,80 +3276,161 @@
     </div>
 
     <!-- SIDEBAR OVERLAY (mobile) -->
-    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+    <div
+      class="sidebar-overlay"
+      id="sidebar-overlay"
+      onclick="closeSidebar()"
+    ></div>
 
     <!-- ADD/EDIT CONTRACT MODAL -->
-    <div class="modal-overlay-2" id="contract-overlay" onclick="closeContractModalOutside(event)">
+    <div
+      class="modal-overlay-2"
+      id="contract-overlay"
+      onclick="closeContractModalOutside(event)"
+    >
       <div class="modal-wide">
-        <span class="modal-title" id="contract-modal-title">Nuevo Contrato</span>
+        <span class="modal-title" id="contract-modal-title"
+          >Nuevo Contrato</span
+        >
         <span class="modal-sub">Sistema de Gestión Onyx · Contratos</span>
-        <input type="hidden" id="cm-id">
+        <input type="hidden" id="cm-id" />
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">ID Contrato *</label>
-            <input type="text" class="form-input" id="cm-ref" placeholder="C-007">
+            <input
+              type="text"
+              class="form-input"
+              id="cm-ref"
+              placeholder="C-007"
+            />
             <span class="field-err" id="cm-ref-err">Campo requerido</span>
           </div>
           <div class="form-group">
             <label class="form-label">Nombre Apartamento *</label>
-            <input type="text" class="form-input" id="cm-nombre" placeholder="Apto 5-A">
+            <input
+              type="text"
+              class="form-input"
+              id="cm-nombre"
+              placeholder="Apto 5-A"
+            />
             <span class="field-err" id="cm-nombre-err">Campo requerido</span>
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">Inquilino Principal *</label>
-          <input type="text" class="form-input" id="cm-tenant1" placeholder="Nombre completo">
+          <input
+            type="text"
+            class="form-input"
+            id="cm-tenant1"
+            placeholder="Nombre completo"
+          />
           <span class="field-err" id="cm-tenant1-err">Campo requerido</span>
         </div>
         <div class="form-group">
           <label class="form-label">Co-Inquilino (opcional)</label>
-          <input type="text" class="form-input" id="cm-tenant2" placeholder="Nombre del co-inquilino">
+          <input
+            type="text"
+            class="form-input"
+            id="cm-tenant2"
+            placeholder="Nombre del co-inquilino"
+          />
         </div>
         <div class="form-group">
           <label class="form-label">Dirección *</label>
-          <input type="text" class="form-input" id="cm-address" placeholder="Calle Las Trinitarias No. 07...">
+          <input
+            type="text"
+            class="form-input"
+            id="cm-address"
+            placeholder="Calle Las Trinitarias No. 07..."
+          />
           <span class="field-err" id="cm-address-err">Campo requerido</span>
         </div>
         <div class="form-group">
           <label class="form-label">Descripción del Apto</label>
-          <input type="text" class="form-input" id="cm-apt" placeholder="Apto 5-A · 1er Piso · 2 hab.">
+          <input
+            type="text"
+            class="form-input"
+            id="cm-apt"
+            placeholder="Apto 5-A · 1er Piso · 2 hab."
+          />
         </div>
         <div class="form-row-3">
           <div class="form-group">
             <label class="form-label">Renta Mensual (RD$) *</label>
-            <input type="number" class="form-input" id="cm-rent" placeholder="14000">
+            <input
+              type="number"
+              class="form-input"
+              id="cm-rent"
+              placeholder="14000"
+            />
             <span class="field-err" id="cm-rent-err">Monto inválido</span>
           </div>
           <div class="form-group">
             <label class="form-label">Depósito (RD$) *</label>
-            <input type="number" class="form-input" id="cm-deposit" placeholder="14000">
+            <input
+              type="number"
+              class="form-input"
+              id="cm-deposit"
+              placeholder="14000"
+            />
             <span class="field-err" id="cm-deposit-err">Monto inválido</span>
           </div>
           <div class="form-group">
             <label class="form-label">Día de Pago *</label>
-            <input type="number" class="form-input" id="cm-payday" placeholder="1-31" min="1" max="31">
+            <input
+              type="number"
+              class="form-input"
+              id="cm-payday"
+              placeholder="1-31"
+              min="1"
+              max="31"
+            />
             <span class="field-err" id="cm-payday-err">Día inválido</span>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Fecha Inicio *</label>
-            <input type="date" class="form-input" id="cm-start">
+            <input type="date" class="form-input" id="cm-start" />
             <span class="field-err" id="cm-start-err">Fecha requerida</span>
           </div>
           <div class="form-group">
             <label class="form-label">Notario</label>
-            <input type="text" class="form-input" id="cm-notary" placeholder="Dr. César S. Alcantara">
+            <input
+              type="text"
+              class="form-input"
+              id="cm-notary"
+              placeholder="Dr. César S. Alcantara"
+            />
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">Notas del Contrato</label>
-          <textarea class="form-textarea" id="cm-notes" placeholder="Observaciones, restricciones, condiciones..."></textarea>
+          <textarea
+            class="form-textarea"
+            id="cm-notes"
+            placeholder="Observaciones, restricciones, condiciones..."
+          ></textarea>
         </div>
         <div class="modal-actions">
-          <button class="btn-cancel" onclick="closeContractModal()">Cancelar</button>
+          <button class="btn-cancel" onclick="closeContractModal()">
+            Cancelar
+          </button>
           <button class="btn-confirm" onclick="submitContract()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;display:inline;margin-right:6px"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              style="
+                width: 14px;
+                height: 14px;
+                display: inline;
+                margin-right: 6px;
+              "
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
             Guardar Contrato
           </button>
         </div>
@@ -2985,8 +3445,9 @@
    Set your API base URL below. No other file needs to be modified.
    ═══════════════════════════════════════════════════════════════════════ */
       // ── Supabase client (replaces Express backend) ──────────────────────
-      const SUPABASE_URL  = "https://hrystcnmykxrywgaicpc.supabase.co";
-      const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhyeXN0Y25teWt4cnl3Z2FpY3BjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjYzNzUsImV4cCI6MjA5MDg0MjM3NX0.rEj2yEv0X3a0JLLphzmts9hxyBxcKhQzkw6TS0pD_FY";
+      const SUPABASE_URL = "https://hrystcnmykxrywgaicpc.supabase.co";
+      const SUPABASE_ANON =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhyeXN0Y25teWt4cnl3Z2FpY3BjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjYzNzUsImV4cCI6MjA5MDg0MjM3NX0.rEj2yEv0X3a0JLLphzmts9hxyBxcKhQzkw6TS0pD_FY";
       const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
       /* ═══════════════════════════════════════════════════════════════════════
@@ -3012,7 +3473,8 @@
       const now = () => new Date();
 
       function getActiveCycle(startBase) {
-        let start = startBase instanceof Date ? new Date(startBase) : new Date(startBase);
+        let start =
+          startBase instanceof Date ? new Date(startBase) : new Date(startBase);
         if (isNaN(start.getTime())) start = new Date();
         const n = now();
         // Contract hasn't started yet — return upcoming start/end so UI can show "pending"
@@ -3069,14 +3531,19 @@
       }
 
       /* ── STATUS THRESHOLDS (single source of truth) ──────────────────── */
-      const THRESH_CRITICAL = 30;  // days — 🔴 red alert (countdown active)
-      const THRESH_WARNING  = 60;  // days — 🟡 amber warning
+      const THRESH_CRITICAL = 30; // days — 🔴 red alert (countdown active)
+      const THRESH_WARNING = 60; // days — 🟡 amber warning
 
       function getStatus(c) {
         const { end, pending } = getActiveCycle(c.startBase);
         if (pending) return "am";
         const d = Math.ceil((end - now()) / 864e5);
-        return d < 0 ? "rs" : d <= THRESH_CRITICAL ? "rs" : d <= THRESH_WARNING ? "am" : "em";
+        return (
+          d < 0 ? "rs"
+          : d <= THRESH_CRITICAL ? "rs"
+          : d <= THRESH_WARNING ? "am"
+          : "em"
+        );
       }
       function getProgress(c) {
         const { start, end } = getActiveCycle(c.startBase);
@@ -3098,9 +3565,12 @@
         const { end } = getActiveCycle(c.startBase);
         const rem = msToDhms(end - now());
         const s = getStatus(c);
-        if (s === "rs" && rem.d < 0) return "Renovación crítica — contrato vencido";
-        if (s === "rs") return "🚨 Renovación crítica — " + rem.d + " días restantes";
-        if (s === "am") return "⚡ Renovación próxima — " + rem.d + " días restantes";
+        if (s === "rs" && rem.d < 0)
+          return "Renovación crítica — contrato vencido";
+        if (s === "rs")
+          return "🚨 Renovación crítica — " + rem.d + " días restantes";
+        if (s === "am")
+          return "⚡ Renovación próxima — " + rem.d + " días restantes";
         return "✓ Vigente — " + rem.d + " días hasta la renovación";
       }
 
@@ -3146,15 +3616,15 @@
           return fpDate.getMonth(); // 0-indexed, directly correct
         }
         // Fallback if fecha_pago is missing/invalid
-        if (dbMes === 0) return 0;    // 0-indexed January
-        if (dbMes === 12) return 11;  // 1-indexed December
-        return dbMes - 1;             // assume 1-indexed (current standard)
+        if (dbMes === 0) return 0; // 0-indexed January
+        if (dbMes === 12) return 11; // 1-indexed December
+        return dbMes - 1; // assume 1-indexed (current standard)
       }
 
       // Deduplication: keep one payment per (contratoId, mes, año) — highest monto wins
       function dedupPagos(pagos) {
         const map = new Map();
-        pagos.forEach(p => {
+        pagos.forEach((p) => {
           const key = `${p.contratoId}__${p.mes}__${p.año}`;
           const existing = map.get(key);
           if (!existing || p.monto > existing.monto) map.set(key, p);
@@ -3177,11 +3647,10 @@
             (cs.getFullYear() === año && cs.getMonth() <= mes);
           if (!active) return false;
 
-          // Grace period only for contracts that STARTED this month
+          // Grace period: for the CURRENT month, payDay applies to ALL contracts.
+          // If today < payDay, the payment isn't due yet — no moroso.
           if (mes === n.getMonth() && año === n.getFullYear()) {
-            const isFirstMonth = cs.getFullYear() === año && cs.getMonth() === mes;
-            if (isFirstMonth && n.getDate() < (c.payDay || 1)) return false;
-            // Contracts from prior months: payment always due regardless of payDay
+            if (n.getDate() < (c.payDay || 1)) return false;
           }
 
           return !PAGOS_HISTORICOS.some(
@@ -3201,23 +3670,31 @@
           cs.getFullYear() < año ||
           (cs.getFullYear() === año && cs.getMonth() <= mes);
         if (!contratoActivo) {
-          return { esperado: 0, cobrado: 0, cobradoTotal: 0, deuda: 0, meses: 0, mesesTranscurridos: 0 };
+          return {
+            esperado: 0,
+            cobrado: 0,
+            cobradoTotal: 0,
+            deuda: 0,
+            meses: 0,
+            mesesTranscurridos: 0,
+          };
         }
 
         const paidThisMonth = PAGOS_HISTORICOS.some(
-          p => p.contratoId === c.id && p.mes === mes && p.año === año
+          (p) => p.contratoId === c.id && p.mes === mes && p.año === año,
         );
-        const cobradoTotal = PAGOS_HISTORICOS.filter(p => p.contratoId === c.id)
-          .reduce((s, p) => s + p.monto, 0);
-        const mesesRegistrados = PAGOS_HISTORICOS.filter(p => p.contratoId === c.id).length;
+        const cobradoTotal = PAGOS_HISTORICOS.filter(
+          (p) => p.contratoId === c.id,
+        ).reduce((s, p) => s + p.monto, 0);
+        const mesesRegistrados = PAGOS_HISTORICOS.filter(
+          (p) => p.contratoId === c.id,
+        ).length;
 
-        // Grace period: if today is strictly before payDay, give 1-day grace ONLY
-        // if the contract just started this month (startBase month == current month).
-        // Otherwise: contract is active from a prior month → payment is always due.
-        const isFirstMonth = cs.getFullYear() === año && cs.getMonth() === mes;
-        const payDayPassed = isFirstMonth ? (n.getDate() >= pd) : true;
+        // Grace period: if today is strictly before payDay, payment not yet due.
+        // This applies every month, not only the first month of the contract.
+        const payDayPassed = n.getDate() >= pd;
 
-        const deuda = (payDayPassed && !paidThisMonth) ? c.rent : 0;
+        const deuda = payDayPassed && !paidThisMonth ? c.rent : 0;
         const cobrado = paidThisMonth ? c.rent : 0;
         const esperado = payDayPassed ? c.rent : 0;
         const mesesTranscurridos = payDayPassed ? 1 : 0;
@@ -3694,7 +4171,8 @@
               s.cls === "em" ? "var(--em)"
               : s.cls === "am" ? "var(--am)"
               : "var(--rs)";
-            el.textContent = pad(rem.d, 3) + "d " + pad(rem.h) + "h " + pad(rem.m) + "m";
+            el.textContent =
+              pad(rem.d, 3) + "d " + pad(rem.h) + "h " + pad(rem.m) + "m";
           }
 
           // Expulsion countdown (only when in expulsion and motivo saved)
@@ -3707,7 +4185,13 @@
               if (cd.passed) {
                 cdEl.textContent = "⚠️ Ya estás en período de notificación";
               } else {
-                cdEl.textContent = pad(cd.dhms.d, 3) + "d " + pad(cd.dhms.h) + "h " + pad(cd.dhms.m) + "m";
+                cdEl.textContent =
+                  pad(cd.dhms.d, 3) +
+                  "d " +
+                  pad(cd.dhms.h) +
+                  "h " +
+                  pad(cd.dhms.m) +
+                  "m";
               }
             }
           }
@@ -3748,15 +4232,20 @@
         // Debt per apartment
         let totalDebt = 0;
         $("debt-list").innerHTML = CONTRATOS.map((c) => {
-          const { deuda, cobrado, esperado, mesesTranscurridos } = CalcularDeudaPorApartamento(c);
+          const { deuda, cobrado, esperado, mesesTranscurridos } =
+            CalcularDeudaPorApartamento(c);
           totalDebt += deuda;
-          const pct = esperado > 0 ? Math.min(100, Math.round((cobrado / esperado) * 100)) : 100;
+          const pct =
+            esperado > 0 ?
+              Math.min(100, Math.round((cobrado / esperado) * 100))
+            : 100;
           const barColor =
             deuda === 0 ? "var(--em)"
             : deuda > c.rent * 2 ? "var(--rs)"
             : "var(--am)";
-          const detalleLabel = mesesTranscurridos > 0
-            ? `${mesesTranscurridos} mes${mesesTranscurridos > 1 ? "es" : ""} del ciclo · ${cur(c.rent)}/mes`
+          const detalleLabel =
+            mesesTranscurridos > 0 ?
+              `${mesesTranscurridos} mes${mesesTranscurridos > 1 ? "es" : ""} del ciclo · ${cur(c.rent)}/mes`
             : "Ciclo recién iniciado";
           return `<div class="debt-item">
       <span class="debt-apt-id">${c.id}</span>
@@ -3774,15 +4263,23 @@
         // Monthly summary — only show months with actual payments recorded
         let rows = "";
         let monthsWithData = 0;
-        for (let i = 35; i >= 0; i--) { // 36-month lookback
-          let m = mes - i, y = año;
-          if (m < 0) { m += 12; y--; }
+        for (let i = 35; i >= 0; i--) {
+          // 36-month lookback
+          let m = mes - i,
+            y = año;
+          if (m < 0) {
+            m += 12;
+            y--;
+          }
           const cob = CalcularIngresosMensuales(m, y);
           if (cob === 0) continue; // skip months with no recorded payments
           monthsWithData++;
           const esp = CONTRATOS.filter((c) => {
             const cs = new Date(c.startBase);
-            return (cs.getFullYear() < y || (cs.getFullYear() === y && cs.getMonth() <= m));
+            return (
+              cs.getFullYear() < y ||
+              (cs.getFullYear() === y && cs.getMonth() <= m)
+            );
           }).reduce((s, c) => s + c.rent, 0);
           const diff = cob - esp;
           rows += `<tr>
@@ -3894,10 +4391,16 @@
 
         // Guard: prevent duplicate payment for same period
         const alreadyPaid = PAGOS_HISTORICOS.some(
-          p => p.contratoId === aptId && p.mes === periodoMes && p.año === periodoAño
+          (p) =>
+            p.contratoId === aptId &&
+            p.mes === periodoMes &&
+            p.año === periodoAño,
         );
         if (alreadyPaid) {
-          showToastMsg("⚠ Ya existe un pago registrado para este período", true);
+          showToastMsg(
+            "⚠ Ya existe un pago registrado para este período",
+            true,
+          );
           btnConf.disabled = false;
           btnConf.innerHTML = origHTML;
           return;
@@ -3907,15 +4410,20 @@
         try {
           // POST to Supabase (mes 1-indexed, fecha_pago stores authoritative month)
           const rows = await sbQuery(() =>
-            _sb.from("pagos").insert([{
-              contrato_id: aptId,
-              monto: montoVal,
-              fecha_pago: fechaVal,
-              mes: periodoMes + 1,
-              anio: periodoAño,
-              metodo,
-              notas: notas || null,
-            }]).select()
+            _sb
+              .from("pagos")
+              .insert([
+                {
+                  contrato_id: aptId,
+                  monto: montoVal,
+                  fecha_pago: fechaVal,
+                  mes: periodoMes + 1,
+                  anio: periodoAño,
+                  metodo,
+                  notas: notas || null,
+                },
+              ])
+              .select(),
           );
           if (rows && rows[0]) savedId = rows[0].id;
         } catch (e) {
@@ -3926,21 +4434,26 @@
         // Recargar pagos desde Supabase para mantener sincronía
         try {
           const pr = await sbQuery(() =>
-              _sb.from("pagos").select("*").order("fecha_pago", { ascending: false })
-            );
+            _sb
+              .from("pagos")
+              .select("*")
+              .order("fecha_pago", { ascending: false }),
+          );
           if (Array.isArray(pr)) {
-            PAGOS_HISTORICOS = dedupPagos(pr.map((p) => ({
-              id: p.id,
-              contratoId: p.contrato_id,
-              aptId: p.contrato_id,
-              monto: parseFloat(p.monto),
-              fechaPago: new Date(p.fecha_pago + "T12:00:00"),
-              mes: normalizarMes(p.mes, p.fecha_pago),
-              año: p.anio,
-              metodo: p.metodo || "transferencia",
-              notas: p.notas || "",
-              auto: false,
-            })));
+            PAGOS_HISTORICOS = dedupPagos(
+              pr.map((p) => ({
+                id: p.id,
+                contratoId: p.contrato_id,
+                aptId: p.contrato_id,
+                monto: parseFloat(p.monto),
+                fechaPago: new Date(p.fecha_pago + "T12:00:00"),
+                mes: normalizarMes(p.mes, p.fecha_pago),
+                año: p.anio,
+                metodo: p.metodo || "transferencia",
+                notas: p.notas || "",
+                auto: false,
+              })),
+            );
           }
         } catch (e) {
           // fallback offline: agregar localmente si Supabase falla
@@ -3986,10 +4499,18 @@
    ═══════════════════════════════════════════════════════════════════════ */
       function saGetState(id) {
         if (!SA_STATE[id])
-          SA_STATE[id] = { notes: [], expulsion: false, expMotivo: "", fechaExpulsion: null, motivoGuardado: false };
+          SA_STATE[id] = {
+            notes: [],
+            expulsion: false,
+            expMotivo: "",
+            fechaExpulsion: null,
+            motivoGuardado: false,
+          };
         // Migrate old records
-        if (!("fechaExpulsion" in SA_STATE[id])) SA_STATE[id].fechaExpulsion = null;
-        if (!("motivoGuardado" in SA_STATE[id]))  SA_STATE[id].motivoGuardado = false;
+        if (!("fechaExpulsion" in SA_STATE[id]))
+          SA_STATE[id].fechaExpulsion = null;
+        if (!("motivoGuardado" in SA_STATE[id]))
+          SA_STATE[id].motivoGuardado = false;
         return SA_STATE[id];
       }
 
@@ -4005,7 +4526,10 @@
 
         try {
           const rows = await sbQuery(() =>
-            _sb.from("notas_inquilino").insert([{ contrato_id: id, nota: t }]).select()
+            _sb
+              .from("notas_inquilino")
+              .insert([{ contrato_id: id, nota: t }])
+              .select(),
           );
           if (rows && rows[0]) noteId = rows[0].id;
         } catch (e) {
@@ -4027,7 +4551,9 @@
 
         if (!String(noteId).startsWith("local-")) {
           try {
-            await sbQuery(() => _sb.from("notas_inquilino").delete().eq("id", noteId));
+            await sbQuery(() =>
+              _sb.from("notas_inquilino").delete().eq("id", noteId),
+            );
           } catch (e) {
             console.warn("[Supabase] Note DELETE failed:", e);
           }
@@ -4051,12 +4577,18 @@
         try {
           if (st.expulsion) {
             // DELETE first (handles missing unique constraint), then INSERT
-            await sbQuery(() => _sb.from("expulsiones").delete().eq("contrato_id", id));
             await sbQuery(() =>
-              _sb.from("expulsiones").insert([{ contrato_id: id, motivo: st.expMotivo || "" }])
+              _sb.from("expulsiones").delete().eq("contrato_id", id),
+            );
+            await sbQuery(() =>
+              _sb
+                .from("expulsiones")
+                .insert([{ contrato_id: id, motivo: st.expMotivo || "" }]),
             );
           } else {
-            await sbQuery(() => _sb.from("expulsiones").delete().eq("contrato_id", id));
+            await sbQuery(() =>
+              _sb.from("expulsiones").delete().eq("contrato_id", id),
+            );
           }
         } catch (e) {
           console.warn("[Supabase] Expulsion sync failed:", e);
@@ -4073,9 +4605,13 @@
         renderSACard(id);
         // Sync to Supabase — DELETE + INSERT avoids unique-constraint dependency
         try {
-          await sbQuery(() => _sb.from("expulsiones").delete().eq("contrato_id", id));
           await sbQuery(() =>
-            _sb.from("expulsiones").insert([{ contrato_id: id, motivo: st.expMotivo }])
+            _sb.from("expulsiones").delete().eq("contrato_id", id),
+          );
+          await sbQuery(() =>
+            _sb
+              .from("expulsiones")
+              .insert([{ contrato_id: id, motivo: st.expMotivo }]),
           );
         } catch (e) {
           console.warn("[Supabase] Motivo save failed:", e);
@@ -4090,41 +4626,60 @@
         lsSaveSA();
         renderSACard(id);
         // Focus the textarea after render
-        setTimeout(() => { const ta = $("sa-exp-textarea-" + id); if (ta) ta.focus(); }, 50);
+        setTimeout(() => {
+          const ta = $("sa-exp-textarea-" + id);
+          if (ta) ta.focus();
+        }, 50);
       }
 
       async function saEliminarContrato(id) {
-        const c = CONTRATOS.find(x => x.id === id);
+        const c = CONTRATOS.find((x) => x.id === id);
         if (!c) return;
         const nombre = c.tenant.split("\n")[0];
         const confirmed = confirm(
           `¿Eliminar el registro de "${nombre}" (${id})?\n\n` +
-          `• El contrato quedará inactivo en Supabase\n` +
-          `• Se limpiarán las expulsiones asociadas\n` +
-          `• Los pagos históricos se conservarán\n\n` +
-          `Esta acción no se puede deshacer.`
+            `• El contrato quedará inactivo en Supabase\n` +
+            `• Se limpiarán las expulsiones asociadas\n` +
+            `• Los pagos históricos se conservarán\n\n` +
+            `Esta acción no se puede deshacer.`,
         );
         if (!confirmed) return;
 
         // Show feedback immediately
         const card = $("sa-card-" + id);
-        if (card) { card.style.opacity = "0.4"; card.style.pointerEvents = "none"; }
+        if (card) {
+          card.style.opacity = "0.4";
+          card.style.pointerEvents = "none";
+        }
 
         try {
           // 1. Soft-delete contract in Supabase
-          await sbQuery(() => _sb.from("contratos").update({ activo: false }).eq("id", id));
+          await sbQuery(() =>
+            _sb.from("contratos").update({ activo: false }).eq("id", id),
+          );
           // 2. Remove expulsiones
-          try { await sbQuery(() => _sb.from("expulsiones").delete().eq("contrato_id", id)); } catch(e) {}
+          try {
+            await sbQuery(() =>
+              _sb.from("expulsiones").delete().eq("contrato_id", id),
+            );
+          } catch (e) {}
           // 3. Remove notas_inquilino
-          try { await sbQuery(() => _sb.from("notas_inquilino").delete().eq("contrato_id", id)); } catch(e) {}
+          try {
+            await sbQuery(() =>
+              _sb.from("notas_inquilino").delete().eq("contrato_id", id),
+            );
+          } catch (e) {}
         } catch (e) {
-          if (card) { card.style.opacity = ""; card.style.pointerEvents = ""; }
+          if (card) {
+            card.style.opacity = "";
+            card.style.pointerEvents = "";
+          }
           showToastMsg("⚠ Error al eliminar: " + e.message, true);
           return;
         }
 
         // Remove from local memory
-        CONTRATOS = CONTRATOS.filter(x => x.id !== id);
+        CONTRATOS = CONTRATOS.filter((x) => x.id !== id);
         delete SA_STATE[id];
         lsSaveSA();
 
@@ -4135,7 +4690,8 @@
 
         // Refresh Contratos cards grid if visible
         const contractPage = $("page-contratos");
-        if (contractPage && contractPage.classList.contains("active")) renderAllCards();
+        if (contractPage && contractPage.classList.contains("active"))
+          renderAllCards();
 
         // Refresh Finanzas table if visible
         const finPage = $("page-finanzas");
@@ -4151,10 +4707,11 @@
         const { end, pending } = getActiveCycle(c.startBase);
         if (pending) return { label: "Pendiente de inicio", cls: "am" };
         const days = Math.ceil((end - now()) / 864e5);
-        if (days < 0)                 return { label: "Vencido",          cls: "rs" };
-        if (days <= THRESH_CRITICAL)  return { label: "Próximo a vencer", cls: "rs" };
-        if (days <= THRESH_WARNING)   return { label: "Por renovar",      cls: "am" };
-        return                               { label: "Vigente",           cls: "em" };
+        if (days < 0) return { label: "Vencido", cls: "rs" };
+        if (days <= THRESH_CRITICAL)
+          return { label: "Próximo a vencer", cls: "rs" };
+        if (days <= THRESH_WARNING) return { label: "Por renovar", cls: "am" };
+        return { label: "Vigente", cls: "em" };
       }
 
       /**
@@ -4184,7 +4741,12 @@
         const countdownTarget = pending ? new Date(c.startBase) : end;
         const rem = msToDhms(countdownTarget - now());
         const daysLeft = Math.ceil((end - now()) / 864e5);
-        const alertClass = exp ? "" : pending ? "" : daysLeft <= THRESH_CRITICAL ? " critical-alert" : daysLeft <= THRESH_WARNING ? " warning-alert" : "";
+        const alertClass =
+          exp ? ""
+          : pending ? ""
+          : daysLeft <= THRESH_CRITICAL ? " critical-alert"
+          : daysLeft <= THRESH_WARNING ? " warning-alert"
+          : "";
         const cdColor =
           status.cls === "em" ? "var(--em)"
           : status.cls === "am" ? "var(--am)"
@@ -4208,7 +4770,8 @@
               .join("")
           : '<span style="font-size:10px;color:var(--t3)">Sin observaciones.</span>';
 
-        const expFechaInicio = st.fechaExpulsion ? fmt(new Date(st.fechaExpulsion)) : "—";
+        const expFechaInicio =
+          st.fechaExpulsion ? fmt(new Date(st.fechaExpulsion)) : "—";
 
         // Build expulsion countdown block
         let expCountdownHTML = "";
@@ -4231,7 +4794,7 @@
                   <span class="sa-exp-cd-title">Tiempo para pedir el apartamento</span>
                   <span class="sa-exp-cd-sub">Fecha límite de acción: ${fmt(cd.target)}</span>
                   <div id="sa-exp-cd-${id}" class="sa-exp-cd-timer">
-                    ${pad(cd.dhms.d,3)}d ${pad(cd.dhms.h)}h ${pad(cd.dhms.m)}m
+                    ${pad(cd.dhms.d, 3)}d ${pad(cd.dhms.h)}h ${pad(cd.dhms.m)}m
                   </div>
                 </div>
               </div>`;
@@ -4263,7 +4826,9 @@
           }
         }
 
-        const expBlock = exp ? `
+        const expBlock =
+          exp ?
+            `
           <div class="sa-expulsion-block">
             <div class="sa-exp-dates">
               <div><span class="sa-exp-dt-label">Inicio proceso</span><span class="sa-exp-dt-val">${expFechaInicio}</span></div>
@@ -4271,7 +4836,8 @@
             </div>
             ${expCountdownHTML}
             ${motivoHTML}
-          </div>` : "";
+          </div>`
+          : "";
 
         const html = `<div class="sa-card${exp ? " expulsion" : ""}${alertClass}" id="sa-card-${id}">
     <div class="sa-card-head">
@@ -4291,13 +4857,19 @@
           </div>
         </div>
       </div>
-      ${!exp && daysLeft <= THRESH_CRITICAL ? `<div class="sa-countdown-banner critical">
+      ${
+        !exp && daysLeft <= THRESH_CRITICAL ?
+          `<div class="sa-countdown-banner critical">
         <span class="sa-cdb-icon">🚨</span>
         <div><span class="sa-cdb-title">Cuenta Regresiva Activa</span><span class="sa-cdb-sub">El contrato vence en menos de ${THRESH_CRITICAL} días — requiere acción inmediata</span></div>
-      </div>` : !exp && daysLeft <= THRESH_WARNING ? `<div class="sa-countdown-banner warning">
+      </div>`
+        : !exp && daysLeft <= THRESH_WARNING ?
+          `<div class="sa-countdown-banner warning">
         <span class="sa-cdb-icon">⚡</span>
         <div><span class="sa-cdb-title">Renovación Próxima</span><span class="sa-cdb-sub">Restan ${daysLeft} días para el vencimiento del contrato</span></div>
-      </div>` : ""}
+      </div>`
+        : ""
+      }
       <div class="sa-notes-section">
         <span class="sa-notes-title">Observaciones</span>
         <div id="sa-notes-list-${id}">${notesHTML}</div>
@@ -4343,7 +4915,8 @@
         if (saCount) saCount.textContent = CONTRATOS.length + " inquilinos";
 
         if (CONTRATOS.length === 0) {
-          grid.innerHTML = '<p style="font-size:13px;color:var(--t3);padding:20px 0">Cargando contratos…</p>';
+          grid.innerHTML =
+            '<p style="font-size:13px;color:var(--t3);padding:20px 0">Cargando contratos…</p>';
           return;
         }
 
@@ -4359,10 +4932,17 @@
           CONTRATOS.map(async (c) => {
             try {
               const notas = await sbQuery(() =>
-                _sb.from("notas_inquilino").select("*").eq("contrato_id", c.id).order("created_at", { ascending: false })
+                _sb
+                  .from("notas_inquilino")
+                  .select("*")
+                  .eq("contrato_id", c.id)
+                  .order("created_at", { ascending: false }),
               );
               const st = saGetState(c.id);
-              st.notes = Array.isArray(notas) ? notas.map((n) => ({ id: n.id, nota: n.nota })) : st.notes;
+              st.notes =
+                Array.isArray(notas) ?
+                  notas.map((n) => ({ id: n.id, nota: n.nota }))
+                : st.notes;
               // NOTE: expulsion state is intentionally NOT cleared here.
               // It was already authoritative-loaded by loadAndInit from Supabase.
               // Resetting it here on a null result caused state loss when upsert
@@ -4407,14 +4987,15 @@
         try {
           const [cr, pr, er] = await Promise.all([
             sbQuery(() =>
-              _sb.from("contratos").select("*").eq("activo", true).order("id")
+              _sb.from("contratos").select("*").eq("activo", true).order("id"),
             ),
             sbQuery(() =>
-              _sb.from("pagos").select("*").order("fecha_pago", { ascending: false })
+              _sb
+                .from("pagos")
+                .select("*")
+                .order("fecha_pago", { ascending: false }),
             ),
-            sbQuery(() =>
-              _sb.from("expulsiones").select("*")
-            ),
+            sbQuery(() => _sb.from("expulsiones").select("*")),
           ]);
 
           if (Array.isArray(cr)) {
@@ -4434,43 +5015,71 @@
           }
 
           if (Array.isArray(pr)) {
-            PAGOS_HISTORICOS = dedupPagos(pr.map((p) => ({
-              id: p.id,
-              contratoId: p.contrato_id,
-              aptId: p.contrato_id,
-              monto: parseFloat(p.monto),
-              fechaPago: new Date(p.fecha_pago + "T12:00:00"),
-              mes: normalizarMes(p.mes, p.fecha_pago),
-              año: p.anio,
-              metodo: p.metodo || "transferencia",
-              notas: p.notas || "",
-              auto: false,
-            })));
+            PAGOS_HISTORICOS = dedupPagos(
+              pr.map((p) => ({
+                id: p.id,
+                contratoId: p.contrato_id,
+                aptId: p.contrato_id,
+                monto: parseFloat(p.monto),
+                fechaPago: new Date(p.fecha_pago + "T12:00:00"),
+                mes: normalizarMes(p.mes, p.fecha_pago),
+                año: p.anio,
+                metodo: p.metodo || "transferencia",
+                notas: p.notas || "",
+                auto: false,
+              })),
+            );
           }
 
           // ── AUTO-CLEAN duplicate payments in DB (runs once on boot) ──────
           // Keeps only the highest-monto row per (contrato_id, mes, anio)
           try {
             const allPagosRaw = await sbQuery(() =>
-              _sb.from("pagos").select("id, contrato_id, mes, anio, monto, fecha_pago").order("monto", { ascending: false })
+              _sb
+                .from("pagos")
+                .select("id, contrato_id, mes, anio, monto, fecha_pago")
+                .order("monto", { ascending: false }),
             );
             if (Array.isArray(allPagosRaw)) {
               const seen = new Map();
               const toDelete = [];
-              allPagosRaw.forEach(p => {
-                // Use fecha_pago month as canonical key (avoids indexing ambiguity)
+              // Build startBase map for pre-contract ghost detection
+              const contratoStartMap = {};
+              CONTRATOS.forEach(c => { contratoStartMap[c.id] = new Date((c.startBase || "") + "T00:00:00"); });
+
+              allPagosRaw.forEach((p) => {
                 const fp = new Date((p.fecha_pago || "") + "T12:00:00");
-                const canonMes = !isNaN(fp.getTime()) ? fp.getMonth() : (p.mes > 0 ? p.mes - 1 : p.mes);
+
+                // Rule 1: Delete payments that predate the contract startBase (ghost/seed data)
+                const contractStart = contratoStartMap[p.contrato_id];
+                if (contractStart && !isNaN(contractStart.getTime()) && !isNaN(fp.getTime())) {
+                  const oneDayBefore = new Date(contractStart);
+                  oneDayBefore.setDate(oneDayBefore.getDate() - 1);
+                  if (fp < oneDayBefore) {
+                    toDelete.push(p.id);
+                    console.log(`[Onyx] Ghost payment before contract start → id=${p.id} fecha=${p.fecha_pago}`);
+                    return;
+                  }
+                }
+
+                // Rule 2: Dedup same (contrato, mes, año) — keep highest monto
+                const canonMes =
+                  !isNaN(fp.getTime()) ? fp.getMonth()
+                  : p.mes > 0 ? p.mes - 1
+                  : p.mes;
                 const key = `${p.contrato_id}__${canonMes}__${p.anio}`;
                 if (seen.has(key)) {
-                  toDelete.push(p.id); // duplicate — mark for deletion
+                  toDelete.push(p.id);
                 } else {
-                  seen.set(key, p.id); // first (highest monto) — keep
+                  seen.set(key, p.id);
                 }
               });
+
               if (toDelete.length > 0) {
-                await sbQuery(() => _sb.from("pagos").delete().in("id", toDelete));
-                console.log(`[Onyx] Auto-cleaned ${toDelete.length} duplicate payment(s) from DB`);
+                await sbQuery(() =>
+                  _sb.from("pagos").delete().in("id", toDelete),
+                );
+                console.log(`[Onyx] Auto-cleaned ${toDelete.length} record(s) (duplicates + pre-contract ghosts)`);
               }
             }
           } catch (e) {
@@ -4483,7 +5092,8 @@
               const st = saGetState(exp.contrato_id);
               st.expulsion = true;
               st.expMotivo = exp.motivo || "";
-              if (!st.fechaExpulsion) st.fechaExpulsion = exp.created_at || new Date().toISOString();
+              if (!st.fechaExpulsion)
+                st.fechaExpulsion = exp.created_at || new Date().toISOString();
               if (exp.motivo && exp.motivo.trim()) st.motivoGuardado = true;
             });
             lsSaveSA();
@@ -4492,7 +5102,8 @@
           // Re-render con datos reales
           renderDashboard();
           const activePage = document.querySelector(".page.active");
-          if (activePage && activePage.id === "page-sistema") renderSituacionActual();
+          if (activePage && activePage.id === "page-sistema")
+            renderSituacionActual();
         } catch (e) {
           console.error("[Supabase] Initial load failed:", e);
           showToastMsg("⚠ Sin conexión — no se pudieron cargar los datos");
@@ -4508,12 +5119,18 @@
    ═══════════════════════════════════════════════════════════════════════ */
       const PIN_HASH_KEY = "onyx_pin_hash";
       // Default PIN 1234 — user can change via UI
-      const DEFAULT_PIN_HASH = "6c3b182b897b9f5342deba66fc433ab2650a06409cee848d478de581db70f702";
+      const DEFAULT_PIN_HASH =
+        "6c3b182b897b9f5342deba66fc433ab2650a06409cee848d478de581db70f702";
       let _pinBuffer = "";
 
       async function sha256hex(str) {
-        const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
-        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+        const buf = await crypto.subtle.digest(
+          "SHA-256",
+          new TextEncoder().encode(str),
+        );
+        return Array.from(new Uint8Array(buf))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
       }
 
       function getStoredPinHash() {
@@ -4541,7 +5158,7 @@
         for (let i = 0; i < 6; i++) {
           const d = document.getElementById("pd-" + i);
           if (d) {
-            d.classList.remove("filled","error");
+            d.classList.remove("filled", "error");
             if (i < _pinBuffer.length) d.classList.add("filled");
           }
         }
@@ -4553,7 +5170,9 @@
           // Correct — animate success then hide
           for (let i = 0; i < 6; i++) {
             const d = document.getElementById("pd-" + i);
-            if (d) { d.classList.add("filled"); }
+            if (d) {
+              d.classList.add("filled");
+            }
           }
           setTimeout(() => {
             document.getElementById("pin-screen").classList.add("hidden");
@@ -4563,14 +5182,20 @@
           // Wrong — shake animation
           for (let i = 0; i < 6; i++) {
             const d = document.getElementById("pd-" + i);
-            if (d) { d.classList.remove("filled"); d.classList.add("error"); }
+            if (d) {
+              d.classList.remove("filled");
+              d.classList.add("error");
+            }
           }
-          document.getElementById("pin-error").textContent = "PIN incorrecto. Intenta de nuevo.";
+          document.getElementById("pin-error").textContent =
+            "PIN incorrecto. Intenta de nuevo.";
           setTimeout(() => {
             _pinBuffer = "";
             for (let i = 0; i < 6; i++) {
               const d = document.getElementById("pd-" + i);
-              if (d) { d.classList.remove("error"); }
+              if (d) {
+                d.classList.remove("error");
+              }
             }
             document.getElementById("pin-error").textContent = "";
           }, 1000);
@@ -4579,7 +5204,9 @@
 
       // Keyboard support for PIN
       document.addEventListener("keydown", (e) => {
-        const pinVisible = !document.getElementById("pin-screen").classList.contains("hidden");
+        const pinVisible = !document
+          .getElementById("pin-screen")
+          .classList.contains("hidden");
         if (pinVisible) {
           if (e.key >= "0" && e.key <= "9") pinKey(e.key);
           if (e.key === "Backspace") pinDel();
@@ -4614,7 +5241,7 @@
       }
 
       // Close sidebar when nav item clicked on mobile
-      document.querySelectorAll(".nav-item").forEach(el => {
+      document.querySelectorAll(".nav-item").forEach((el) => {
         el.addEventListener("click", () => {
           if (window.innerWidth <= 900) closeSidebar();
         });
@@ -4627,14 +5254,33 @@
         const overlay = document.getElementById("contract-overlay");
         const title = document.getElementById("contract-modal-title");
         // Clear form
-        ["cm-id","cm-ref","cm-nombre","cm-tenant1","cm-tenant2","cm-address",
-         "cm-apt","cm-rent","cm-deposit","cm-payday","cm-start","cm-notary","cm-notes"]
-          .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
-        document.querySelectorAll(".field-err").forEach(e => e.classList.remove("show"));
-        document.querySelectorAll(".form-input, .form-select, .form-textarea").forEach(e => e.classList.remove("err"));
+        [
+          "cm-id",
+          "cm-ref",
+          "cm-nombre",
+          "cm-tenant1",
+          "cm-tenant2",
+          "cm-address",
+          "cm-apt",
+          "cm-rent",
+          "cm-deposit",
+          "cm-payday",
+          "cm-start",
+          "cm-notary",
+          "cm-notes",
+        ].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.value = "";
+        });
+        document
+          .querySelectorAll(".field-err")
+          .forEach((e) => e.classList.remove("show"));
+        document
+          .querySelectorAll(".form-input, .form-select, .form-textarea")
+          .forEach((e) => e.classList.remove("err"));
 
         if (contratoId) {
-          const c = CONTRATOS.find(x => x.id === contratoId);
+          const c = CONTRATOS.find((x) => x.id === contratoId);
           if (!c) return;
           title.textContent = "Editar Contrato";
           document.getElementById("cm-id").value = c.id;
@@ -4643,19 +5289,28 @@
           document.getElementById("cm-nombre").value = c.aptNombre || "";
           const lines = c.tenant.split("\n");
           document.getElementById("cm-tenant1").value = lines[0] || "";
-          document.getElementById("cm-tenant2").value = lines[1] ? lines[1].replace(/^& /, "") : "";
-          document.getElementById("cm-address").value = c.address.replace(/\n/g, ", ");
+          document.getElementById("cm-tenant2").value =
+            lines[1] ? lines[1].replace(/^& /, "") : "";
+          document.getElementById("cm-address").value = c.address.replace(
+            /\n/g,
+            ", ",
+          );
           document.getElementById("cm-apt").value = c.apt || "";
           document.getElementById("cm-rent").value = c.rent || "";
           document.getElementById("cm-deposit").value = c.deposit || "";
           document.getElementById("cm-payday").value = c.payDay || "";
-          if (c.startBase) document.getElementById("cm-start").value = new Date(c.startBase).toISOString().split("T")[0];
+          if (c.startBase)
+            document.getElementById("cm-start").value = new Date(c.startBase)
+              .toISOString()
+              .split("T")[0];
           document.getElementById("cm-notary").value = c.notary || "";
           document.getElementById("cm-notes").value = c.notes || "";
         } else {
           title.textContent = "Nuevo Contrato";
           document.getElementById("cm-ref").disabled = false;
-          document.getElementById("cm-start").value = new Date().toISOString().split("T")[0];
+          document.getElementById("cm-start").value = new Date()
+            .toISOString()
+            .split("T")[0];
         }
         overlay.classList.add("open");
       }
@@ -4665,7 +5320,8 @@
       }
 
       function closeContractModalOutside(e) {
-        if (e.target === document.getElementById("contract-overlay")) closeContractModal();
+        if (e.target === document.getElementById("contract-overlay"))
+          closeContractModal();
       }
 
       function _cmRequired(id, errId) {
@@ -4697,19 +5353,24 @@
       async function submitContract() {
         // Validate
         let valid = true;
-        valid = _cmRequired("cm-ref","cm-ref-err") && valid;
-        valid = _cmRequired("cm-nombre","cm-nombre-err") && valid;
-        valid = _cmRequired("cm-tenant1","cm-tenant1-err") && valid;
-        valid = _cmRequired("cm-address","cm-address-err") && valid;
-        valid = _cmNumber("cm-rent","cm-rent-err", 1) && valid;
-        valid = _cmNumber("cm-deposit","cm-deposit-err", 0) && valid;
-        valid = _cmNumber("cm-payday","cm-payday-err", 1) && valid;
-        valid = _cmRequired("cm-start","cm-start-err") && valid;
+        valid = _cmRequired("cm-ref", "cm-ref-err") && valid;
+        valid = _cmRequired("cm-nombre", "cm-nombre-err") && valid;
+        valid = _cmRequired("cm-tenant1", "cm-tenant1-err") && valid;
+        valid = _cmRequired("cm-address", "cm-address-err") && valid;
+        valid = _cmNumber("cm-rent", "cm-rent-err", 1) && valid;
+        valid = _cmNumber("cm-deposit", "cm-deposit-err", 0) && valid;
+        valid = _cmNumber("cm-payday", "cm-payday-err", 1) && valid;
+        valid = _cmRequired("cm-start", "cm-start-err") && valid;
         if (!valid) return;
 
         const isEdit = !!document.getElementById("cm-id").value;
         const tenant2 = document.getElementById("cm-tenant2").value.trim();
-        const tenantStr = tenant2 ? document.getElementById("cm-tenant1").value.trim() + "\n& " + tenant2 : document.getElementById("cm-tenant1").value.trim();
+        const tenantStr =
+          tenant2 ?
+            document.getElementById("cm-tenant1").value.trim() +
+            "\n& " +
+            tenant2
+          : document.getElementById("cm-tenant1").value.trim();
 
         const payload = {
           id: document.getElementById("cm-ref").value.trim().toUpperCase(),
@@ -4728,40 +5389,78 @@
 
         const btn = document.querySelector("#contract-overlay .btn-confirm");
         const orig = btn.innerHTML;
-        btn.disabled = true; btn.textContent = "Guardando…";
+        btn.disabled = true;
+        btn.textContent = "Guardando…";
 
         try {
           if (isEdit) {
             await sbQuery(() =>
-              _sb.from("contratos").update({
-                apt_nombre: payload.apt_nombre, tenant: payload.tenant,
-                address: payload.address, apt: payload.apt,
-                rent: payload.rent, deposit: payload.deposit,
-                pay_day: payload.pay_day, start_base: payload.start_base,
-                notary: payload.notary, notes: payload.notes,
-              }).eq("id", payload.id)
+              _sb
+                .from("contratos")
+                .update({
+                  apt_nombre: payload.apt_nombre,
+                  tenant: payload.tenant,
+                  address: payload.address,
+                  apt: payload.apt,
+                  rent: payload.rent,
+                  deposit: payload.deposit,
+                  pay_day: payload.pay_day,
+                  start_base: payload.start_base,
+                  notary: payload.notary,
+                  notes: payload.notes,
+                })
+                .eq("id", payload.id),
             );
             // Update locally
-            const idx = CONTRATOS.findIndex(c => c.id === payload.id);
+            const idx = CONTRATOS.findIndex((c) => c.id === payload.id);
             if (idx >= 0) {
-              CONTRATOS[idx] = { ...CONTRATOS[idx], aptNombre: payload.apt_nombre, tenant: payload.tenant,
-                address: payload.address, apt: payload.apt, rent: payload.rent, deposit: payload.deposit,
-                payDay: payload.pay_day, startBase: new Date(payload.start_base), notary: payload.notary, notes: payload.notes };
+              CONTRATOS[idx] = {
+                ...CONTRATOS[idx],
+                aptNombre: payload.apt_nombre,
+                tenant: payload.tenant,
+                address: payload.address,
+                apt: payload.apt,
+                rent: payload.rent,
+                deposit: payload.deposit,
+                payDay: payload.pay_day,
+                startBase: new Date(payload.start_base),
+                notary: payload.notary,
+                notes: payload.notes,
+              };
             }
             showToastMsg("Contrato actualizado — " + payload.id);
           } else {
             await sbQuery(() =>
-              _sb.from("contratos").insert([{
-                id: payload.id, apt_nombre: payload.apt_nombre,
-                tenant: payload.tenant, address: payload.address,
-                apt: payload.apt, rent: payload.rent, deposit: payload.deposit,
-                pay_day: payload.pay_day, start_base: payload.start_base,
-                notary: payload.notary, notes: payload.notes, activo: true,
-              }])
+              _sb.from("contratos").insert([
+                {
+                  id: payload.id,
+                  apt_nombre: payload.apt_nombre,
+                  tenant: payload.tenant,
+                  address: payload.address,
+                  apt: payload.apt,
+                  rent: payload.rent,
+                  deposit: payload.deposit,
+                  pay_day: payload.pay_day,
+                  start_base: payload.start_base,
+                  notary: payload.notary,
+                  notes: payload.notes,
+                  activo: true,
+                },
+              ]),
             );
-            CONTRATOS.push({ id: payload.id, aptNombre: payload.apt_nombre, tenant: payload.tenant,
-              address: payload.address, apt: payload.apt, rent: payload.rent, deposit: payload.deposit,
-              payDay: payload.pay_day, startBase: new Date(payload.start_base), notary: payload.notary, notes: payload.notes });
+            CONTRATOS.push({
+              id: payload.id,
+              aptNombre: payload.apt_nombre,
+              tenant: payload.tenant,
+              address: payload.address,
+              apt: payload.apt,
+              rent: payload.rent,
+              deposit: payload.deposit,
+              payDay: payload.pay_day,
+              startBase: new Date(payload.start_base),
+              notary: payload.notary,
+              notes: payload.notes,
+            });
             showToastMsg("Contrato creado — " + payload.id);
           }
           closeContractModal();
@@ -4770,7 +5469,8 @@
         } catch (e) {
           showToastMsg("⚠ Error al guardar: " + e.message, true);
         }
-        btn.disabled = false; btn.innerHTML = orig;
+        btn.disabled = false;
+        btn.innerHTML = orig;
       }
 
       /* ═══════════════════════════════════════════════════════════════════════
@@ -4779,34 +5479,41 @@
    ═══════════════════════════════════════════════════════════════════════ */
       function exportFinancialPDF() {
         const n = now();
-        const mes = n.getMonth(), año = n.getFullYear();
-        const totalMonthly = CONTRATOS.reduce((s,c) => s + c.rent, 0);
-        const totalDeposits = CONTRATOS.reduce((s,c) => s + c.deposit, 0);
+        const mes = n.getMonth(),
+          año = n.getFullYear();
+        const totalMonthly = CONTRATOS.reduce((s, c) => s + c.rent, 0);
+        const totalDeposits = CONTRATOS.reduce((s, c) => s + c.deposit, 0);
         const morosos = DetectarMorosos(mes, año);
         const ingresosEste = CalcularIngresosMensuales(mes, año);
         const paidCount = CONTRATOS.length - morosos.length;
 
-        const rows = CONTRATOS.map(c => {
-          const paid = PAGOS_HISTORICOS.find(p => p.contratoId === c.id && p.mes === mes && p.año === año);
-          const {deuda} = CalcularDeudaPorApartamento(c);
-          const {end} = getActiveCycle(c.startBase);
+        const rows = CONTRATOS.map((c) => {
+          const paid = PAGOS_HISTORICOS.find(
+            (p) => p.contratoId === c.id && p.mes === mes && p.año === año,
+          );
+          const { deuda } = CalcularDeudaPorApartamento(c);
+          const { end } = getActiveCycle(c.startBase);
           const dRen = Math.ceil((end - n) / 864e5);
           return `<tr>
             <td>${c.id}</td>
             <td>${c.aptNombre}</td>
             <td>${c.tenant.split("\n")[0]}</td>
             <td>RD$${Number(c.rent).toLocaleString("es-DO")}</td>
-            <td style="color:${paid?"#2ebd8e":"#f2415a"};font-weight:600">${paid ? "Pagado" : "Pendiente"}</td>
-            <td>${deuda > 0 ? "RD$"+Number(deuda).toLocaleString("es-DO") : "—"}</td>
-            <td style="color:${dRen < 0?"#f2415a":dRen<=45?"#ecaf42":"#2ebd8e"}">${dRen < 0 ? "VENCIDO" : dRen + "d"}</td>
+            <td style="color:${paid ? "#2ebd8e" : "#f2415a"};font-weight:600">${paid ? "Pagado" : "Pendiente"}</td>
+            <td>${deuda > 0 ? "RD$" + Number(deuda).toLocaleString("es-DO") : "—"}</td>
+            <td style="color:${
+              dRen < 0 ? "#f2415a"
+              : dRen <= 45 ? "#ecaf42"
+              : "#2ebd8e"
+            }">${dRen < 0 ? "VENCIDO" : dRen + "d"}</td>
           </tr>`;
         }).join("");
 
         const histRows = [...PAGOS_HISTORICOS]
-          .sort((a,b) => b.fechaPago - a.fechaPago)
+          .sort((a, b) => b.fechaPago - a.fechaPago)
           .slice(0, 30)
-          .map(p => {
-            const c = CONTRATOS.find(x => x.id === p.contratoId);
+          .map((p) => {
+            const c = CONTRATOS.find((x) => x.id === p.contratoId);
             return `<tr>
               <td>${p.contratoId}</td>
               <td>${c ? c.tenant.split("\n")[0] : "—"}</td>
@@ -4815,7 +5522,8 @@
               <td>${p.metodo}</td>
               <td>${fmt(p.fechaPago)}</td>
             </tr>`;
-          }).join("");
+          })
+          .join("");
 
         const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
           <title>Onyx Realty — Reporte ${MONTHS_ES_LONG[mes]} ${año}</title>
@@ -4842,7 +5550,7 @@
           <div class="kpis">
             <div class="kpi"><span class="kpi-label">Ingresos Esperados / Mes</span><span class="kpi-num gold">RD$${Number(totalMonthly).toLocaleString("es-DO")}</span></div>
             <div class="kpi"><span class="kpi-label">Cobrado Este Mes</span><span class="kpi-num em">RD$${Number(ingresosEste).toLocaleString("es-DO")}</span></div>
-            <div class="kpi"><span class="kpi-label">Morosos Este Mes</span><span class="kpi-num ${morosos.length>0?"rs":"em"}">${morosos.length} de ${CONTRATOS.length}</span></div>
+            <div class="kpi"><span class="kpi-label">Morosos Este Mes</span><span class="kpi-num ${morosos.length > 0 ? "rs" : "em"}">${morosos.length} de ${CONTRATOS.length}</span></div>
             <div class="kpi"><span class="kpi-label">Depósitos Retenidos</span><span class="kpi-num">RD$${Number(totalDeposits).toLocaleString("es-DO")}</span></div>
           </div>
           <h2>Estado de Contratos — ${MONTHS_ES_LONG[mes]} ${año}</h2>
@@ -4851,7 +5559,7 @@
           <h2>Últimos 30 Pagos Registrados</h2>
           <table><thead><tr><th>ID</th><th>Inquilino</th><th>Período</th><th>Monto</th><th>Método</th><th>Fecha</th></tr></thead>
           <tbody>${histRows}</tbody></table>
-          <div class="footer">Generado por Onyx Realty · ${n.toLocaleDateString("es-DO",{day:"2-digit",month:"long",year:"numeric"})} · ${n.toLocaleTimeString("es-DO",{hour:"2-digit",minute:"2-digit"})}</div>
+          <div class="footer">Generado por Onyx Realty · ${n.toLocaleDateString("es-DO", { day: "2-digit", month: "long", year: "numeric" })} · ${n.toLocaleTimeString("es-DO", { hour: "2-digit", minute: "2-digit" })}</div>
           </body></html>`;
 
         const w = window.open("", "_blank", "width=900,height=700");
@@ -4868,17 +5576,21 @@
 
       function renderPaymentHistoryPaged() {
         // Always render deduplicated list
-        const sorted = [...PAGOS_HISTORICOS].sort((a,b) => b.fechaPago - a.fechaPago);
+        const sorted = [...PAGOS_HISTORICOS].sort(
+          (a, b) => b.fechaPago - a.fechaPago,
+        );
         const totalPages = Math.ceil(sorted.length / HIST_PAGE_SIZE);
         const start = _histPage * HIST_PAGE_SIZE;
         const page = sorted.slice(start, start + HIST_PAGE_SIZE);
 
-        document.getElementById("hist-count").textContent = sorted.length + " registros";
-        document.getElementById("payment-history").innerHTML = page.map(p => {
-          const c = CONTRATOS.find(x => x.id === p.contratoId);
-          const name = c ? c.tenant.split("\n")[0] : "—";
-          const pid = String(p.id).replace(/['"]/g, "");
-          return `<div class="hist-row" id="hrow-${pid}">
+        document.getElementById("hist-count").textContent =
+          sorted.length + " registros";
+        document.getElementById("payment-history").innerHTML = page
+          .map((p) => {
+            const c = CONTRATOS.find((x) => x.id === p.contratoId);
+            const name = c ? c.tenant.split("\n")[0] : "—";
+            const pid = String(p.id).replace(/['"]/g, "");
+            return `<div class="hist-row" id="hrow-${pid}">
             <span class="hist-id">${p.contratoId}</span>
             <div><span class="hist-tenant">${name}</span><span class="hist-apt">${MONTHS_ES[p.mes]} ${p.año}</span></div>
             <span class="hist-method">${p.metodo}</span>
@@ -4889,15 +5601,16 @@
               <button class="hist-act-btn del" onclick="deletePayment('${pid}')">🗑</button>
             </div>
           </div>`;
-        }).join('<div class="separator"></div>');
+          })
+          .join('<div class="separator"></div>');
 
         // Pagination controls
         if (totalPages > 1) {
-          let pHtml = `<button class="pg-btn" onclick="_histPage=Math.max(0,_histPage-1);renderPaymentHistoryPaged()" ${_histPage===0?"disabled":""}>‹ Anterior</button>`;
+          let pHtml = `<button class="pg-btn" onclick="_histPage=Math.max(0,_histPage-1);renderPaymentHistoryPaged()" ${_histPage === 0 ? "disabled" : ""}>‹ Anterior</button>`;
           for (let i = 0; i < totalPages; i++) {
-            pHtml += `<button class="pg-btn ${i===_histPage?"active":""}" onclick="_histPage=${i};renderPaymentHistoryPaged()">${i+1}</button>`;
+            pHtml += `<button class="pg-btn ${i === _histPage ? "active" : ""}" onclick="_histPage=${i};renderPaymentHistoryPaged()">${i + 1}</button>`;
           }
-          pHtml += `<button class="pg-btn" onclick="_histPage=Math.min(${totalPages-1},_histPage+1);renderPaymentHistoryPaged()" ${_histPage===totalPages-1?"disabled":""}>Siguiente ›</button>`;
+          pHtml += `<button class="pg-btn" onclick="_histPage=Math.min(${totalPages - 1},_histPage+1);renderPaymentHistoryPaged()" ${_histPage === totalPages - 1 ? "disabled" : ""}>Siguiente ›</button>`;
           document.getElementById("payment-pagination").innerHTML = pHtml;
         } else {
           document.getElementById("payment-pagination").innerHTML = "";
@@ -4906,16 +5619,20 @@
 
       /* ── EDIT / DELETE PAYMENT ──────────────────────────────────────────── */
       function openEditPayModal(payId) {
-        const p = PAGOS_HISTORICOS.find(x => String(x.id) === String(payId));
+        const p = PAGOS_HISTORICOS.find((x) => String(x.id) === String(payId));
         if (!p) return;
-        const c = CONTRATOS.find(x => x.id === p.contratoId);
+        const c = CONTRATOS.find((x) => x.id === p.contratoId);
         document.getElementById("ep-id").value = payId;
-        document.getElementById("ep-apt").value = p.contratoId + (c ? " — " + c.tenant.split("\n")[0].substring(0,28) : "");
+        document.getElementById("ep-apt").value =
+          p.contratoId +
+          (c ? " — " + c.tenant.split("\n")[0].substring(0, 28) : "");
         document.getElementById("ep-monto").value = p.monto;
-        document.getElementById("ep-fecha").value = p.fechaPago instanceof Date
-          ? p.fechaPago.toISOString().split("T")[0]
+        document.getElementById("ep-fecha").value =
+          p.fechaPago instanceof Date ?
+            p.fechaPago.toISOString().split("T")[0]
           : String(p.fechaPago).split("T")[0];
-        document.getElementById("ep-metodo").value = p.metodo || "transferencia";
+        document.getElementById("ep-metodo").value =
+          p.metodo || "transferencia";
         document.getElementById("ep-notas").value = p.notas || "";
 
         // Populate period selector centered on payment month
@@ -4923,8 +5640,12 @@
         pSel.innerHTML = "";
         const n = now();
         for (let i = 11; i >= 0; i--) {
-          let m = n.getMonth() - i, y = n.getFullYear();
-          if (m < 0) { m += 12; y--; }
+          let m = n.getMonth() - i,
+            y = n.getFullYear();
+          if (m < 0) {
+            m += 12;
+            y--;
+          }
           const opt = document.createElement("option");
           opt.value = y + "_" + m;
           opt.textContent = MONTHS_ES_LONG[m] + " " + y;
@@ -4946,33 +5667,46 @@
         const fechaVal = document.getElementById("ep-fecha").value;
         const metodo = document.getElementById("ep-metodo").value;
         const notas = document.getElementById("ep-notas").value.trim();
-        const [periodoAño, periodoMes] = document.getElementById("ep-period").value.split("_").map(Number);
+        const [periodoAño, periodoMes] = document
+          .getElementById("ep-period")
+          .value.split("_")
+          .map(Number);
 
-        if (!montoVal || !fechaVal) { showToastMsg("⚠ Completa todos los campos", true); return; }
+        if (!montoVal || !fechaVal) {
+          showToastMsg("⚠ Completa todos los campos", true);
+          return;
+        }
 
         const btn = document.querySelector("#edit-pay-overlay .btn-confirm");
         const orig = btn.innerHTML;
-        btn.disabled = true; btn.textContent = "Guardando…";
+        btn.disabled = true;
+        btn.textContent = "Guardando…";
 
         try {
           await sbQuery(() =>
-            _sb.from("pagos").update({
-              monto: montoVal,
-              fecha_pago: fechaVal,
-              mes: periodoMes + 1,
-              anio: periodoAño,
-              metodo,
-              notas: notas || null,
-            }).eq("id", payId)
+            _sb
+              .from("pagos")
+              .update({
+                monto: montoVal,
+                fecha_pago: fechaVal,
+                mes: periodoMes + 1,
+                anio: periodoAño,
+                metodo,
+                notas: notas || null,
+              })
+              .eq("id", payId),
           );
-        } catch(e) {
+        } catch (e) {
           showToastMsg("⚠ Error al guardar: " + e.message, true);
-          btn.disabled = false; btn.innerHTML = orig;
+          btn.disabled = false;
+          btn.innerHTML = orig;
           return;
         }
 
         // Update in memory
-        const idx = PAGOS_HISTORICOS.findIndex(x => String(x.id) === String(payId));
+        const idx = PAGOS_HISTORICOS.findIndex(
+          (x) => String(x.id) === String(payId),
+        );
         if (idx >= 0) {
           PAGOS_HISTORICOS[idx] = {
             ...PAGOS_HISTORICOS[idx],
@@ -4986,35 +5720,54 @@
         }
 
         document.getElementById("edit-pay-overlay").classList.remove("open");
-        btn.disabled = false; btn.innerHTML = orig;
+        btn.disabled = false;
+        btn.innerHTML = orig;
         renderFinanzas();
         renderDashboard();
         showToastMsg("Pago actualizado correctamente");
       }
 
       async function deletePayment(payId) {
-        const p = PAGOS_HISTORICOS.find(x => String(x.id) === String(payId));
+        const p = PAGOS_HISTORICOS.find((x) => String(x.id) === String(payId));
         if (!p) return;
-        const c = CONTRATOS.find(x => x.id === p.contratoId);
-        const label = (c ? c.tenant.split("\n")[0] : p.contratoId) + " — " + MONTHS_ES_LONG[p.mes] + " " + p.año;
-        if (!confirm(`¿Eliminar este pago?\n\n${label}\n${cur(p.monto)}\n\nEsta acción no se puede deshacer.`)) return;
+        const c = CONTRATOS.find((x) => x.id === p.contratoId);
+        const label =
+          (c ? c.tenant.split("\n")[0] : p.contratoId) +
+          " — " +
+          MONTHS_ES_LONG[p.mes] +
+          " " +
+          p.año;
+        if (
+          !confirm(
+            `¿Eliminar este pago?\n\n${label}\n${cur(p.monto)}\n\nEsta acción no se puede deshacer.`,
+          )
+        )
+          return;
 
         // Fade out immediately
         const row = document.getElementById("hrow-" + payId);
-        if (row) { row.style.opacity = "0.3"; row.style.pointerEvents = "none"; }
+        if (row) {
+          row.style.opacity = "0.3";
+          row.style.pointerEvents = "none";
+        }
 
         try {
           if (!String(payId).startsWith("PAY-LOCAL-")) {
             await sbQuery(() => _sb.from("pagos").delete().eq("id", payId));
           }
-        } catch(e) {
-          if (row) { row.style.opacity = ""; row.style.pointerEvents = ""; }
+        } catch (e) {
+          if (row) {
+            row.style.opacity = "";
+            row.style.pointerEvents = "";
+          }
           showToastMsg("⚠ Error al eliminar: " + e.message, true);
           return;
         }
 
         // Remove from memory
-        PAGOS_HISTORICOS = PAGOS_HISTORICOS.filter(x => String(x.id) !== String(payId));
+        PAGOS_HISTORICOS = PAGOS_HISTORICOS.filter(
+          (x) => String(x.id) !== String(payId),
+        );
         lsSavePagos();
 
         renderFinanzas();
