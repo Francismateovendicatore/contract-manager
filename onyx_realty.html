@@ -3638,37 +3638,29 @@
         ).reduce((s, p) => s + p.monto, 0);
       }
       function DetectarMorosos(mes, año) {
-        // A contract is moroso if it has ANY overdue unpaid period.
-        // Logic per period: payDay passed for that month + no payment recorded.
-        // For the current month: compare today vs payDay.
-        // For past months: payDay always considered passed.
+        // REGLA: moroso = contrato activo este mes
+        //                 + payDay de este mes YA pasó (hoy >= payDay)
+        //                 + NO existe pago registrado para este mes
+        // Sin deuda acumulada de meses anteriores. Solo el mes actual.
         const n = now();
         return CONTRATOS.filter((c) => {
+          // 1. Contrato debe estar activo este mes
           const cs = c.startBase instanceof Date ? c.startBase : new Date(c.startBase);
-          const pd = c.payDay || 1;
+          const active =
+            cs.getFullYear() < año ||
+            (cs.getFullYear() === año && cs.getMonth() <= mes);
+          if (!active) return false;
 
-          // Scan every month from contract start up to the requested (mes, año)
-          let chkM = cs.getMonth();
-          let chkY = cs.getFullYear();
-
-          while (chkY < año || (chkY === año && chkM <= mes)) {
-            const isCurrent = chkM === n.getMonth() && chkY === n.getFullYear();
-            // For current month → payDay must have passed; for past months → always overdue
-            const overdueThisMonth = isCurrent ? n.getDate() >= pd : true;
-
-            if (overdueThisMonth) {
-              const paid = PAGOS_HISTORICOS.some(
-                (p) => p.contratoId === c.id && p.mes === chkM && p.año === chkY,
-              );
-              if (!paid) return true; // found at least one unpaid overdue period
-            }
-
-            // Advance to next month
-            chkM++;
-            if (chkM > 11) { chkM = 0; chkY++; }
+          // 2. El payDay de este mes debe haber pasado
+          //    (solo aplica cuando revisamos el mes actual)
+          if (mes === n.getMonth() && año === n.getFullYear()) {
+            if (n.getDate() < (c.payDay || 1)) return false; // fecha aún no llega
           }
 
-          return false;
+          // 3. No debe existir pago registrado para este mes
+          return !PAGOS_HISTORICOS.some(
+            (p) => p.contratoId === c.id && p.mes === mes && p.año === año,
+          );
         });
       }
       function CalcularDeudaPorApartamento(c) {
@@ -3703,27 +3695,15 @@
           (p) => p.contratoId === c.id,
         ).length;
 
-        // Scan all months from startBase to now and accumulate total debt
-        const csM = cs.getMonth(), csY = cs.getFullYear();
-        let totalDeuda = 0, totalEsperado = 0, totalMesesTranscurridos = 0;
-        let chkM = csM, chkY = csY;
-        while (chkY < año || (chkY === año && chkM <= mes)) {
-          const isCurrent = chkM === n.getMonth() && chkY === n.getFullYear();
-          const overdueThisMonth = isCurrent ? n.getDate() >= pd : true;
-          if (overdueThisMonth) {
-            totalMesesTranscurridos++;
-            totalEsperado += c.rent;
-            const hasPaid = PAGOS_HISTORICOS.some(
-              (p) => p.contratoId === c.id && p.mes === chkM && p.año === chkY,
-            );
-            if (!hasPaid) totalDeuda += c.rent;
-          }
-          chkM++; if (chkM > 11) { chkM = 0; chkY++; }
-        }
-        const deuda = totalDeuda;
+        // DEUDA = solo el mes actual.
+        // Si hoy >= payDay y no pagó este mes → debe la renta de este mes.
+        // Nunca se acumula deuda de meses anteriores en este cálculo.
+        const payDayPassed = n.getDate() >= pd;
+
+        const deuda = payDayPassed && !paidThisMonth ? c.rent : 0;
         const cobrado = paidThisMonth ? c.rent : 0;
-        const esperado = totalEsperado;
-        const mesesTranscurridos = totalMesesTranscurridos;
+        const esperado = payDayPassed ? c.rent : 0;
+        const mesesTranscurridos = payDayPassed ? 1 : 0;
 
         return {
           esperado,
