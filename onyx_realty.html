@@ -2235,21 +2235,68 @@
       }
       /* CRUD mini buttons in SA card footer */
       .sa-crud-btn {
-        padding: 4px 9px; border-radius: var(--rxs);
-        font-size: 11px; cursor: pointer;
+        padding: 5px 11px; border-radius: var(--rxs);
+        font-size: 12px; cursor: pointer;
         transition: all 0.15s; border: 1px solid;
-        background: none;
+        background: none; font-weight: 600;
       }
       .sa-crud-btn.edit {
         color: var(--gold); border-color: var(--gold-border);
         background: var(--gold-dim);
       }
-      .sa-crud-btn.edit:hover { background: var(--gold-glow); }
+      .sa-crud-btn.edit:hover {
+        background: var(--gold-glow);
+        box-shadow: 0 0 12px rgba(201,147,74,0.2);
+        transform: translateY(-1px);
+      }
       .sa-crud-btn.del {
         color: var(--rs); border-color: var(--rs-border);
         background: var(--rs-dim);
       }
-      .sa-crud-btn.del:hover { background: rgba(242,65,90,0.15); }
+      .sa-crud-btn.del:hover {
+        background: rgba(242,65,90,0.15);
+        box-shadow: 0 0 12px rgba(242,65,90,0.2);
+        transform: translateY(-1px);
+      }
+      /* Visual indicator: SA cards are editable/deletable */
+      .sa-card {
+        position: relative;
+      }
+      .sa-card::after {
+        content: "✎ · 🗑";
+        position: absolute;
+        top: 10px; right: 14px;
+        font-size: 9px;
+        color: var(--t3);
+        font-family: "JetBrains Mono", monospace;
+        letter-spacing: 0.06em;
+        opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none;
+      }
+      .sa-card:hover::after { opacity: 0.5; }
+      /* Subtle left accent strip on SA cards (shows edit/delete is available) */
+      .sa-card-footer {
+        position: relative;
+      }
+      .sa-card-footer::before {
+        content: "";
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        width: 2px;
+        background: linear-gradient(180deg, var(--gold) 0%, var(--rs) 100%);
+        opacity: 0.18;
+        border-radius: 0 0 0 var(--r);
+        transition: opacity 0.2s;
+      }
+      .sa-card:hover .sa-card-footer::before { opacity: 0.45; }
+      /* CRUD action bar label */
+      .sa-crud-label {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 8px; letter-spacing: 0.14em;
+        text-transform: uppercase; color: var(--t3);
+        display: block; margin-bottom: 4px;
+      }
     </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </head>
@@ -3246,8 +3293,12 @@
         Próximo pago: ${fmt(np)} · en ${dpay} día${dpay === 1 ? "" : "s"} · ${cur(c.rent)}
       </div>
       <div class="notes-box"><span class="notes-lbl">Notas</span><span class="notes-txt">${c.notes}</span></div>
-      <div style="padding:0 0 4px;text-align:right">
-        <button class="td-btn" style="margin-top:8px" onclick="openContractModal('${c.id}')">✎ Editar contrato</button>
+      <div style="padding:0 0 4px;display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--t3);letter-spacing:0.1em;display:flex;align-items:center;gap:5px">
+          <span style="width:5px;height:5px;border-radius:50%;background:var(--gold);display:inline-block;box-shadow:0 0 6px rgba(201,147,74,0.5)"></span>
+          EDITABLE
+        </span>
+        <button class="td-btn" onclick="openContractModal('${c.id}')">✎ Editar contrato</button>
       </div>
     </div>
   </div>`;
@@ -3947,33 +3998,54 @@
         const c = CONTRATOS.find(x => x.id === id);
         if (!c) return;
         const nombre = c.tenant.split("\n")[0];
-        if (!confirm(`¿Eliminar el registro de "${nombre}" (${id})?\n\nEsto eliminará el contrato y sus expulsiones asociadas. Los pagos históricos se conservarán.`)) return;
+        const confirmed = confirm(
+          `¿Eliminar el registro de "${nombre}" (${id})?\n\n` +
+          `• El contrato quedará inactivo en Supabase\n` +
+          `• Se limpiarán las expulsiones asociadas\n` +
+          `• Los pagos históricos se conservarán\n\n` +
+          `Esta acción no se puede deshacer.`
+        );
+        if (!confirmed) return;
+
+        // Show feedback immediately
+        const card = $("sa-card-" + id);
+        if (card) { card.style.opacity = "0.4"; card.style.pointerEvents = "none"; }
 
         try {
-          // Soft-delete: set activo = false in Supabase
+          // 1. Soft-delete contract in Supabase
           await sbQuery(() => _sb.from("contratos").update({ activo: false }).eq("id", id));
-          // Clean up expulsiones
-          await sbQuery(() => _sb.from("expulsiones").delete().eq("contrato_id", id)).catch(() => {});
+          // 2. Remove expulsiones
+          try { await sbQuery(() => _sb.from("expulsiones").delete().eq("contrato_id", id)); } catch(e) {}
+          // 3. Remove notas_inquilino
+          try { await sbQuery(() => _sb.from("notas_inquilino").delete().eq("contrato_id", id)); } catch(e) {}
         } catch (e) {
+          if (card) { card.style.opacity = ""; card.style.pointerEvents = ""; }
           showToastMsg("⚠ Error al eliminar: " + e.message, true);
           return;
         }
 
-        // Remove from local state
-        CONTRATOS = CONTRATOS.filter(c => c.id !== id);
+        // Remove from local memory
+        CONTRATOS = CONTRATOS.filter(x => x.id !== id);
         delete SA_STATE[id];
         lsSaveSA();
 
-        // Remove card from UI instantly
-        const card = $("sa-card-" + id);
+        // Remove card from Situación Actual
         if (card) card.remove();
         const saCount = $("sa-count");
         if (saCount) saCount.textContent = CONTRATOS.length + " inquilinos";
 
-        // Refresh other views
+        // Refresh Contratos cards grid if visible
+        const contractPage = $("page-contratos");
+        if (contractPage && contractPage.classList.contains("active")) renderAllCards();
+
+        // Refresh Finanzas table if visible
+        const finPage = $("page-finanzas");
+        if (finPage && finPage.classList.contains("active")) renderFinanzas();
+
+        // Always refresh dashboard + sidebar
         renderDashboard();
         updateSidebarFinances();
-        showToastMsg("Contrato eliminado — " + nombre);
+        showToastMsg(`Registro eliminado — ${nombre}`);
       }
 
       function saContractStatus(c) {
@@ -4139,13 +4211,19 @@
       ${expBlock}
     </div>
     <div class="sa-card-footer">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--t3)">Renta: ${cur(c.rent)} - Día ${c.payDay}</span>
-        <button class="sa-crud-btn edit" onclick="openContractModal('${id}')" title="Editar contrato">✎</button>
-        <button class="sa-crud-btn del" onclick="saEliminarContrato('${id}')" title="Eliminar registro">🗑</button>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--t3);letter-spacing:0.08em">Renta: ${cur(c.rent)} · Día ${c.payDay}</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="sa-crud-btn edit" onclick="openContractModal('${id}')" title="Editar información del contrato">
+            ✎ Editar
+          </button>
+          <button class="sa-crud-btn del" onclick="saEliminarContrato('${id}')" title="Eliminar este registro permanentemente">
+            🗑 Eliminar
+          </button>
+        </div>
       </div>
       <button class="sa-expul-btn ${exp ? "deactivate" : "activate"}" onclick="saToggleExpulsion('${id}')">
-        ${exp ? "Cancelar expulsión" : "Iniciar expulsión"}
+        ${exp ? "✓ Cancelar expulsión" : "⚠ Iniciar expulsión"}
       </button>
     </div>
   </div>`;
@@ -4269,6 +4347,35 @@
               notas: p.notas || "",
               auto: false,
             })));
+          }
+
+          // ── AUTO-CLEAN duplicate payments in DB (runs once on boot) ──────
+          // Keeps only the highest-monto row per (contrato_id, mes, anio)
+          try {
+            const allPagosRaw = await sbQuery(() =>
+              _sb.from("pagos").select("id, contrato_id, mes, anio, monto, fecha_pago").order("monto", { ascending: false })
+            );
+            if (Array.isArray(allPagosRaw)) {
+              const seen = new Map();
+              const toDelete = [];
+              allPagosRaw.forEach(p => {
+                // Use fecha_pago month as canonical key (avoids indexing ambiguity)
+                const fp = new Date((p.fecha_pago || "") + "T12:00:00");
+                const canonMes = !isNaN(fp.getTime()) ? fp.getMonth() : (p.mes > 0 ? p.mes - 1 : p.mes);
+                const key = `${p.contrato_id}__${canonMes}__${p.anio}`;
+                if (seen.has(key)) {
+                  toDelete.push(p.id); // duplicate — mark for deletion
+                } else {
+                  seen.set(key, p.id); // first (highest monto) — keep
+                }
+              });
+              if (toDelete.length > 0) {
+                await sbQuery(() => _sb.from("pagos").delete().in("id", toDelete));
+                console.log(`[Onyx] Auto-cleaned ${toDelete.length} duplicate payment(s) from DB`);
+              }
+            }
+          } catch (e) {
+            console.warn("[Onyx] DB dedup skipped:", e.message);
           }
 
           // Poblar SA_STATE con expulsiones desde Supabase → persistencia garantizada
