@@ -273,6 +273,40 @@
         font-size: 20px; font-weight: 600; color: var(--rs);
         letter-spacing: 0.04em; text-shadow: 0 0 20px rgba(242,65,90,0.4);
       }
+      /* ── PAYMENT ROW EDIT/DELETE ACTIONS ───────────────────────────── */
+      .hist-row {
+        position: relative;
+      }
+      .hist-row-actions {
+        display: flex; gap: 6px; align-items: center;
+        opacity: 0; transition: opacity 0.15s;
+      }
+      .hist-row:hover .hist-row-actions { opacity: 1; }
+      .hist-act-btn {
+        padding: 3px 9px; border-radius: var(--rxs);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9px; cursor: pointer;
+        transition: all 0.15s; border: 1px solid;
+        font-weight: 600;
+      }
+      .hist-act-btn.edit {
+        color: var(--gold); border-color: var(--gold-border);
+        background: var(--gold-dim);
+      }
+      .hist-act-btn.edit:hover { background: var(--gold-glow); }
+      .hist-act-btn.del {
+        color: var(--rs); border-color: var(--rs-border);
+        background: var(--rs-dim);
+      }
+      .hist-act-btn.del:hover { background: rgba(242,65,90,0.15); }
+      /* Payment edit modal */
+      .modal-overlay-3 {
+        position: fixed; inset: 0; z-index: 1200;
+        background: rgba(3,3,5,0.88); backdrop-filter: blur(20px) saturate(180%);
+        display: none; align-items: center; justify-content: center;
+      }
+      .modal-overlay-3.open { display: flex; animation: ovIn 0.2s ease both; }
+
       /* ── MOTIVO SAVED STATE ──────────────────────────────────────────── */
       .sa-exp-motivo-saved { margin-top: 10px; }
       .sa-exp-motivo-saved-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
@@ -1699,12 +1733,13 @@
       }
       .hist-row {
         display: grid;
-        grid-template-columns: 100px 1fr auto auto auto;
+        grid-template-columns: 100px 1fr auto auto auto auto;
         align-items: center;
         gap: 14px;
         padding: 11px 22px;
         border-bottom: 1px solid var(--b0);
         transition: background 0.15s;
+        position: relative;
       }
       .hist-row:hover {
         background: rgba(255, 255, 255, 0.015);
@@ -2813,6 +2848,54 @@
       </div>
     </div>
 
+    <!-- EDIT PAYMENT MODAL -->
+    <div class="modal-overlay-3" id="edit-pay-overlay" onclick="closeEditPayModal(event)">
+      <div class="modal" style="width:460px">
+        <span class="modal-title">Editar Pago</span>
+        <span class="modal-sub">Modificar registro · Onyx Gestión</span>
+        <input type="hidden" id="ep-id">
+        <div class="form-group">
+          <label class="form-label">Apartamento</label>
+          <input type="text" class="form-input" id="ep-apt" disabled style="opacity:0.5">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Período</label>
+            <select class="form-select" id="ep-period"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Monto (RD$)</label>
+            <input type="number" class="form-input" id="ep-monto" placeholder="15000">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Fecha de Pago</label>
+            <input type="date" class="form-input" id="ep-fecha">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Método</label>
+            <select class="form-select" id="ep-metodo">
+              <option value="transferencia">Transferencia Bancaria</option>
+              <option value="efectivo">Efectivo</option>
+              <option value="cheque">Cheque</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notas</label>
+          <textarea class="form-textarea" id="ep-notas" placeholder="Observaciones..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="document.getElementById('edit-pay-overlay').classList.remove('open')">Cancelar</button>
+          <button class="btn-confirm" onclick="saveEditedPayment()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;display:inline;margin-right:6px"><polyline points="20 6 9 17 4 12"/></svg>
+            Guardar Cambios
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- SIDEBAR OVERLAY (mobile) -->
     <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
@@ -3088,27 +3171,38 @@
         const n = now();
         return CONTRATOS.filter((c) => {
           const cs = new Date(c.startBase);
+          // Contract must be active this month
           const active =
             cs.getFullYear() < año ||
             (cs.getFullYear() === año && cs.getMonth() <= mes);
           if (!active) return false;
-          // Si es el mes actual, solo contar como moroso si ya pasó el día de pago
+
+          // Grace period only for contracts that STARTED this month
           if (mes === n.getMonth() && año === n.getFullYear()) {
-            if (n.getDate() < (c.payDay || 1)) return false;
+            const isFirstMonth = cs.getFullYear() === año && cs.getMonth() === mes;
+            if (isFirstMonth && n.getDate() < (c.payDay || 1)) return false;
+            // Contracts from prior months: payment always due regardless of payDay
           }
+
           return !PAGOS_HISTORICOS.some(
             (p) => p.contratoId === c.id && p.mes === mes && p.año === año,
           );
         });
       }
       function CalcularDeudaPorApartamento(c) {
-        // Deuda = solo el mes actual si ya pasó el día de pago y no se ha cobrado.
-        // No acumular meses históricos — el sistema se está configurando desde cero.
         const n = now();
         const mes = n.getMonth();
         const año = n.getFullYear();
         const pd = c.payDay || 1;
-        const payDayPassed = n.getDate() >= pd;
+
+        // Contract must have started on or before this month
+        const cs = new Date(c.startBase);
+        const contratoActivo =
+          cs.getFullYear() < año ||
+          (cs.getFullYear() === año && cs.getMonth() <= mes);
+        if (!contratoActivo) {
+          return { esperado: 0, cobrado: 0, cobradoTotal: 0, deuda: 0, meses: 0, mesesTranscurridos: 0 };
+        }
 
         const paidThisMonth = PAGOS_HISTORICOS.some(
           p => p.contratoId === c.id && p.mes === mes && p.año === año
@@ -3117,7 +3211,12 @@
           .reduce((s, p) => s + p.monto, 0);
         const mesesRegistrados = PAGOS_HISTORICOS.filter(p => p.contratoId === c.id).length;
 
-        // deuda = rent si payDay pasó y no pagó este mes; 0 si aún no vence o ya pagó
+        // Grace period: if today is strictly before payDay, give 1-day grace ONLY
+        // if the contract just started this month (startBase month == current month).
+        // Otherwise: contract is active from a prior month → payment is always due.
+        const isFirstMonth = cs.getFullYear() === año && cs.getMonth() === mes;
+        const payDayPassed = isFirstMonth ? (n.getDate() >= pd) : true;
+
         const deuda = (payDayPassed && !paidThisMonth) ? c.rent : 0;
         const cobrado = paidThisMonth ? c.rent : 0;
         const esperado = payDayPassed ? c.rent : 0;
@@ -4768,6 +4867,7 @@
       const HIST_PAGE_SIZE = 25;
 
       function renderPaymentHistoryPaged() {
+        // Always render deduplicated list
         const sorted = [...PAGOS_HISTORICOS].sort((a,b) => b.fechaPago - a.fechaPago);
         const totalPages = Math.ceil(sorted.length / HIST_PAGE_SIZE);
         const start = _histPage * HIST_PAGE_SIZE;
@@ -4777,12 +4877,17 @@
         document.getElementById("payment-history").innerHTML = page.map(p => {
           const c = CONTRATOS.find(x => x.id === p.contratoId);
           const name = c ? c.tenant.split("\n")[0] : "—";
-          return `<div class="hist-row">
+          const pid = String(p.id).replace(/['"]/g, "");
+          return `<div class="hist-row" id="hrow-${pid}">
             <span class="hist-id">${p.contratoId}</span>
             <div><span class="hist-tenant">${name}</span><span class="hist-apt">${MONTHS_ES[p.mes]} ${p.año}</span></div>
             <span class="hist-method">${p.metodo}</span>
             <span class="hist-monto">${cur(p.monto)}</span>
             <span class="hist-date">${fmt(p.fechaPago)}</span>
+            <div class="hist-row-actions">
+              <button class="hist-act-btn edit" onclick="openEditPayModal('${pid}')">✎ Editar</button>
+              <button class="hist-act-btn del" onclick="deletePayment('${pid}')">🗑</button>
+            </div>
           </div>`;
         }).join('<div class="separator"></div>');
 
@@ -4797,6 +4902,125 @@
         } else {
           document.getElementById("payment-pagination").innerHTML = "";
         }
+      }
+
+      /* ── EDIT / DELETE PAYMENT ──────────────────────────────────────────── */
+      function openEditPayModal(payId) {
+        const p = PAGOS_HISTORICOS.find(x => String(x.id) === String(payId));
+        if (!p) return;
+        const c = CONTRATOS.find(x => x.id === p.contratoId);
+        document.getElementById("ep-id").value = payId;
+        document.getElementById("ep-apt").value = p.contratoId + (c ? " — " + c.tenant.split("\n")[0].substring(0,28) : "");
+        document.getElementById("ep-monto").value = p.monto;
+        document.getElementById("ep-fecha").value = p.fechaPago instanceof Date
+          ? p.fechaPago.toISOString().split("T")[0]
+          : String(p.fechaPago).split("T")[0];
+        document.getElementById("ep-metodo").value = p.metodo || "transferencia";
+        document.getElementById("ep-notas").value = p.notas || "";
+
+        // Populate period selector centered on payment month
+        const pSel = document.getElementById("ep-period");
+        pSel.innerHTML = "";
+        const n = now();
+        for (let i = 11; i >= 0; i--) {
+          let m = n.getMonth() - i, y = n.getFullYear();
+          if (m < 0) { m += 12; y--; }
+          const opt = document.createElement("option");
+          opt.value = y + "_" + m;
+          opt.textContent = MONTHS_ES_LONG[m] + " " + y;
+          if (m === p.mes && y === p.año) opt.selected = true;
+          pSel.appendChild(opt);
+        }
+
+        document.getElementById("edit-pay-overlay").classList.add("open");
+      }
+
+      function closeEditPayModal(e) {
+        if (e.target === document.getElementById("edit-pay-overlay"))
+          document.getElementById("edit-pay-overlay").classList.remove("open");
+      }
+
+      async function saveEditedPayment() {
+        const payId = document.getElementById("ep-id").value;
+        const montoVal = parseFloat(document.getElementById("ep-monto").value);
+        const fechaVal = document.getElementById("ep-fecha").value;
+        const metodo = document.getElementById("ep-metodo").value;
+        const notas = document.getElementById("ep-notas").value.trim();
+        const [periodoAño, periodoMes] = document.getElementById("ep-period").value.split("_").map(Number);
+
+        if (!montoVal || !fechaVal) { showToastMsg("⚠ Completa todos los campos", true); return; }
+
+        const btn = document.querySelector("#edit-pay-overlay .btn-confirm");
+        const orig = btn.innerHTML;
+        btn.disabled = true; btn.textContent = "Guardando…";
+
+        try {
+          await sbQuery(() =>
+            _sb.from("pagos").update({
+              monto: montoVal,
+              fecha_pago: fechaVal,
+              mes: periodoMes + 1,
+              anio: periodoAño,
+              metodo,
+              notas: notas || null,
+            }).eq("id", payId)
+          );
+        } catch(e) {
+          showToastMsg("⚠ Error al guardar: " + e.message, true);
+          btn.disabled = false; btn.innerHTML = orig;
+          return;
+        }
+
+        // Update in memory
+        const idx = PAGOS_HISTORICOS.findIndex(x => String(x.id) === String(payId));
+        if (idx >= 0) {
+          PAGOS_HISTORICOS[idx] = {
+            ...PAGOS_HISTORICOS[idx],
+            monto: montoVal,
+            fechaPago: new Date(fechaVal + "T12:00:00"),
+            mes: periodoMes,
+            año: periodoAño,
+            metodo,
+            notas,
+          };
+        }
+
+        document.getElementById("edit-pay-overlay").classList.remove("open");
+        btn.disabled = false; btn.innerHTML = orig;
+        renderFinanzas();
+        renderDashboard();
+        showToastMsg("Pago actualizado correctamente");
+      }
+
+      async function deletePayment(payId) {
+        const p = PAGOS_HISTORICOS.find(x => String(x.id) === String(payId));
+        if (!p) return;
+        const c = CONTRATOS.find(x => x.id === p.contratoId);
+        const label = (c ? c.tenant.split("\n")[0] : p.contratoId) + " — " + MONTHS_ES_LONG[p.mes] + " " + p.año;
+        if (!confirm(`¿Eliminar este pago?\n\n${label}\n${cur(p.monto)}\n\nEsta acción no se puede deshacer.`)) return;
+
+        // Fade out immediately
+        const row = document.getElementById("hrow-" + payId);
+        if (row) { row.style.opacity = "0.3"; row.style.pointerEvents = "none"; }
+
+        try {
+          if (!String(payId).startsWith("PAY-LOCAL-")) {
+            await sbQuery(() => _sb.from("pagos").delete().eq("id", payId));
+          }
+        } catch(e) {
+          if (row) { row.style.opacity = ""; row.style.pointerEvents = ""; }
+          showToastMsg("⚠ Error al eliminar: " + e.message, true);
+          return;
+        }
+
+        // Remove from memory
+        PAGOS_HISTORICOS = PAGOS_HISTORICOS.filter(x => String(x.id) !== String(payId));
+        lsSavePagos();
+
+        renderFinanzas();
+        renderDashboard();
+        updateSidebarFinances();
+        showToastMsg("Pago eliminado — " + label);
       }
 
       /* ═══════════════════════════════════════════════════════════════════════
