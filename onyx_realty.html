@@ -4478,12 +4478,12 @@
             PAGOS_HISTORICOS = dedupPagos(
               pr.map((p) => ({
                 id: p.id,
-                contratoId: p.contrato_id,
-                aptId: p.contrato_id,
+                contratoId: String(p.contrato_id),
+                aptId: String(p.contrato_id),
                 monto: parseFloat(p.monto),
                 fechaPago: new Date(p.fecha_pago + "T12:00:00"),
                 mes: normalizarMes(p.mes, p.fecha_pago),
-                año: p.anio,
+                año: parseInt(p.anio, 10),  // ALWAYS number — prevents "2026"===2026 false
                 metodo: p.metodo || "transferencia",
                 notas: p.notas || "",
                 auto: false,
@@ -5035,15 +5035,21 @@
 
           if (Array.isArray(cr)) {
             CONTRATOS = cr.map((c) => ({
-              id: c.id,
+              id: String(c.id),
               aptNombre: c.apt_nombre,
               tenant: c.tenant,
               address: c.address,
               apt: c.apt,
               rent: parseFloat(c.rent),
               deposit: parseFloat(c.deposit),
-              startBase: new Date(String(c.start_base || "2000-01-01").substring(0, 10)),
-              payDay: c.pay_day,
+              // Safe UTC startBase. Fallback = today's month, NOT year 2000
+              startBase: (() => {
+                const raw = c.start_base ? String(c.start_base).substring(0, 10) : null;
+                if (raw && /^\d{4}-\d{2}-\d{2}$/.test(raw)) return new Date(raw);
+                const _t = new Date();
+                return new Date(_t.getUTCFullYear() + '-' + String(_t.getUTCMonth()+1).padStart(2,'0') + '-01');
+              })(),
+              payDay: parseInt(c.pay_day, 10) || 1,
               notary: c.notary || "",
               notes: c.notes || "",
             }));
@@ -5053,12 +5059,12 @@
             PAGOS_HISTORICOS = dedupPagos(
               pr.map((p) => ({
                 id: p.id,
-                contratoId: p.contrato_id,
-                aptId: p.contrato_id,
+                contratoId: String(p.contrato_id),
+                aptId: String(p.contrato_id),
                 monto: parseFloat(p.monto),
                 fechaPago: new Date(p.fecha_pago + "T12:00:00"),
                 mes: normalizarMes(p.mes, p.fecha_pago),
-                año: p.anio,
+                año: parseInt(p.anio, 10),  // ALWAYS number — prevents "2026"===2026 false
                 metodo: p.metodo || "transferencia",
                 notas: p.notas || "",
                 auto: false,
@@ -5441,8 +5447,13 @@
                 apt: payload.apt,
                 rent: payload.rent,
                 deposit: payload.deposit,
-                payDay: payload.pay_day,
-                startBase: new Date(String(payload.start_base || "2000-01-01").substring(0, 10)),
+                payDay: parseInt(payload.pay_day, 10) || 1,
+                startBase: (() => {
+                  const raw = payload.start_base ? String(payload.start_base).substring(0, 10) : null;
+                  if (raw && /^\d{4}-\d{2}-\d{2}$/.test(raw)) return new Date(raw);
+                  const _t = new Date();
+                  return new Date(_t.getUTCFullYear() + '-' + String(_t.getUTCMonth()+1).padStart(2,'0') + '-01');
+                })(),
                 notary: payload.notary,
                 notes: payload.notes,
               };
@@ -5475,8 +5486,13 @@
               apt: payload.apt,
               rent: payload.rent,
               deposit: payload.deposit,
-              payDay: payload.pay_day,
-              startBase: new Date(String(payload.start_base || "2000-01-01").substring(0, 10)),
+              payDay: parseInt(payload.pay_day, 10) || 1,
+              startBase: (() => {
+                const raw = payload.start_base ? String(payload.start_base).substring(0, 10) : null;
+                if (raw && /^\d{4}-\d{2}-\d{2}$/.test(raw)) return new Date(raw);
+                const _t = new Date();
+                return new Date(_t.getUTCFullYear() + '-' + String(_t.getUTCMonth()+1).padStart(2,'0') + '-01');
+              })(),
               notary: payload.notary,
               notes: payload.notes,
             });
