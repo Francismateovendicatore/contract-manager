@@ -2233,6 +2233,23 @@
         border: 1px solid var(--em-border);
         color: var(--em);
       }
+      /* CRUD mini buttons in SA card footer */
+      .sa-crud-btn {
+        padding: 4px 9px; border-radius: var(--rxs);
+        font-size: 11px; cursor: pointer;
+        transition: all 0.15s; border: 1px solid;
+        background: none;
+      }
+      .sa-crud-btn.edit {
+        color: var(--gold); border-color: var(--gold-border);
+        background: var(--gold-dim);
+      }
+      .sa-crud-btn.edit:hover { background: var(--gold-glow); }
+      .sa-crud-btn.del {
+        color: var(--rs); border-color: var(--rs-border);
+        background: var(--rs-dim);
+      }
+      .sa-crud-btn.del:hover { background: rgba(242,65,90,0.15); }
     </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </head>
@@ -2993,18 +3010,26 @@
          correct interpretation, falling back to 1-indexed (subtract 1).
       ────────────────────────────────────────────────────────────────────── */
       function normalizarMes(dbMes, fechaPagoStr) {
-        // Edge cases: only possible in one convention
-        if (dbMes === 0) return 0;   // 0-indexed January (impossible in 1-indexed)
-        if (dbMes === 12) return 11; // 1-indexed December (impossible in 0-indexed)
-        // For 1-11: use fecha_pago month as reference
+        // PRIMARY: always use fecha_pago's actual month — 100% unambiguous
         const fpDate = new Date((fechaPagoStr || "") + "T12:00:00");
         if (!isNaN(fpDate.getTime())) {
-          const fpMes = fpDate.getMonth(); // 0-indexed
-          if (dbMes - 1 === fpMes) return dbMes - 1; // 1-indexed interpretation matches
-          if (dbMes     === fpMes) return dbMes;       // 0-indexed interpretation matches
+          return fpDate.getMonth(); // 0-indexed, directly correct
         }
-        // Fallback: assume 1-indexed (current standard)
-        return dbMes - 1;
+        // Fallback if fecha_pago is missing/invalid
+        if (dbMes === 0) return 0;    // 0-indexed January
+        if (dbMes === 12) return 11;  // 1-indexed December
+        return dbMes - 1;             // assume 1-indexed (current standard)
+      }
+
+      // Deduplication: keep one payment per (contratoId, mes, año) — highest monto wins
+      function dedupPagos(pagos) {
+        const map = new Map();
+        pagos.forEach(p => {
+          const key = `${p.contratoId}__${p.mes}__${p.año}`;
+          const existing = map.get(key);
+          if (!existing || p.monto > existing.monto) map.set(key, p);
+        });
+        return Array.from(map.values());
       }
 
       function CalcularIngresosMensuales(mes, año) {
@@ -3717,9 +3742,20 @@
         btnConf.disabled = true;
         btnConf.textContent = "Guardando…";
 
+        // Guard: prevent duplicate payment for same period
+        const alreadyPaid = PAGOS_HISTORICOS.some(
+          p => p.contratoId === aptId && p.mes === periodoMes && p.año === periodoAño
+        );
+        if (alreadyPaid) {
+          showToastMsg("⚠ Ya existe un pago registrado para este período", true);
+          btnConf.disabled = false;
+          btnConf.innerHTML = origHTML;
+          return;
+        }
+
         let savedId = "PAY-LOCAL-" + Date.now();
         try {
-          // POST to Supabase (mes 1-indexed)
+          // POST to Supabase (mes 1-indexed, fecha_pago stores authoritative month)
           const rows = await sbQuery(() =>
             _sb.from("pagos").insert([{
               contrato_id: aptId,
@@ -3743,7 +3779,7 @@
               _sb.from("pagos").select("*").order("fecha_pago", { ascending: false })
             );
           if (Array.isArray(pr)) {
-            PAGOS_HISTORICOS = pr.map((p) => ({
+            PAGOS_HISTORICOS = dedupPagos(pr.map((p) => ({
               id: p.id,
               contratoId: p.contrato_id,
               aptId: p.contrato_id,
@@ -3754,7 +3790,7 @@
               metodo: p.metodo || "transferencia",
               notas: p.notas || "",
               auto: false,
-            }));
+            })));
           }
         } catch (e) {
           // fallback offline: agregar localmente si Supabase falla
@@ -3905,6 +3941,39 @@
         renderSACard(id);
         // Focus the textarea after render
         setTimeout(() => { const ta = $("sa-exp-textarea-" + id); if (ta) ta.focus(); }, 50);
+      }
+
+      async function saEliminarContrato(id) {
+        const c = CONTRATOS.find(x => x.id === id);
+        if (!c) return;
+        const nombre = c.tenant.split("\n")[0];
+        if (!confirm(`¿Eliminar el registro de "${nombre}" (${id})?\n\nEsto eliminará el contrato y sus expulsiones asociadas. Los pagos históricos se conservarán.`)) return;
+
+        try {
+          // Soft-delete: set activo = false in Supabase
+          await sbQuery(() => _sb.from("contratos").update({ activo: false }).eq("id", id));
+          // Clean up expulsiones
+          await sbQuery(() => _sb.from("expulsiones").delete().eq("contrato_id", id)).catch(() => {});
+        } catch (e) {
+          showToastMsg("⚠ Error al eliminar: " + e.message, true);
+          return;
+        }
+
+        // Remove from local state
+        CONTRATOS = CONTRATOS.filter(c => c.id !== id);
+        delete SA_STATE[id];
+        lsSaveSA();
+
+        // Remove card from UI instantly
+        const card = $("sa-card-" + id);
+        if (card) card.remove();
+        const saCount = $("sa-count");
+        if (saCount) saCount.textContent = CONTRATOS.length + " inquilinos";
+
+        // Refresh other views
+        renderDashboard();
+        updateSidebarFinances();
+        showToastMsg("Contrato eliminado — " + nombre);
       }
 
       function saContractStatus(c) {
@@ -4070,7 +4139,11 @@
       ${expBlock}
     </div>
     <div class="sa-card-footer">
-      <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--t3)">Renta: ${cur(c.rent)} - Día ${c.payDay}</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--t3)">Renta: ${cur(c.rent)} - Día ${c.payDay}</span>
+        <button class="sa-crud-btn edit" onclick="openContractModal('${id}')" title="Editar contrato">✎</button>
+        <button class="sa-crud-btn del" onclick="saEliminarContrato('${id}')" title="Eliminar registro">🗑</button>
+      </div>
       <button class="sa-expul-btn ${exp ? "deactivate" : "activate"}" onclick="saToggleExpulsion('${id}')">
         ${exp ? "Cancelar expulsión" : "Iniciar expulsión"}
       </button>
@@ -4184,7 +4257,7 @@
           }
 
           if (Array.isArray(pr)) {
-            PAGOS_HISTORICOS = pr.map((p) => ({
+            PAGOS_HISTORICOS = dedupPagos(pr.map((p) => ({
               id: p.id,
               contratoId: p.contrato_id,
               aptId: p.contrato_id,
@@ -4195,7 +4268,7 @@
               metodo: p.metodo || "transferencia",
               notas: p.notas || "",
               auto: false,
-            }));
+            })));
           }
 
           // Poblar SA_STATE con expulsiones desde Supabase → persistencia garantizada
