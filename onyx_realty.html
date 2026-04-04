@@ -2845,115 +2845,15 @@
       /* ═══════════════════════════════════════════════════════════════════════
    FALLBACK CONTRACT DATA  (used when API is unreachable)
    ═══════════════════════════════════════════════════════════════════════ */
-      const FALLBACK_CONTRATOS = [
-        {
-          id: "C-001",
-          aptNombre: "Casa 07-B",
-          tenant:
-            "Flor Magdalena Heyaime Perez\n& Francisco Javier Blandin Prieto",
-          address:
-            "Calle Las Trinitarias No. 07-B\nAtlas Cumbre de Paraíso, Sector Bayona",
-          apt: "Casa / Unidad 07-B",
-          rent: 15000,
-          deposit: 15000,
-          startBase: new Date("2025-03-15"),
-          payDay: 3,
-          notary: "Dr. César S. Alcantara Moquete",
-          notes: "Paga el día 3 de cada mes. Depósito RD$15,000.",
-        },
-        {
-          id: "C-002",
-          aptNombre: "Apto Interior 07-B",
-          tenant: "Jonathan Encarnacion\n& Danelsy C. Mendez Almanzar",
-          address:
-            "Calle Las Trinitarias No. 07-B\nSector Bayona, Santo Domingo Oeste",
-          apt: "Apartamento interior · Sector 07-B",
-          rent: 13000,
-          deposit: 13000,
-          startBase: new Date("2024-08-22"),
-          payDay: 30,
-          notary: "Dr. César S. Alcantara Moquete",
-          notes: "Paga el día 30 de cada mes. Depósito RD$13,000.",
-        },
-        {
-          id: "C-003",
-          aptNombre: "Apto 8-B",
-          tenant: "Luis Alfredo Adames Torres\n& Nicaury Perez Castillo",
-          address:
-            "Residencial Cumbre del Paraíso\nApto 8-B, 1er nivel, Bayona",
-          apt: "Apto 8-B · 1er Piso · 2 hab., sala, cocina, baño, balcón",
-          rent: 14000,
-          deposit: 14000,
-          startBase: new Date("2024-11-14"),
-          payDay: 15,
-          notary: "Dr. César S. Alcantara Moquete",
-          notes: "Paga el día 15 de cada mes. NO MASCOTAS NI AVES.",
-        },
-        {
-          id: "C-004",
-          aptNombre: "Apto 1-B 2do Piso",
-          tenant:
-            "Alexandra Maria Jaquez Dominic\n& Sandro Javier Mendoza Garcia",
-          address:
-            "Calle Las Trinitarias No. 08, Apto 1-B\n2do nivel, Cumbre de Paraíso, Bayona",
-          apt: "Apto 1-B · 2do Piso",
-          rent: 14000,
-          deposit: 28000,
-          startBase: new Date("2024-09-25"),
-          payDay: 5,
-          notary: "Dr. César S. Alcantara Moquete",
-          notes: "Depósito 2 meses (RD$28,000). No mascotas.",
-        },
-        {
-          id: "C-005",
-          aptNombre: "Apartamento 06-A",
-          tenant: "Ramon Antonio Perez Andujar",
-          address:
-            "Calle Las Trinitarias No. 06-A\nCumbre de Paraíso, Bayona, SDO",
-          apt: "Apartamento 06-A",
-          rent: 13000,
-          deposit: 20000,
-          startBase: new Date("2025-09-01"),
-          payDay: 1,
-          notary: "Dr. César S. Alcantara Moquete",
-          notes: "Inicio 01/09/2025. Depósito RD$20,000.",
-        },
-        {
-          id: "C-006",
-          aptNombre: "Apto Vivienda Familiar",
-          tenant: "Carolyn Maria Santiago Angeles",
-          address:
-            "Cumbres del Paraíso, Calle Las Trinitarias\nNo. 8, 2do nivel, Bayona, SDO",
-          apt: "Apartamento · Vivienda Familiar",
-          rent: 13000,
-          deposit: 26000,
-          startBase: new Date("2023-09-04"),
-          payDay: 30,
-          notary: "Dr. Jorge José Pichardo Terrero",
-          notes: "Depósito 2 meses. Servicios a cargo de la inquilina.",
-        },
-      ];
+      // FALLBACK_CONTRATOS eliminado — fuente única de datos: Supabase
+      const FALLBACK_CONTRATOS = [];
 
       /* ═══════════════════════════════════════════════════════════════════════
    APPLICATION STATE
    ═══════════════════════════════════════════════════════════════════════ */
       let CONTRATOS = [];
-      // ÚNICO pago real conocido — Flor Magdalena / Francisco Javier · RD$15,000
-      // Si la API responde, este seed se reemplaza con los datos reales del servidor.
-      const SEED_PAGOS = [
-        {
-          id: "seed-001",
-          contratoId: "C-001",
-          aptId: "C-001",
-          monto: 15000,
-          fechaPago: new Date("2025-03-15"),
-          mes: 2, // marzo = 2 (0-indexed)
-          año: 2025,
-          metodo: "transferencia",
-          notas: "",
-          auto: false,
-        },
-      ];
+      // SEED_PAGOS eliminado — fuente única de datos: Supabase
+      const SEED_PAGOS = [];
       let PAGOS_HISTORICOS = [];
       // SA_STATE: { [contratoId]: { notes, expulsion, expMotivo, fechaExpulsion, motivoGuardado } }
       let SA_STATE = {};
@@ -3810,19 +3710,40 @@
           showToastMsg("⚠ Sin conexión — pago guardado offline");
         }
 
-        PAGOS_HISTORICOS.push({
-          id: savedId,
-          contratoId: aptId,
-          aptId,
-          monto: montoVal,
-          fechaPago: new Date(fechaVal),
-          mes: periodoMes,
-          año: periodoAño,
-          metodo,
-          notas,
-          auto: false,
-        });
-        lsSavePagos();
+        // Recargar pagos desde Supabase para mantener sincronía
+        try {
+          const pr = await sbQuery(() =>
+            _sb.from("pagos").select("*").order("fecha_pago", { ascending: false })
+          );
+          if (Array.isArray(pr)) {
+            PAGOS_HISTORICOS = pr.map((p) => ({
+              id: p.id,
+              contratoId: p.contrato_id,
+              aptId: p.contrato_id,
+              monto: parseFloat(p.monto),
+              fechaPago: new Date(p.fecha_pago),
+              mes: p.mes - 1,
+              año: p.anio,
+              metodo: p.metodo || "transferencia",
+              notas: p.notas || "",
+              auto: false,
+            }));
+          }
+        } catch (e) {
+          // fallback offline: agregar localmente si Supabase falla
+          PAGOS_HISTORICOS.push({
+            id: savedId,
+            contratoId: aptId,
+            aptId,
+            monto: montoVal,
+            fechaPago: new Date(fechaVal),
+            mes: periodoMes,
+            año: periodoAño,
+            metodo,
+            notas,
+            auto: false,
+          });
+        }
 
         closeModal();
         $("f-apt").value = "";
@@ -4204,25 +4125,26 @@
       }
 
       async function loadAndInit() {
-        // 1. Restore from localStorage immediately → snappy perceived performance
-        const lsPagos = lsLoadPagos();
-        PAGOS_HISTORICOS = lsPagos.length > 0 ? lsPagos : SEED_PAGOS;
+        // SA_STATE (notas/expulsiones locales) — sigue en localStorage
         SA_STATE = lsLoadSA();
 
-        // 2. Use fallback contracts to paint UI before API responds
-        CONTRATOS = FALLBACK_CONTRATOS.map((c) => ({
-          ...c,
-          startBase: new Date(c.startBase),
-        }));
+        // Iniciar UI vacía mientras carga Supabase
+        CONTRATOS = [];
+        PAGOS_HISTORICOS = [];
         init();
 
-        // 3. Fetch live contratos from Supabase (no servidor Express necesario)
+        // Cargar contratos Y pagos desde Supabase (fuente única de verdad)
         try {
-          const cr = await sbQuery(() =>
-            _sb.from("contratos").select("*").eq("activo", true).order("id")
-          );
+          const [cr, pr] = await Promise.all([
+            sbQuery(() =>
+              _sb.from("contratos").select("*").eq("activo", true).order("id")
+            ),
+            sbQuery(() =>
+              _sb.from("pagos").select("*").order("fecha_pago", { ascending: false })
+            ),
+          ]);
 
-          if (Array.isArray(cr) && cr.length > 0) {
+          if (Array.isArray(cr)) {
             CONTRATOS = cr.map((c) => ({
               id: c.id,
               aptNombre: c.apt_nombre,
@@ -4238,17 +4160,28 @@
             }));
           }
 
-          // Pagos: localStorage + SEED (no se cargan de la DB)
-          if (lsPagos.length === 0) PAGOS_HISTORICOS = SEED_PAGOS;
+          if (Array.isArray(pr)) {
+            PAGOS_HISTORICOS = pr.map((p) => ({
+              id: p.id,
+              contratoId: p.contrato_id,
+              aptId: p.contrato_id,
+              monto: parseFloat(p.monto),
+              fechaPago: new Date(p.fecha_pago),
+              mes: p.mes - 1,          // DB usa 1-indexed, app usa 0-indexed
+              año: p.anio,
+              metodo: p.metodo || "transferencia",
+              notas: p.notas || "",
+              auto: false,
+            }));
+          }
 
-          // Re-render con datos frescos
+          // Re-render con datos reales
           renderDashboard();
           const activePage = document.querySelector(".page.active");
           if (activePage && activePage.id === "page-sistema") renderSituacionActual();
         } catch (e) {
           console.error("[Supabase] Initial load failed:", e);
-          if (PAGOS_HISTORICOS.length === 0)
-            showToastMsg("⚠ Sin conexión — operando en modo offline");
+          showToastMsg("⚠ Sin conexión — no se pudieron cargar los datos");
         }
       }
 
