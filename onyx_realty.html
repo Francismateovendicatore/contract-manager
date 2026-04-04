@@ -5040,7 +5040,7 @@
               apt: c.apt,
               rent: parseFloat(c.rent),
               deposit: parseFloat(c.deposit),
-              startBase: new Date(c.start_base),
+              startBase: new Date((c.start_base || "").includes("T") ? c.start_base : c.start_base + "T12:00:00"),
               payDay: c.pay_day,
               notary: c.notary || "",
               notes: c.notes || "",
@@ -5440,7 +5440,7 @@
                 rent: payload.rent,
                 deposit: payload.deposit,
                 payDay: payload.pay_day,
-                startBase: new Date(payload.start_base),
+                startBase: new Date((payload.start_base || "").includes("T") ? payload.start_base : payload.start_base + "T12:00:00"),
                 notary: payload.notary,
                 notes: payload.notes,
               };
@@ -5474,7 +5474,7 @@
               rent: payload.rent,
               deposit: payload.deposit,
               payDay: payload.pay_day,
-              startBase: new Date(payload.start_base),
+              startBase: new Date((payload.start_base || "").includes("T") ? payload.start_base : payload.start_base + "T12:00:00"),
               notary: payload.notary,
               notes: payload.notes,
             });
