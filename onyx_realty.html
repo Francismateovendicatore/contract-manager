@@ -2234,6 +2234,7 @@
         color: var(--em);
       }
     </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </head>
   <body>
     <div id="atm"></div>
@@ -2836,7 +2837,10 @@
    ⚙  CONFIGURATION
    Set your API base URL below. No other file needs to be modified.
    ═══════════════════════════════════════════════════════════════════════ */
-      const API_BASE = "https://contract-manager-u2hy.onrender.com"; // ← YOUR_API_URL_HERE
+      // ── Supabase client (replaces Express backend) ──────────────────────
+      const SUPABASE_URL  = "https://hrystcnmykxrywgaicpc.supabase.co";
+      const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhyeXN0Y25teWt4cnl3Z2FpY3BjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjYzNzUsImV4cCI6MjA5MDg0MjM3NX0.rEj2yEv0X3a0JLLphzmts9hxyBxcKhQzkw6TS0pD_FY";
+      const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
       /* ═══════════════════════════════════════════════════════════════════════
    FALLBACK CONTRACT DATA  (used when API is unreachable)
@@ -3134,8 +3138,8 @@
    LOCAL-STORAGE FALLBACK
    Keys are versioned so stale data doesn't cause parse errors.
    ═══════════════════════════════════════════════════════════════════════ */
-      const LS_PAGOS = "onyx_pagos_v4";
-      const LS_SA = "onyx_sa_v4";
+      const LS_PAGOS = "onyx_pagos_v3";
+      const LS_SA = "onyx_sa_v3";
 
       function lsSavePagos() {
         try {
@@ -3185,19 +3189,11 @@
    API LAYER
    All server communication goes through apiFetch.
    ═══════════════════════════════════════════════════════════════════════ */
-      async function apiFetch(path, opts = {}) {
-        const res = await fetch(API_BASE + path, {
-          headers: {
-            "Content-Type": "application/json",
-            ...(opts.headers || {}),
-          },
-          ...opts,
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.error || `HTTP ${res.status}`);
-        }
-        return res.json();
+      // Supabase helper — throws on error just like apiFetch did
+      async function sbQuery(fn) {
+        const { data, error } = await fn();
+        if (error) throw new Error(error.message);
+        return data;
       }
 
       /* ═══════════════════════════════════════════════════════════════════════
@@ -3399,17 +3395,14 @@
 
         // Alerts
         const alerts = [];
-        morosos.forEach((c) => {
-          // Only alert if this contract has at least 1 recorded payment
-          const hasHistory = PAGOS_HISTORICOS.some(p => p.contratoId === c.id);
-          if (!hasHistory) return;
+        morosos.forEach((c) =>
           alerts.push({
             type: "rs",
             text: "Pago pendiente — " + c.tenant.split("\n")[0],
             sub:
               c.id + " · " + MONTHS_ES[mes] + " " + año + " · " + cur(c.rent),
-          });
-        });
+          }),
+        );
         CONTRATOS.forEach((c) => {
           const s = getStatus(c);
           if (s === "am") {
@@ -3650,10 +3643,9 @@
         $("fin-summary").textContent =
           paidCount + " pagados · " + pendCount + " pendientes";
 
-        // Debt per apartment — only show contracts with at least 1 payment recorded
+        // Debt per apartment
         let totalDebt = 0;
-        const contratosConPagos = CONTRATOS.filter(c => PAGOS_HISTORICOS.some(p => p.contratoId === c.id));
-        $("debt-list").innerHTML = contratosConPagos.length === 0 ? '<p style="font-size:12px;color:var(--t3);padding:10px 0">Sin deudas registradas.</p>' : contratosConPagos.map((c) => {
+        $("debt-list").innerHTML = CONTRATOS.map((c) => {
           const { deuda, cobrado, esperado, mesesTranscurridos } = CalcularDeudaPorApartamento(c);
           totalDebt += deuda;
           const pct = esperado > 0 ? Math.min(100, Math.round((cobrado / esperado) * 100)) : 100;
@@ -3675,7 +3667,6 @@
     </div>`;
         }).join("");
         $("total-debt").textContent =
-          contratosConPagos.length === 0 ? "" :
           totalDebt > 0 ? "Deuda total: " + cur(totalDebt) : "✓ Sin deudas";
 
         // Monthly summary — only show months with actual payments recorded
@@ -3801,10 +3792,9 @@
 
         let savedId = "PAY-LOCAL-" + Date.now();
         try {
-          // POST to API  (API stores mes 1-indexed)
-          const resp = await apiFetch("/pagos", {
-            method: "POST",
-            body: JSON.stringify({
+          // POST to Supabase (mes 1-indexed)
+          const rows = await sbQuery(() =>
+            _sb.from("pagos").insert([{
               contrato_id: aptId,
               monto: montoVal,
               fecha_pago: fechaVal,
@@ -3812,11 +3802,11 @@
               anio: periodoAño,
               metodo,
               notas: notas || null,
-            }),
-          });
-          savedId = resp.id || savedId;
+            }]).select()
+          );
+          if (rows && rows[0]) savedId = rows[0].id;
         } catch (e) {
-          console.warn("[API] Payment POST failed — saving locally:", e);
+          console.warn("[Supabase] Payment POST failed — saving locally:", e);
           showToastMsg("⚠ Sin conexión — pago guardado offline");
         }
 
@@ -3880,13 +3870,12 @@
         let noteId = "local-" + Date.now();
 
         try {
-          const saved = await apiFetch("/notas", {
-            method: "POST",
-            body: JSON.stringify({ contrato_id: id, nota: t }),
-          });
-          noteId = saved.id;
+          const rows = await sbQuery(() =>
+            _sb.from("notas_inquilino").insert([{ contrato_id: id, nota: t }]).select()
+          );
+          if (rows && rows[0]) noteId = rows[0].id;
         } catch (e) {
-          console.warn("[API] Note POST failed — saving locally:", e);
+          console.warn("[Supabase] Note POST failed — saving locally:", e);
         }
 
         st.notes.push({ id: noteId, nota: t });
@@ -3904,9 +3893,9 @@
 
         if (!String(noteId).startsWith("local-")) {
           try {
-            await apiFetch("/notas/" + noteId, { method: "DELETE" });
+            await sbQuery(() => _sb.from("notas_inquilino").delete().eq("id", noteId));
           } catch (e) {
-            console.warn("[API] Note DELETE failed:", e);
+            console.warn("[Supabase] Note DELETE failed:", e);
           }
         }
       }
@@ -3927,18 +3916,14 @@
 
         try {
           if (st.expulsion) {
-            await apiFetch("/expulsiones", {
-              method: "POST",
-              body: JSON.stringify({
-                contrato_id: id,
-                motivo: st.expMotivo || "",
-              }),
-            });
+            await sbQuery(() =>
+              _sb.from("expulsiones").upsert([{ contrato_id: id, motivo: st.expMotivo || "" }], { onConflict: "contrato_id" })
+            );
           } else {
-            await apiFetch("/expulsiones/" + id, { method: "DELETE" });
+            await sbQuery(() => _sb.from("expulsiones").delete().eq("contrato_id", id));
           }
         } catch (e) {
-          console.warn("[API] Expulsion sync failed:", e);
+          console.warn("[Supabase] Expulsion sync failed:", e);
         }
       }
 
@@ -3950,14 +3935,13 @@
         st.motivoGuardado = true;
         lsSaveSA();
         renderSACard(id);
-        // Sync to API
+        // Sync to Supabase
         try {
-          await apiFetch("/expulsiones", {
-            method: "POST",
-            body: JSON.stringify({ contrato_id: id, motivo: st.expMotivo }),
-          });
+          await sbQuery(() =>
+            _sb.from("expulsiones").upsert([{ contrato_id: id, motivo: st.expMotivo }], { onConflict: "contrato_id" })
+          );
         } catch (e) {
-          console.warn("[API] Motivo save failed:", e);
+          console.warn("[Supabase] Motivo save failed:", e);
         }
         showToastMsg("Motivo guardado correctamente");
       }
@@ -4173,10 +4157,11 @@
         await Promise.allSettled(
           CONTRATOS.map(async (c) => {
             try {
-              const [notas, expulsion] = await Promise.all([
-                apiFetch("/notas/" + c.id),
-                apiFetch("/expulsiones/" + c.id),
+              const [notas, expRaw] = await Promise.all([
+                sbQuery(() => _sb.from("notas_inquilino").select("*").eq("contrato_id", c.id).order("created_at", { ascending: false })),
+                sbQuery(() => _sb.from("expulsiones").select("*").eq("contrato_id", c.id).maybeSingle()),
               ]);
+              const expulsion = expRaw;
               const st = saGetState(c.id);
               st.notes = notas.map((n) => ({ id: n.id, nota: n.nota }));
               if (expulsion) {
@@ -4231,12 +4216,11 @@
         }));
         init();
 
-        // 3. Fetch live data from server
+        // 3. Fetch live contratos from Supabase (no servidor Express necesario)
         try {
-          const [cr] = await Promise.all([
-            apiFetch("/contratos"),
-          ]);
-          const pr = []; // pagos loaded from localStorage only
+          const cr = await sbQuery(() =>
+            _sb.from("contratos").select("*").eq("activo", true).order("id")
+          );
 
           if (Array.isArray(cr) && cr.length > 0) {
             CONTRATOS = cr.map((c) => ({
@@ -4254,24 +4238,15 @@
             }));
           }
 
-          // NOTE: API pagos are NOT loaded — PAGOS_HISTORICOS is managed
-          // exclusively via localStorage + SEED to avoid displaying dev/test
-          // entries from the database.  New payments registered through the UI
-          // are persisted to both the API and localStorage as normal.
-          if (lsPagos.length === 0) {
-            PAGOS_HISTORICOS = SEED_PAGOS;
-          }
+          // Pagos: localStorage + SEED (no se cargan de la DB)
+          if (lsPagos.length === 0) PAGOS_HISTORICOS = SEED_PAGOS;
 
-          // Re-render dashboard with live data
+          // Re-render con datos frescos
           renderDashboard();
-          // Also re-render Situación Actual if it's the active page
           const activePage = document.querySelector(".page.active");
           if (activePage && activePage.id === "page-sistema") renderSituacionActual();
         } catch (e) {
-          console.error(
-            "[API] Initial load failed — running on local/fallback data:",
-            e,
-          );
+          console.error("[Supabase] Initial load failed:", e);
           if (PAGOS_HISTORICOS.length === 0)
             showToastMsg("⚠ Sin conexión — operando en modo offline");
         }
@@ -4510,7 +4485,15 @@
 
         try {
           if (isEdit) {
-            await apiFetch("/contratos/" + payload.id, { method: "PUT", body: JSON.stringify(payload) });
+            await sbQuery(() =>
+              _sb.from("contratos").update({
+                apt_nombre: payload.apt_nombre, tenant: payload.tenant,
+                address: payload.address, apt: payload.apt,
+                rent: payload.rent, deposit: payload.deposit,
+                pay_day: payload.pay_day, start_base: payload.start_base,
+                notary: payload.notary, notes: payload.notes,
+              }).eq("id", payload.id)
+            );
             // Update locally
             const idx = CONTRATOS.findIndex(c => c.id === payload.id);
             if (idx >= 0) {
@@ -4520,7 +4503,15 @@
             }
             showToastMsg("Contrato actualizado — " + payload.id);
           } else {
-            await apiFetch("/contratos", { method: "POST", body: JSON.stringify(payload) });
+            await sbQuery(() =>
+              _sb.from("contratos").insert([{
+                id: payload.id, apt_nombre: payload.apt_nombre,
+                tenant: payload.tenant, address: payload.address,
+                apt: payload.apt, rent: payload.rent, deposit: payload.deposit,
+                pay_day: payload.pay_day, start_base: payload.start_base,
+                notary: payload.notary, notes: payload.notes, activo: true,
+              }])
+            );
             CONTRATOS.push({ id: payload.id, aptNombre: payload.apt_nombre, tenant: payload.tenant,
               address: payload.address, apt: payload.apt, rent: payload.rent, deposit: payload.deposit,
               payDay: payload.pay_day, startBase: new Date(payload.start_base), notary: payload.notary, notes: payload.notes });
