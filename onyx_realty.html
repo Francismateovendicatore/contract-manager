@@ -3638,21 +3638,14 @@
         ).reduce((s, p) => s + p.monto, 0);
       }
       function DetectarMorosos(mes, año) {
-        const n = now();
+        // A contract is moroso if: it was active this month AND has no payment recorded.
+        // payDay is informational only — no grace period applied.
         return CONTRATOS.filter((c) => {
-          const cs = new Date(c.startBase);
-          // Contract must be active this month
+          const cs = c.startBase instanceof Date ? c.startBase : new Date(c.startBase);
           const active =
             cs.getFullYear() < año ||
             (cs.getFullYear() === año && cs.getMonth() <= mes);
           if (!active) return false;
-
-          // Grace period: for the CURRENT month, payDay applies to ALL contracts.
-          // If today < payDay, the payment isn't due yet — no moroso.
-          if (mes === n.getMonth() && año === n.getFullYear()) {
-            if (n.getDate() < (c.payDay || 1)) return false;
-          }
-
           return !PAGOS_HISTORICOS.some(
             (p) => p.contratoId === c.id && p.mes === mes && p.año === año,
           );
@@ -3690,14 +3683,11 @@
           (p) => p.contratoId === c.id,
         ).length;
 
-        // Grace period: if today is strictly before payDay, payment not yet due.
-        // This applies every month, not only the first month of the contract.
-        const payDayPassed = n.getDate() >= pd;
-
-        const deuda = payDayPassed && !paidThisMonth ? c.rent : 0;
+        // No payDay grace: if contract is active and no payment recorded → debt.
+        const deuda = !paidThisMonth ? c.rent : 0;
         const cobrado = paidThisMonth ? c.rent : 0;
-        const esperado = payDayPassed ? c.rent : 0;
-        const mesesTranscurridos = payDayPassed ? 1 : 0;
+        const esperado = c.rent;
+        const mesesTranscurridos = 1;
 
         return {
           esperado,
@@ -5043,26 +5033,40 @@
             if (Array.isArray(allPagosRaw)) {
               const seen = new Map();
               const toDelete = [];
-              // Build startBase map for pre-contract ghost detection
-              const contratoStartMap = {};
-              CONTRATOS.forEach(c => { contratoStartMap[c.id] = new Date((c.startBase || "") + "T00:00:00"); });
+              const now12 = new Date();
 
+              // Pass 1: find the most recent payment date per contract
+              const latestByContract = {};
+              allPagosRaw.forEach((p) => {
+                const fp = new Date((p.fecha_pago || "") + "T12:00:00");
+                if (!isNaN(fp.getTime())) {
+                  if (!latestByContract[p.contrato_id] || fp > latestByContract[p.contrato_id])
+                    latestByContract[p.contrato_id] = fp;
+                }
+              });
+
+              // Pass 2: dedup — sorted by monto DESC (highest kept)
               allPagosRaw.forEach((p) => {
                 const fp = new Date((p.fecha_pago || "") + "T12:00:00");
 
-                // Rule 1: Delete payments that predate the contract startBase (ghost/seed data)
-                const contractStart = contratoStartMap[p.contrato_id];
-                if (contractStart && !isNaN(contractStart.getTime()) && !isNaN(fp.getTime())) {
-                  const oneDayBefore = new Date(contractStart);
-                  oneDayBefore.setDate(oneDayBefore.getDate() - 1);
-                  if (fp < oneDayBefore) {
-                    toDelete.push(p.id);
-                    console.log(`[Onyx] Ghost payment before contract start → id=${p.id} fecha=${p.fecha_pago}`);
-                    return;
+                // Rule A: delete payments from a significantly older period (>3 months)
+                // when a newer payment exists for the same contract.
+                // This removes ghost/seed data (e.g. a Marzo 2025 row when contract
+                // latest payment is Abril 2026 → 13 months apart → ghost).
+                if (!isNaN(fp.getTime())) {
+                  const latest = latestByContract[p.contrato_id];
+                  if (latest) {
+                    const monthsOld = (latest.getFullYear() - fp.getFullYear()) * 12 +
+                                      (latest.getMonth() - fp.getMonth());
+                    if (monthsOld > 3) {
+                      toDelete.push(p.id);
+                      console.log(`[Onyx] Ghost/stale payment → id=${p.id} fecha=${p.fecha_pago} (${monthsOld}mo behind latest)`);
+                      return;
+                    }
                   }
                 }
 
-                // Rule 2: Dedup same (contrato, mes, año) — keep highest monto
+                // Rule B: dedup same (contrato_id, mes, anio) — keep highest monto
                 const canonMes =
                   !isNaN(fp.getTime()) ? fp.getMonth()
                   : p.mes > 0 ? p.mes - 1
@@ -5079,7 +5083,28 @@
                 await sbQuery(() =>
                   _sb.from("pagos").delete().in("id", toDelete),
                 );
-                console.log(`[Onyx] Auto-cleaned ${toDelete.length} record(s) (duplicates + pre-contract ghosts)`);
+                console.log(`[Onyx] Auto-cleaned ${toDelete.length} record(s) from DB (stale + dupes)`);
+                // Reload PAGOS_HISTORICOS so the current session reflects clean data
+                const cleanPagos = await sbQuery(() =>
+                  _sb.from("pagos").select("*").order("fecha_pago", { ascending: false })
+                );
+                if (Array.isArray(cleanPagos)) {
+                  PAGOS_HISTORICOS = dedupPagos(
+                    cleanPagos.map((p) => ({
+                      id: p.id,
+                      contratoId: p.contrato_id,
+                      aptId: p.contrato_id,
+                      monto: parseFloat(p.monto),
+                      fechaPago: new Date(p.fecha_pago + "T12:00:00"),
+                      mes: normalizarMes(p.mes, p.fecha_pago),
+                      año: p.anio,
+                      metodo: p.metodo || "transferencia",
+                      notas: p.notas || "",
+                      auto: false,
+                    }))
+                  );
+                  console.log("[Onyx] PAGOS_HISTORICOS reloaded after dedup:", PAGOS_HISTORICOS.length, "records");
+                }
               }
             }
           } catch (e) {
