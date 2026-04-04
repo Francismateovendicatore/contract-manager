@@ -257,6 +257,46 @@
         font-family: "JetBrains Mono", monospace;
         font-size: 11.5px; color: var(--t1); font-weight: 500;
       }
+      /* ── EXPULSION COUNTDOWN ─────────────────────────────────────────── */
+      .sa-exp-countdown {
+        display: flex; align-items: flex-start; gap: 10px;
+        padding: 12px 14px; border-radius: var(--rsm);
+        margin-bottom: 12px; border: 1px solid;
+      }
+      .sa-exp-countdown.active { background: var(--rs-dim); border-color: var(--rs-border); }
+      .sa-exp-countdown.passed { background: rgba(236,175,66,0.08); border-color: var(--am-border); }
+      .sa-exp-cd-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+      .sa-exp-cd-title { font-size: 11.5px; font-weight: 600; color: var(--t1); display: block; margin-bottom: 3px; }
+      .sa-exp-cd-sub { font-family: "JetBrains Mono", monospace; font-size: 9px; color: var(--t2); display: block; margin-bottom: 6px; }
+      .sa-exp-cd-timer {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 20px; font-weight: 600; color: var(--rs);
+        letter-spacing: 0.04em; text-shadow: 0 0 20px rgba(242,65,90,0.4);
+      }
+      /* ── MOTIVO SAVED STATE ──────────────────────────────────────────── */
+      .sa-exp-motivo-saved { margin-top: 10px; }
+      .sa-exp-motivo-saved-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+      .sa-exp-motivo-text {
+        font-size: 13px; color: var(--t2); line-height: 1.6;
+        padding: 10px 12px; background: rgba(255,255,255,0.025);
+        border: 1px solid var(--b1); border-radius: var(--rxs);
+      }
+      .sa-exp-edit-btn {
+        font-family: "JetBrains Mono", monospace; font-size: 9.5px; color: var(--t3);
+        background: none; border: 1px solid var(--b2); border-radius: var(--rxs);
+        padding: 4px 10px; cursor: pointer; transition: all 0.15s;
+      }
+      .sa-exp-edit-btn:hover { color: var(--gold); border-color: var(--gold-border); }
+      /* ── MOTIVO EDIT STATE ───────────────────────────────────────────── */
+      .sa-exp-motivo-edit { margin-top: 10px; }
+      .sa-exp-save-btn {
+        display: flex; align-items: center; justify-content: center;
+        width: 100%; margin-top: 10px; padding: 10px; border-radius: var(--rsm);
+        background: var(--rs-dim); border: 1px solid var(--rs-border);
+        color: var(--rs); font-size: 12px; font-weight: 600;
+        cursor: pointer; transition: all 0.18s;
+      }
+      .sa-exp-save-btn:hover { background: rgba(242,65,90,0.15); }
       *,
       *::before,
       *::after {
@@ -2894,8 +2934,24 @@
    APPLICATION STATE
    ═══════════════════════════════════════════════════════════════════════ */
       let CONTRATOS = [];
+      // ÚNICO pago real conocido — Flor Magdalena / Francisco Javier · RD$15,000
+      // Si la API responde, este seed se reemplaza con los datos reales del servidor.
+      const SEED_PAGOS = [
+        {
+          id: "seed-001",
+          contratoId: "C-001",
+          aptId: "C-001",
+          monto: 15000,
+          fechaPago: new Date("2025-03-15"),
+          mes: 2, // marzo = 2 (0-indexed)
+          año: 2025,
+          metodo: "transferencia",
+          notas: "",
+          auto: false,
+        },
+      ];
       let PAGOS_HISTORICOS = [];
-      // SA_STATE: { [contratoId]: { notes: [{id, nota}], expulsion: bool, expMotivo: string } }
+      // SA_STATE: { [contratoId]: { notes, expulsion, expMotivo, fechaExpulsion, motivoGuardado } }
       let SA_STATE = {};
 
       /* ═══════════════════════════════════════════════════════════════════════
@@ -3521,17 +3577,33 @@
       }
       function updateSACountdowns() {
         CONTRATOS.forEach((c) => {
+          // Regular contract countdown (Restante)
           const el = $("sa-cd-" + c.id);
-          if (!el) return;
-          const { end } = getActiveCycle(c.startBase);
-          const rem = msToDhms(end - now());
-          const s = saContractStatus(c);
-          el.style.color =
-            s.cls === "em" ? "var(--em)"
-            : s.cls === "am" ? "var(--am)"
-            : "var(--rs)";
-          el.textContent =
-            pad(rem.d, 3) + "d " + pad(rem.h) + "h " + pad(rem.m) + "m";
+          if (el) {
+            const { end } = getActiveCycle(c.startBase);
+            const rem = msToDhms(end - now());
+            const s = saContractStatus(c);
+            el.style.color =
+              s.cls === "em" ? "var(--em)"
+              : s.cls === "am" ? "var(--am)"
+              : "var(--rs)";
+            el.textContent = pad(rem.d, 3) + "d " + pad(rem.h) + "h " + pad(rem.m) + "m";
+          }
+
+          // Expulsion countdown (only when in expulsion and motivo saved)
+          const st = saGetState(c.id);
+          if (st.expulsion) {
+            const cdEl = $("sa-exp-cd-" + c.id);
+            if (cdEl) {
+              const { end } = getActiveCycle(c.startBase);
+              const cd = calcExpulsionCountdown(end);
+              if (cd.passed) {
+                cdEl.textContent = "⚠️ Ya estás en período de notificación";
+              } else {
+                cdEl.textContent = pad(cd.dhms.d, 3) + "d " + pad(cd.dhms.h) + "h " + pad(cd.dhms.m) + "m";
+              }
+            }
+          }
         });
       }
 
@@ -3775,8 +3847,10 @@
    ═══════════════════════════════════════════════════════════════════════ */
       function saGetState(id) {
         if (!SA_STATE[id])
-          SA_STATE[id] = { notes: [], expulsion: false, expMotivo: "", fechaExpulsion: null };
+          SA_STATE[id] = { notes: [], expulsion: false, expMotivo: "", fechaExpulsion: null, motivoGuardado: false };
+        // Migrate old records
         if (!("fechaExpulsion" in SA_STATE[id])) SA_STATE[id].fechaExpulsion = null;
+        if (!("motivoGuardado" in SA_STATE[id]))  SA_STATE[id].motivoGuardado = false;
         return SA_STATE[id];
       }
 
@@ -3827,9 +3901,11 @@
         st.expulsion = !st.expulsion;
         if (st.expulsion) {
           if (!st.fechaExpulsion) st.fechaExpulsion = new Date().toISOString();
+          st.motivoGuardado = false; // open edit mode when starting
         } else {
           st.expMotivo = "";
           st.fechaExpulsion = null;
+          st.motivoGuardado = false;
         }
         renderSACard(id);
         lsSaveSA();
@@ -3851,21 +3927,34 @@
         }
       }
 
-      // Debounced motivo save
-      let _motivoTimers = {};
-      async function saUpdateMotivo(id, val) {
-        saGetState(id).expMotivo = val;
+      // Save and lock the expulsion motivo
+      async function saGuardarMotivo(id) {
+        const st = saGetState(id);
+        const ta = $("sa-exp-textarea-" + id);
+        if (ta) st.expMotivo = ta.value.trim();
+        st.motivoGuardado = true;
         lsSaveSA();
-        clearTimeout(_motivoTimers[id]);
-        _motivoTimers[id] = setTimeout(async () => {
-          if (!saGetState(id).expulsion) return;
-          try {
-            await apiFetch("/expulsiones", {
-              method: "POST",
-              body: JSON.stringify({ contrato_id: id, motivo: val }),
-            });
-          } catch (e) {}
-        }, 800);
+        renderSACard(id);
+        // Sync to API
+        try {
+          await apiFetch("/expulsiones", {
+            method: "POST",
+            body: JSON.stringify({ contrato_id: id, motivo: st.expMotivo }),
+          });
+        } catch (e) {
+          console.warn("[API] Motivo save failed:", e);
+        }
+        showToastMsg("Motivo guardado correctamente");
+      }
+
+      // Reopen the motivo for editing
+      function saEditarMotivo(id) {
+        const st = saGetState(id);
+        st.motivoGuardado = false;
+        lsSaveSA();
+        renderSACard(id);
+        // Focus the textarea after render
+        setTimeout(() => { const ta = $("sa-exp-textarea-" + id); if (ta) ta.focus(); }, 50);
       }
 
       function saContractStatus(c) {
@@ -3875,6 +3964,21 @@
         if (days <= THRESH_CRITICAL)  return { label: "Próximo a vencer", cls: "rs" };
         if (days <= THRESH_WARNING)   return { label: "Por renovar",      cls: "am" };
         return                               { label: "Vigente",           cls: "em" };
+      }
+
+      /**
+       * Calcula el countdown de expulsión:
+       * - Objetivo: contractEnd - 2 meses (punto de acción formal)
+       * - Cuenta desde NOW hasta ese objetivo
+       * - Si ya pasó: retorna { passed: true }
+       * - Si no: retorna { passed: false, ms, dhms }
+       */
+      function calcExpulsionCountdown(contractEnd) {
+        const target = new Date(contractEnd);
+        target.setMonth(target.getMonth() - 2); // 2 meses antes del fin
+        const msLeft = target - now();
+        if (msLeft <= 0) return { passed: true, target };
+        return { passed: false, target, ms: msLeft, dhms: msToDhms(msLeft) };
       }
 
       function renderSACard(id) {
@@ -3911,17 +4015,69 @@
           : '<span style="font-size:10px;color:var(--t3)">Sin observaciones.</span>';
 
         const expFechaInicio = st.fechaExpulsion ? fmt(new Date(st.fechaExpulsion)) : "—";
-        const expBlock =
-          exp ?
-            `<div class="sa-expulsion-block">
-        <div class="sa-exp-dates">
-          <div><span class="sa-exp-dt-label">Inicio proceso</span><span class="sa-exp-dt-val">${expFechaInicio}</span></div>
-          <div><span class="sa-exp-dt-label">Fin de contrato</span><span class="sa-exp-dt-val">${fmt(end)}</span></div>
-        </div>
-        <span class="sa-exp-title">Motivo de expulsión</span>
-        <textarea class="sa-exp-input" placeholder="Detalla el motivo..." oninput="saUpdateMotivo('${id}',this.value)">${st.expMotivo}</textarea>
-       </div>`
-          : "";
+
+        // Build expulsion countdown block
+        let expCountdownHTML = "";
+        if (exp) {
+          const cd = calcExpulsionCountdown(end);
+          if (cd.passed) {
+            expCountdownHTML = `
+              <div class="sa-exp-countdown passed">
+                <span class="sa-exp-cd-icon">⚠️</span>
+                <div>
+                  <span class="sa-exp-cd-title">Ya estás en período de notificación o fuera de tiempo</span>
+                  <span class="sa-exp-cd-sub">La fecha límite de acción (${fmt(cd.target)}) ya pasó — actúa de inmediato</span>
+                </div>
+              </div>`;
+          } else {
+            expCountdownHTML = `
+              <div class="sa-exp-countdown active">
+                <span class="sa-exp-cd-icon">⏳</span>
+                <div style="flex:1">
+                  <span class="sa-exp-cd-title">Tiempo para pedir el apartamento</span>
+                  <span class="sa-exp-cd-sub">Fecha límite de acción: ${fmt(cd.target)}</span>
+                  <div id="sa-exp-cd-${id}" class="sa-exp-cd-timer">
+                    ${pad(cd.dhms.d,3)}d ${pad(cd.dhms.h)}h ${pad(cd.dhms.m)}m
+                  </div>
+                </div>
+              </div>`;
+          }
+        }
+
+        // Motivo block: edit mode vs saved/locked mode
+        let motivoHTML = "";
+        if (exp) {
+          if (st.motivoGuardado && st.expMotivo) {
+            motivoHTML = `
+              <div class="sa-exp-motivo-saved">
+                <div class="sa-exp-motivo-saved-head">
+                  <span class="sa-exp-title">Motivo de expulsión</span>
+                  <button class="sa-exp-edit-btn" onclick="saEditarMotivo('${id}')">✎ Editar</button>
+                </div>
+                <div class="sa-exp-motivo-text">${st.expMotivo.replace(/\n/g, "<br>")}</div>
+              </div>`;
+          } else {
+            motivoHTML = `
+              <div class="sa-exp-motivo-edit">
+                <span class="sa-exp-title">Motivo de expulsión</span>
+                <textarea id="sa-exp-textarea-${id}" class="sa-exp-input" placeholder="Detalla el motivo de la expulsión...">${st.expMotivo}</textarea>
+                <button class="sa-exp-save-btn" onclick="saGuardarMotivo('${id}')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;display:inline;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>
+                  Guardar expulsión
+                </button>
+              </div>`;
+          }
+        }
+
+        const expBlock = exp ? `
+          <div class="sa-expulsion-block">
+            <div class="sa-exp-dates">
+              <div><span class="sa-exp-dt-label">Inicio proceso</span><span class="sa-exp-dt-val">${expFechaInicio}</span></div>
+              <div><span class="sa-exp-dt-label">Fin de contrato</span><span class="sa-exp-dt-val">${fmt(end)}</span></div>
+            </div>
+            ${expCountdownHTML}
+            ${motivoHTML}
+          </div>` : "";
 
         const html = `<div class="sa-card${exp ? " expulsion" : ""}${alertClass}" id="sa-card-${id}">
     <div class="sa-card-head">
@@ -4007,8 +4163,14 @@
               if (expulsion) {
                 st.expulsion = true;
                 st.expMotivo = expulsion.motivo || "";
+                // Preserve local fechaExpulsion — API doesn't store it
+                if (!st.fechaExpulsion) st.fechaExpulsion = new Date().toISOString();
+                // If motivo exists from API, mark as saved
+                if (expulsion.motivo && expulsion.motivo.trim()) st.motivoGuardado = true;
               } else {
                 st.expulsion = false;
+                st.fechaExpulsion = null;
+                st.motivoGuardado = false;
               }
             } catch (e) {
               /* keep localStorage data */
@@ -4039,7 +4201,8 @@
 
       async function loadAndInit() {
         // 1. Restore from localStorage immediately → snappy perceived performance
-        PAGOS_HISTORICOS = lsLoadPagos();
+        const lsPagos = lsLoadPagos();
+        PAGOS_HISTORICOS = lsPagos.length > 0 ? lsPagos : SEED_PAGOS;
         SA_STATE = lsLoadSA();
 
         // 2. Use fallback contracts to paint UI before API responds
@@ -4072,20 +4235,25 @@
             }));
           }
 
-          if (Array.isArray(pr)) {
+          if (Array.isArray(pr) && pr.length > 0) {
+            // API has real data — use it, replacing seed
             PAGOS_HISTORICOS = pr.map((p) => ({
               id: p.id,
               contratoId: p.contrato_id,
               aptId: p.contrato_id,
               monto: parseFloat(p.monto),
               fechaPago: new Date(p.fecha_pago),
-              mes: Math.max(0, (p.mes || 1) - 1), // API 1-indexed → 0-indexed; clamp to avoid -1
+              mes: Math.max(0, (p.mes || 1) - 1),
               año: p.anio,
               metodo: p.metodo,
               notas: p.notas || "",
               auto: true,
             }));
             lsSavePagos();
+          } else if (lsPagos.length === 0) {
+            // API returned empty and localStorage was empty — keep seed but don't persist it
+            // (seed will be replaced once real payments are registered)
+            PAGOS_HISTORICOS = SEED_PAGOS;
           }
 
           // Re-render dashboard with live data
