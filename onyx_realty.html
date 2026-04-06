@@ -3638,57 +3638,37 @@
         ).reduce((s, p) => s + p.monto, 0);
       }
       function DetectarMorosos(mes, año) {
-        // REGLA DEFINITIVA:
-        // Un inquilino es moroso si tiene AL MENOS UN período vencido sin pago:
-        //   - Meses ANTERIORES al actual → siempre vencidos (payDay ya pasó)
-        //   - Mes ACTUAL → solo si hoy >= payDay
-        // Se escanean todos los meses desde el inicio del contrato.
+        // REGLA EXACTA — 3 estados posibles, mutuamente excluyentes:
+        //
+        // ✅ PAGADO   → existe pago registrado para este mes/año → NO moroso
+        // 🟡 AL DÍA  → no hay pago pero hoy < payDay → NO moroso (aún no llega)
+        // 🔴 MOROSO  → no hay pago Y hoy >= payDay → SÍ moroso
+        //
+        // ⚠️  SOLO se evalúa el MES ACTUAL. No se acumula deuda histórica.
+        //     Los meses anteriores sin pago no convierten al inquilino en moroso.
         const n = now();
         const todayDay = n.getDate();
 
         return CONTRATOS.filter((c) => {
+          // Verificar que el contrato ya haya iniciado en este mes/año
           const cs =
             c.startBase instanceof Date ? c.startBase : new Date(c.startBase);
-          // Use UTC methods — ISO date strings ("2026-04-01") are UTC midnight,
-          // so getUTCMonth() gives the CORRECT month regardless of local timezone.
-          const startY = cs.getUTCFullYear();
-          const startM = cs.getUTCMonth(); // 0-indexed
+          const contratoActivo =
+            cs.getUTCFullYear() < año ||
+            (cs.getUTCFullYear() === año && cs.getUTCMonth() <= mes);
+          if (!contratoActivo) return false;
 
-          // Scan every month from contract start → current month
-          let scanY = startY;
-          let scanM = startM;
+          // Estado 1 — PAGADO: ya existe pago registrado para este mes
+          const hasPaid = PAGOS_HISTORICOS.some(
+            (p) => p.contratoId === c.id && p.mes === mes && p.año === año,
+          );
+          if (hasPaid) return false;
 
-          while (
-            scanY < año ||
-            (scanY === año && scanM <= mes)
-          ) {
-            const isPast = scanY < año || (scanY === año && scanM < mes);
-            const isCurrent = scanY === año && scanM === mes;
+          // Estado 2 — AL DÍA: aún no llega la fecha de pago → no es moroso
+          if (todayDay < (c.payDay || 1)) return false;
 
-            // Is this period's payment now due?
-            const due =
-              isPast ||
-              (isCurrent && todayDay >= (c.payDay || 1));
-
-            if (due) {
-              const hasPaid = PAGOS_HISTORICOS.some(
-                (p) =>
-                  p.contratoId === c.id &&
-                  p.mes === scanM &&
-                  p.año === scanY,
-              );
-              if (!hasPaid) return true; // Found unpaid due period → moroso
-            }
-
-            // Advance to next month
-            scanM++;
-            if (scanM > 11) {
-              scanM = 0;
-              scanY++;
-            }
-          }
-
-          return false;
+          // Estado 3 — MOROSO: fecha de pago ya pasó y no hay pago registrado
+          return true;
         });
       }
       function CalcularDeudaPorApartamento(c) {
@@ -3697,7 +3677,7 @@
         const año = n.getFullYear();
         const pd = c.payDay || 1;
 
-        // Contract must have started on or before this month
+        // Contrato debe haber iniciado en o antes de este mes
         const cs = new Date(c.startBase);
         const contratoActivo =
           cs.getUTCFullYear() < año ||
@@ -3710,6 +3690,7 @@
             deuda: 0,
             meses: 0,
             mesesTranscurridos: 0,
+            estadoPago: "al_dia",
           };
         }
 
@@ -3723,13 +3704,24 @@
           (p) => p.contratoId === c.id,
         ).length;
 
-        // DEUDA = c.rent si este inquilino tiene algún período vencido sin pagar.
-        // Usa la misma lógica que DetectarMorosos (multi-mes) pero limitada
-        // al monto de UN mes (sin acumular deuda histórica enorme).
-        const esMoroso = DetectarMorosos(mes, año).some((x) => x.id === c.id);
         const payDayPassed = n.getDate() >= pd;
 
-        const deuda = esMoroso ? c.rent : 0;
+        // 3 estados excluyentes — SOLO se evalúa el mes actual:
+        // ✅ PAGADO   → paidThisMonth = true → deuda = 0
+        // 🟡 AL DÍA  → !paidThisMonth && !payDayPassed → deuda = 0
+        // 🔴 MOROSO  → !paidThisMonth && payDayPassed → deuda = renta
+        let estadoPago, deuda;
+        if (paidThisMonth) {
+          estadoPago = "pagado";
+          deuda = 0;
+        } else if (!payDayPassed) {
+          estadoPago = "al_dia";
+          deuda = 0;
+        } else {
+          estadoPago = "moroso";
+          deuda = c.rent;
+        }
+
         const cobrado = paidThisMonth ? c.rent : 0;
         const esperado = payDayPassed ? c.rent : 0;
         const mesesTranscurridos = payDayPassed ? 1 : 0;
@@ -3741,6 +3733,7 @@
           deuda,
           meses: mesesRegistrados,
           mesesTranscurridos,
+          estadoPago,
         };
       }
 
@@ -4244,30 +4237,54 @@
           "Finanzas — " + MONTHS_ES_LONG[mes] + " " + año;
 
         let paidCount = 0,
-          pendCount = 0;
+          pendCount = 0,
+          morosoCount = 0;
         $("month-tbody").innerHTML = CONTRATOS.map((c) => {
           const paid = PAGOS_HISTORICOS.find(
             (p) => p.contratoId === c.id && p.mes === mes && p.año === año,
           );
-          const estado = paid ? "pagado" : "pendiente";
-          if (paid) paidCount++;
-          else pendCount++;
+          const payDayPassed = n.getDate() >= (c.payDay || 1);
+          // Verificar que contrato ya inició
+          const cs = new Date(c.startBase);
+          const contratoActivo =
+            cs.getUTCFullYear() < año ||
+            (cs.getUTCFullYear() === año && cs.getUTCMonth() <= mes);
+
+          let estado, estadoLabel;
+          if (paid) {
+            estado = "pagado";
+            estadoLabel = "✓ Pagado";
+            paidCount++;
+          } else if (!contratoActivo || !payDayPassed) {
+            estado = "pendiente";
+            estadoLabel = "Al día";
+            pendCount++;
+          } else {
+            estado = "atrasado";
+            estadoLabel = "Moroso";
+            morosoCount++;
+          }
           return `<tr>
       <td><span class="td-apt">${c.id}</span></td>
       <td><span class="td-name">${c.tenant.split("\n")[0]}</span></td>
       <td><span class="td-monto">${cur(c.rent)}</span></td>
       <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t2)">Día ${c.payDay}</td>
-      <td><span class="td-estado ${estado}">${paid ? "Pagado" : "Pendiente"}</span></td>
+      <td><span class="td-estado ${estado}">${estadoLabel}</span></td>
       <td>${!paid ? `<button class="td-btn" onclick="openModalFor('${c.id}')">Registrar</button>` : "—"}</td>
     </tr>`;
         }).join("");
         $("fin-summary").textContent =
-          paidCount + " pagados · " + pendCount + " pendientes";
+          paidCount +
+          " pagados · " +
+          pendCount +
+          " al día · " +
+          morosoCount +
+          " morosos";
 
         // Debt per apartment
         let totalDebt = 0;
         $("debt-list").innerHTML = CONTRATOS.map((c) => {
-          const { deuda, cobrado, esperado, mesesTranscurridos } =
+          const { deuda, cobrado, esperado, mesesTranscurridos, estadoPago } =
             CalcularDeudaPorApartamento(c);
           totalDebt += deuda;
           const pct =
@@ -4275,13 +4292,19 @@
               Math.min(100, Math.round((cobrado / esperado) * 100))
             : 100;
           const barColor =
-            deuda === 0 ? "var(--em)"
-            : deuda > c.rent * 2 ? "var(--rs)"
-            : "var(--am)";
+            estadoPago === "pagado" ? "var(--em)"
+            : estadoPago === "al_dia" ? "var(--am)"
+            : "var(--rs)";
           const detalleLabel =
-            mesesTranscurridos > 0 ?
-              `${mesesTranscurridos} mes${mesesTranscurridos > 1 ? "es" : ""} del ciclo · ${cur(c.rent)}/mes`
-            : "Ciclo recién iniciado";
+            estadoPago === "pagado" ? "Pagó este mes"
+            : estadoPago === "al_dia" ? `Aún no llega el día ${c.payDay}`
+            : `Venció el día ${c.payDay} — sin pago`;
+          const deudaLabel =
+            estadoPago === "pagado" ?
+              '<span class="debt-amount zero">✓ Pagado</span>'
+            : estadoPago === "al_dia" ?
+              '<span class="debt-amount zero">Al día</span>'
+            : `<span class="debt-amount positive">${cur(deuda)}</span>`;
           return `<div class="debt-item">
       <span class="debt-apt-id">${c.id}</span>
       <div class="debt-name">
@@ -4289,7 +4312,7 @@
         <span class="debt-detail">${detalleLabel}</span>
         <div class="debt-bar-track"><div class="debt-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
       </div>
-      <div>${deuda === 0 ? '<span class="debt-amount zero">✓ Al día</span>' : `<span class="debt-amount positive">${cur(deuda)}</span>`}</div>
+      <div>${deudaLabel}</div>
     </div>`;
         }).join("");
         $("total-debt").textContent =
@@ -4483,7 +4506,7 @@
                 monto: parseFloat(p.monto),
                 fechaPago: new Date(p.fecha_pago + "T12:00:00"),
                 mes: normalizarMes(p.mes, p.fecha_pago),
-                año: parseInt(p.anio, 10),  // ALWAYS number — prevents "2026"===2026 false
+                año: parseInt(p.anio, 10), // ALWAYS number — prevents "2026"===2026 false
                 metodo: p.metodo || "transferencia",
                 notas: p.notas || "",
                 auto: false,
@@ -5044,10 +5067,17 @@
               deposit: parseFloat(c.deposit),
               // Safe UTC startBase. Fallback = today's month, NOT year 2000
               startBase: (() => {
-                const raw = c.start_base ? String(c.start_base).substring(0, 10) : null;
-                if (raw && /^\d{4}-\d{2}-\d{2}$/.test(raw)) return new Date(raw);
+                const raw =
+                  c.start_base ? String(c.start_base).substring(0, 10) : null;
+                if (raw && /^\d{4}-\d{2}-\d{2}$/.test(raw))
+                  return new Date(raw);
                 const _t = new Date();
-                return new Date(_t.getUTCFullYear() + '-' + String(_t.getUTCMonth()+1).padStart(2,'0') + '-01');
+                return new Date(
+                  _t.getUTCFullYear() +
+                    "-" +
+                    String(_t.getUTCMonth() + 1).padStart(2, "0") +
+                    "-01",
+                );
               })(),
               payDay: parseInt(c.pay_day, 10) || 1,
               notary: c.notary || "",
@@ -5064,7 +5094,7 @@
                 monto: parseFloat(p.monto),
                 fechaPago: new Date(p.fecha_pago + "T12:00:00"),
                 mes: normalizarMes(p.mes, p.fecha_pago),
-                año: parseInt(p.anio, 10),  // ALWAYS number — prevents "2026"===2026 false
+                año: parseInt(p.anio, 10), // ALWAYS number — prevents "2026"===2026 false
                 metodo: p.metodo || "transferencia",
                 notas: p.notas || "",
                 auto: false,
@@ -5449,10 +5479,19 @@
                 deposit: payload.deposit,
                 payDay: parseInt(payload.pay_day, 10) || 1,
                 startBase: (() => {
-                  const raw = payload.start_base ? String(payload.start_base).substring(0, 10) : null;
-                  if (raw && /^\d{4}-\d{2}-\d{2}$/.test(raw)) return new Date(raw);
+                  const raw =
+                    payload.start_base ?
+                      String(payload.start_base).substring(0, 10)
+                    : null;
+                  if (raw && /^\d{4}-\d{2}-\d{2}$/.test(raw))
+                    return new Date(raw);
                   const _t = new Date();
-                  return new Date(_t.getUTCFullYear() + '-' + String(_t.getUTCMonth()+1).padStart(2,'0') + '-01');
+                  return new Date(
+                    _t.getUTCFullYear() +
+                      "-" +
+                      String(_t.getUTCMonth() + 1).padStart(2, "0") +
+                      "-01",
+                  );
                 })(),
                 notary: payload.notary,
                 notes: payload.notes,
@@ -5488,10 +5527,19 @@
               deposit: payload.deposit,
               payDay: parseInt(payload.pay_day, 10) || 1,
               startBase: (() => {
-                const raw = payload.start_base ? String(payload.start_base).substring(0, 10) : null;
-                if (raw && /^\d{4}-\d{2}-\d{2}$/.test(raw)) return new Date(raw);
+                const raw =
+                  payload.start_base ?
+                    String(payload.start_base).substring(0, 10)
+                  : null;
+                if (raw && /^\d{4}-\d{2}-\d{2}$/.test(raw))
+                  return new Date(raw);
                 const _t = new Date();
-                return new Date(_t.getUTCFullYear() + '-' + String(_t.getUTCMonth()+1).padStart(2,'0') + '-01');
+                return new Date(
+                  _t.getUTCFullYear() +
+                    "-" +
+                    String(_t.getUTCMonth() + 1).padStart(2, "0") +
+                    "-01",
+                );
               })(),
               notary: payload.notary,
               notes: payload.notes,
@@ -5526,15 +5574,23 @@
           const paid = PAGOS_HISTORICOS.find(
             (p) => p.contratoId === c.id && p.mes === mes && p.año === año,
           );
-          const { deuda } = CalcularDeudaPorApartamento(c);
+          const { deuda, estadoPago } = CalcularDeudaPorApartamento(c);
           const { end } = getActiveCycle(c.startBase);
           const dRen = Math.ceil((end - n) / 864e5);
+          const estadoColor =
+            estadoPago === "pagado" ? "#2ebd8e"
+            : estadoPago === "al_dia" ? "#ecaf42"
+            : "#f2415a";
+          const estadoTexto =
+            estadoPago === "pagado" ? "Pagado"
+            : estadoPago === "al_dia" ? "Al día"
+            : "Moroso";
           return `<tr>
             <td>${c.id}</td>
             <td>${c.aptNombre}</td>
             <td>${c.tenant.split("\n")[0]}</td>
             <td>RD$${Number(c.rent).toLocaleString("es-DO")}</td>
-            <td style="color:${paid ? "#2ebd8e" : "#f2415a"};font-weight:600">${paid ? "Pagado" : "Pendiente"}</td>
+            <td style="color:${estadoColor};font-weight:600">${estadoTexto}</td>
             <td>${deuda > 0 ? "RD$" + Number(deuda).toLocaleString("es-DO") : "—"}</td>
             <td style="color:${
               dRen < 0 ? "#f2415a"
