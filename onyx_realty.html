@@ -11,13 +11,13 @@
     />
     <style>
       :root {
-        --void: #030305;
-        --base: #060609;
-        --low: #0a0a10;
-        --mid: #0f0f18;
-        --high: #151522;
-        --raised: #1b1b2c;
-        --top: #222236;
+        --void: #0a0a0a;
+        --base: #0d0d0d;
+        --low: #111111;
+        --mid: #161616;
+        --high: #1a1a1a;
+        --raised: #202020;
+        --top: #272727;
         --b0: rgba(255, 255, 255, 0.03);
         --b1: rgba(255, 255, 255, 0.055);
         --b2: rgba(255, 255, 255, 0.09);
@@ -36,16 +36,15 @@
         --rs: #f2415a;
         --rs-dim: rgba(242, 65, 90, 0.08);
         --rs-border: rgba(242, 65, 90, 0.22);
-        --t1: #ededf8;
-        --t2: #6868a0;
-        --t3: #323250;
+        --t1: #f0f0f0;
+        --t2: #787878;
+        --t3: #404040;
         --sidebar-w: 258px;
         --r: 18px;
         --rsm: 11px;
         --rxs: 8px;
       }
 
-      /* ── PIN LOGIN SCREEN ─────────────────────────────────────────────── */
       #pin-screen {
         position: fixed;
         inset: 0;
@@ -54,28 +53,19 @@
         align-items: center;
         justify-content: center;
         flex-direction: column;
-        background:
-          radial-gradient(
-            ellipse 80% 60% at 50% -10%,
-            rgba(201, 147, 74, 0.1) 0%,
-            transparent 60%
-          ),
-          radial-gradient(
-            ellipse 50% 40% at 80% 80%,
-            rgba(201, 147, 74, 0.05) 0%,
-            transparent 50%
-          ),
-          #080807;
+        background: #0a0a0a;
         overflow: hidden;
       }
-      /* subtle noise texture */
+      /* subtle gold top glow */
       #pin-screen::before {
         content: "";
         position: absolute;
-        inset: 0;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-        background-size: 200px;
-        opacity: 0.4;
+        top: -100px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 600px;
+        height: 300px;
+        background: radial-gradient(ellipse, rgba(201,147,74,0.08) 0%, transparent 70%);
         pointer-events: none;
       }
       /* top gold line accent */
@@ -89,7 +79,7 @@
         background: linear-gradient(
           90deg,
           transparent 0%,
-          rgba(201, 147, 74, 0.6) 50%,
+          rgba(201, 147, 74, 0.5) 50%,
           transparent 100%
         );
       }
@@ -725,28 +715,13 @@
         z-index: 0;
         background:
           radial-gradient(
-            ellipse 80% 60% at 15% -10%,
-            rgba(201, 147, 74, 0.055) 0%,
-            transparent 60%
-          ),
-          radial-gradient(
-            ellipse 60% 50% at 85% 105%,
-            rgba(46, 189, 142, 0.038) 0%,
-            transparent 58%
-          ),
-          radial-gradient(
-            ellipse 50% 40% at 55% 45%,
-            rgba(242, 65, 90, 0.018) 0%,
-            transparent 55%
+            ellipse 70% 50% at 50% 0%,
+            rgba(201, 147, 74, 0.04) 0%,
+            transparent 70%
           );
       }
       #grain {
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-        z-index: 0;
-        opacity: 0.22;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 600 600' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+        display: none;
       }
       .sidebar {
         position: fixed;
@@ -3741,52 +3716,59 @@
         ).reduce((s, p) => s + p.monto, 0);
       }
       function DetectarMorosos(mes, año) {
-        // REGLA: moroso SOLO si hoy > día_de_pago y no pagó.
-        // Si hoy == día_de_pago → NO es moroso.
-        // Comparación numérica pura para evitar bugs de timezone.
-        const n = now();
-        const todayDay = n.getDate();
+        // mes = 0-indexed (getMonth()), año = getFullYear()
+        // REGLA ÚNICA: moroso SOLO si hoy ESTRICTAMENTE > día_de_pago Y no pagó.
+        // Si hoy == día_de_pago → DEBE PAGAR HOY → NO es moroso.
+        const todayDay = now().getDate();
+
+        // Extrae {y, m, d} del startBase de un contrato (m es 0-indexed)
+        function startYMD(c) {
+          const raw =
+            c.startBase instanceof Date ? c.startBase
+            : new Date(String(c.startBase || "").substring(0, 10) + "T12:00:00");
+          if (isNaN(raw.getTime())) return null;
+          return { y: raw.getFullYear(), m: raw.getMonth(), d: raw.getDate() };
+        }
+
+        // ¿El contrato inició DESPUÉS del día pd en el período (pY, pM)?
+        function contratoNuevoParaPeriodo(s, pY, pM, pd) {
+          if (!s) return true; // startBase inválido → tratar como nuevo → AL DÍA
+          if (s.y > pY) return true;
+          if (s.y === pY && s.m > pM) return true;
+          if (s.y === pY && s.m === pM && s.d > pd) return true;
+          return false;
+        }
 
         return CONTRATOS.filter((c) => {
           const pd = c.payDay || 1;
+          const s = startYMD(c);
 
-          // Inicio del contrato como números enteros (sin timezone)
-          const csRaw =
-            c.startBase instanceof Date ?
-              c.startBase
-            : new Date(String(c.startBase).substring(0, 10) + "T12:00:00");
-          const csNum =
-            csRaw.getFullYear() * 10000 +
-            csRaw.getMonth() * 100 +
-            csRaw.getDate();
+          // PASO 1: ¿Pagó este mes? → AL DÍA
+          if (PAGOS_HISTORICOS.some(
+            (p) => p.contratoId === c.id && p.mes === mes && p.año === año
+          )) return false;
 
-          // PASO 1: ¿Pagó el mes actual?
-          const paidCurrentMonth = PAGOS_HISTORICOS.some(
-            (p) => p.contratoId === c.id && p.mes === mes && p.año === año,
-          );
-          if (paidCurrentMonth) return false;
-
-          // PASO 2: ¿Ya pasó el día de pago de ESTE mes? (hoy ESTRICTAMENTE mayor)
-          if (todayDay > pd) return true;
-
-          // PASO 3: Este mes aún no vence → revisar mes anterior
-          let prevMes = mes - 1,
-            prevAño = año;
-          if (prevMes < 0) {
-            prevMes = 11;
-            prevAño = año - 1;
+          // PASO 2: ¿Venció el día de pago de ESTE mes? (hoy > pd, estrictamente)
+          if (todayDay > pd) {
+            // Si el contrato inició después del día de pago de este mes → primera cuota es próximo mes
+            if (contratoNuevoParaPeriodo(s, año, mes, pd)) return false;
+            return true; // MOROSO
           }
 
-          // ¿El contrato inició DESPUÉS del día de pago anterior? → primera obligación es este mes
-          const prevNum = prevAño * 10000 + prevMes * 100 + pd;
-          if (csNum > prevNum) return false; // nuevo contrato → AL DÍA
+          // PASO 3: Hoy ≤ día de pago → revisar mes anterior
+          let prevMes = mes - 1, prevAño = año;
+          if (prevMes < 0) { prevMes = 11; prevAño = año - 1; }
 
-          // ¿Pagó el mes anterior?
-          const paidPrevMonth = PAGOS_HISTORICOS.some(
-            (p) =>
-              p.contratoId === c.id && p.mes === prevMes && p.año === prevAño,
-          );
-          return !paidPrevMonth;
+          // ¿Pagó el mes anterior? → AL DÍA
+          if (PAGOS_HISTORICOS.some(
+            (p) => p.contratoId === c.id && p.mes === prevMes && p.año === prevAño
+          )) return false;
+
+          // ¿Contrato inició después del día de pago anterior? → primera cuota es este mes → AL DÍA
+          if (contratoNuevoParaPeriodo(s, prevAño, prevMes, pd)) return false;
+
+          // Contrato antiguo, no pagó el mes anterior → MOROSO
+          return true;
         });
       }
       function CalcularDeudaPorApartamento(c) {
@@ -3796,15 +3778,21 @@
         const pd = c.payDay || 1;
         const todayDay = n.getDate();
 
-        // Inicio del contrato como número entero puro (sin timezone)
-        const csRaw =
-          c.startBase instanceof Date ?
-            c.startBase
-          : new Date(String(c.startBase).substring(0, 10) + "T12:00:00");
-        const csNum =
-          csRaw.getFullYear() * 10000 +
-          csRaw.getMonth() * 100 +
-          csRaw.getDate();
+        // Extrae {y, m, d} del startBase (m es 0-indexed)
+        const sbRaw =
+          c.startBase instanceof Date ? c.startBase
+          : new Date(String(c.startBase || "").substring(0, 10) + "T12:00:00");
+        const s = isNaN(sbRaw.getTime()) ? null
+          : { y: sbRaw.getFullYear(), m: sbRaw.getMonth(), d: sbRaw.getDate() };
+
+        // ¿El contrato inició DESPUÉS del día pd en el período (pY, pM)?
+        function nuevoParaPeriodo(pY, pM) {
+          if (!s) return true; // startBase inválido → tratar como nuevo → AL DÍA
+          if (s.y > pY) return true;
+          if (s.y === pY && s.m > pM) return true;
+          if (s.y === pY && s.m === pM && s.d > pd) return true;
+          return false;
+        }
 
         const cobradoTotal = PAGOS_HISTORICOS.filter(
           (p) => p.contratoId === c.id,
@@ -3813,41 +3801,36 @@
           (p) => p.contratoId === c.id,
         ).length;
 
-        // PASO 1: ¿Pagó el mes actual?
-        const paidCurrentMonth = PAGOS_HISTORICOS.some(
-          (p) => p.contratoId === c.id && p.mes === mes && p.año === año,
-        );
-
         let estadoPago, deuda;
 
-        if (paidCurrentMonth) {
+        // PASO 1: ¿Pagó este mes?
+        if (PAGOS_HISTORICOS.some(
+          (p) => p.contratoId === c.id && p.mes === mes && p.año === año
+        )) {
           estadoPago = "pagado";
           deuda = 0;
         } else if (todayDay > pd) {
-          // PASO 2: hoy > pd → venció sin pago → MOROSO
-          estadoPago = "moroso";
-          deuda = c.rent;
-        } else {
-          // PASO 3: este mes aún no vence → revisar mes anterior
-          let prevMes = mes - 1,
-            prevAño = año;
-          if (prevMes < 0) {
-            prevMes = 11;
-            prevAño = año - 1;
+          // PASO 2: venció el día de pago de este mes
+          if (nuevoParaPeriodo(año, mes)) {
+            estadoPago = "al_dia"; // contrato nuevo, primera cuota es próximo mes
+            deuda = 0;
+          } else {
+            estadoPago = "moroso";
+            deuda = c.rent;
           }
+        } else {
+          // PASO 3: aún no vence este mes → revisar mes anterior
+          let prevMes = mes - 1, prevAño = año;
+          if (prevMes < 0) { prevMes = 11; prevAño = año - 1; }
 
-          // ¿Contrato inició DESPUÉS del día de pago anterior? → primera obligación es este mes
-          const prevNum = prevAño * 10000 + prevMes * 100 + pd;
-          if (csNum > prevNum) {
+          if (PAGOS_HISTORICOS.some(
+            (p) => p.contratoId === c.id && p.mes === prevMes && p.año === prevAño
+          ) || nuevoParaPeriodo(prevAño, prevMes)) {
             estadoPago = "al_dia";
             deuda = 0;
           } else {
-            const paidPrevMonth = PAGOS_HISTORICOS.some(
-              (p) =>
-                p.contratoId === c.id && p.mes === prevMes && p.año === prevAño,
-            );
-            estadoPago = paidPrevMonth ? "al_dia" : "moroso";
-            deuda = paidPrevMonth ? 0 : c.rent;
+            estadoPago = "moroso";
+            deuda = c.rent;
           }
         }
 
