@@ -3638,19 +3638,34 @@
         ).reduce((s, p) => s + p.monto, 0);
       }
       function DetectarMorosos(mes, año) {
-        // REGLA EXACTA — período de pago más reciente que ya venció:
+        // ═══════════════════════════════════════════════════════════════
+        // LÓGICA DE 3 PASOS (única forma de cubrir todos los casos):
         //
-        // Si hoy >= payDay → el período de este mes ya venció → revisar mes actual
-        // Si hoy <  payDay → el día de pago de este mes no ha llegado →
-        //                    el período ANTERIOR ya venció → revisar mes pasado
+        // PASO 1 — ¿Pagó el mes actual?
+        //   → SÍ: PAGADO (no moroso), independientemente del payDay
+        //   Cubre: Flor Magdalena pagó abril el día 3 (antes del día 5)
         //
-        // Ejemplo real: hoy 5 abril, Carolyn payDay 30
-        //   → 5 < 30, así que el 30 de MARZO ya pasó → revisar marzo
-        //   → Carolyn no pagó marzo → MOROSA ✅
+        // PASO 2 — Si NO pagó este mes: ¿ya pasó el payDay de este mes?
+        //   (hoy > payDay, estrictamente)
+        //   → SÍ: MOROSO (debía pagar este mes y no lo hizo)
         //
-        // ✅ PAGADO  → pagó en el período vencido más reciente
-        // 🟡 AL DÍA → pagó el período vencido más reciente (espera el próximo)
-        // 🔴 MOROSO → no pagó en el período vencido más reciente
+        // PASO 3 — Si hoy <= payDay (incluye "hoy es el día de pago"):
+        //   Este mes todavía no vence. Revisar si pagó el mes ANTERIOR.
+        //   → SI el contrato no existía el mes anterior: AL DÍA (nuevo contrato)
+        //   → SI pagó el mes anterior: AL DÍA
+        //   → SI NO pagó el mes anterior: MOROSO (debía pagar el mes pasado)
+        //
+        // Ejemplos reales (hoy 5 abril):
+        //   Flor Magdalena  payDay=5, pagó abril → Paso 1 resuelve → PAGADA ✅
+        //   Alexandra/Ramon payDay=5, no pagaron → Paso 1 no; Paso 2: 5>5 NO;
+        //                   Paso 3: contrato inició en abril → nuevo → AL DÍA ✅
+        //   Carolyn/Dan/Jonathan payDay=30, no pagaron →
+        //                   Paso 1 no; Paso 2: 5>30 NO;
+        //                   Paso 3: no pagaron marzo → MOROSOS ✅
+        //   Luis Alfredo    payDay=15, pagó marzo →
+        //                   Paso 1 no (abril no pagado); Paso 2: 5>15 NO;
+        //                   Paso 3: pagó marzo → AL DÍA ✅
+        // ═══════════════════════════════════════════════════════════════
         const n = now();
         const todayDay = n.getDate();
 
@@ -3659,28 +3674,36 @@
             c.startBase instanceof Date ? c.startBase : new Date(c.startBase);
           const pd = c.payDay || 1;
 
-          // Determinar el período de pago más reciente que ya venció
-          let checkMes, checkAño;
-          if (todayDay > pd) {
-            checkAño = año;
-            if (checkMes < 0) {
-              checkMes = 11;
-              checkAño = año - 1;
-            }
+          // PASO 1: ¿Tiene pago registrado para el mes actual?
+          const paidCurrentMonth = PAGOS_HISTORICOS.some(
+            (p) => p.contratoId === c.id && p.mes === mes && p.año === año,
+          );
+          if (paidCurrentMonth) return false; // PAGADO → no es moroso
+
+          // PASO 2: ¿Ya pasó el día de pago de ESTE mes?
+          if (todayDay > pd) return true; // MOROSO: venció y no pagó
+
+          // PASO 3: hoy <= payDay → este mes aún no vence.
+          // Verificar si pagó el MES ANTERIOR.
+          let prevMes = mes - 1;
+          let prevAño = año;
+          if (prevMes < 0) {
+            prevMes = 11;
+            prevAño = año - 1;
           }
 
-          // Verificar que el contrato ya haya iniciado en ese período
-          const contratoActivo =
-            cs.getUTCFullYear() < checkAño ||
-            (cs.getUTCFullYear() === checkAño && cs.getUTCMonth() <= checkMes);
-          if (!contratoActivo) return false;
+          // ¿El contrato existía el mes anterior?
+          const prevPeriodExiste =
+            cs.getUTCFullYear() < prevAño ||
+            (cs.getUTCFullYear() === prevAño && cs.getUTCMonth() <= prevMes);
+          if (!prevPeriodExiste) return false; // Contrato nuevo → AL DÍA
 
-          // ¿Tiene pago registrado para ese período?
-          const hasPaid = PAGOS_HISTORICOS.some(
+          // ¿Pagó el mes anterior?
+          const paidPrevMonth = PAGOS_HISTORICOS.some(
             (p) =>
-              p.contratoId === c.id && p.mes === checkMes && p.año === checkAño,
+              p.contratoId === c.id && p.mes === prevMes && p.año === prevAño,
           );
-          return !hasPaid; // sin pago → MOROSO
+          return !paidPrevMonth; // MOROSO si no pagó el mes anterior
         });
       }
       function CalcularDeudaPorApartamento(c) {
@@ -3689,38 +3712,8 @@
         const año = n.getFullYear();
         const pd = c.payDay || 1;
         const todayDay = n.getDate();
-
-        // Determinar el período de pago más reciente que ya venció
-        // (misma lógica que DetectarMorosos)
-        let checkMes, checkAño;
-        if (todayDay > pd) {
-          if (checkMes < 0) {
-            checkMes = 11;
-            checkAño = año - 1;
-          }
-        }
-
-        // Contrato debe haber iniciado en o antes del período a verificar
         const cs = new Date(c.startBase);
-        const contratoActivo =
-          cs.getUTCFullYear() < checkAño ||
-          (cs.getUTCFullYear() === checkAño && cs.getUTCMonth() <= checkMes);
-        if (!contratoActivo) {
-          return {
-            esperado: 0,
-            cobrado: 0,
-            cobradoTotal: 0,
-            deuda: 0,
-            meses: 0,
-            mesesTranscurridos: 0,
-            estadoPago: "al_dia",
-          };
-        }
 
-        const paidCheckPeriod = PAGOS_HISTORICOS.some(
-          (p) =>
-            p.contratoId === c.id && p.mes === checkMes && p.año === checkAño,
-        );
         const cobradoTotal = PAGOS_HISTORICOS.filter(
           (p) => p.contratoId === c.id,
         ).reduce((s, p) => s + p.monto, 0);
@@ -3728,20 +3721,48 @@
           (p) => p.contratoId === c.id,
         ).length;
 
-        // 3 estados:
-        // ✅ PAGADO  → pagó en el período vencido más reciente
-        // 🟡 AL DÍA → igual a pagado (el próximo aún no llega)
-        // 🔴 MOROSO → no pagó en el período vencido más reciente
+        // MISMA lógica de 3 pasos que DetectarMorosos
+        // PASO 1: ¿Pagó el mes actual?
+        const paidCurrentMonth = PAGOS_HISTORICOS.some(
+          (p) => p.contratoId === c.id && p.mes === mes && p.año === año,
+        );
+
         let estadoPago, deuda;
-        if (paidCheckPeriod) {
-          estadoPago = todayDay >= pd ? "pagado" : "al_dia";
+
+        if (paidCurrentMonth) {
+          estadoPago = "pagado";
           deuda = 0;
-        } else {
+        } else if (todayDay > pd) {
+          // PASO 2: venció este mes sin pago
           estadoPago = "moroso";
           deuda = c.rent;
+        } else {
+          // PASO 3: este mes no ha vencido — revisar mes anterior
+          let prevMes = mes - 1;
+          let prevAño = año;
+          if (prevMes < 0) {
+            prevMes = 11;
+            prevAño = año - 1;
+          }
+
+          const prevPeriodExiste =
+            cs.getUTCFullYear() < prevAño ||
+            (cs.getUTCFullYear() === prevAño && cs.getUTCMonth() <= prevMes);
+
+          if (!prevPeriodExiste) {
+            estadoPago = "al_dia"; // contrato nuevo
+            deuda = 0;
+          } else {
+            const paidPrevMonth = PAGOS_HISTORICOS.some(
+              (p) =>
+                p.contratoId === c.id && p.mes === prevMes && p.año === prevAño,
+            );
+            estadoPago = paidPrevMonth ? "al_dia" : "moroso";
+            deuda = paidPrevMonth ? 0 : c.rent;
+          }
         }
 
-        const cobrado = paidCheckPeriod ? c.rent : 0;
+        const cobrado = estadoPago !== "moroso" ? c.rent : 0;
         const esperado = c.rent;
 
         return {
@@ -4275,21 +4296,8 @@
             estadoLabel = "Moroso";
             morosoCount++;
           }
-          // "paid" para el botón Registrar — buscar si ya pagó en el período relevante
-          const pd = c.payDay || 1;
-          const todayDay = n.getDate();
-          const checkMes =
-            todayDay >= pd ? mes
-            : mes === 0 ? 11
-            : mes - 1;
-          const checkAño =
-            todayDay >= pd ? año
-            : mes === 0 ? año - 1
-            : año;
-          const paid = PAGOS_HISTORICOS.find(
-            (p) =>
-              p.contratoId === c.id && p.mes === checkMes && p.año === checkAño,
-          );
+          // El botón "Registrar" se oculta si ya está pagado
+          const paid = estadoPago === "pagado";
           return `<tr>
       <td><span class="td-apt">${c.id}</span></td>
       <td><span class="td-name">${c.tenant.split("\n")[0]}</span></td>
