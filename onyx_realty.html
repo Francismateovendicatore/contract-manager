@@ -3741,73 +3741,52 @@
         ).reduce((s, p) => s + p.monto, 0);
       }
       function DetectarMorosos(mes, año) {
-        // ═══════════════════════════════════════════════════════════════
-        // LÓGICA DE 3 PASOS (única forma de cubrir todos los casos):
-        //
-        // PASO 1 — ¿Pagó el mes actual?
-        //   → SÍ: PAGADO (no moroso), independientemente del payDay
-        //   Cubre: Flor Magdalena pagó abril el día 3 (antes del día 5)
-        //
-        // PASO 2 — Si NO pagó este mes: ¿ya pasó el payDay de este mes?
-        //   (hoy > payDay, estrictamente)
-        //   → SÍ: MOROSO (debía pagar este mes y no lo hizo)
-        //
-        // PASO 3 — Si hoy <= payDay (incluye "hoy es el día de pago"):
-        //   Este mes todavía no vence. Revisar si pagó el mes ANTERIOR.
-        //   → SI el contrato no existía el mes anterior: AL DÍA (nuevo contrato)
-        //   → SI pagó el mes anterior: AL DÍA
-        //   → SI NO pagó el mes anterior: MOROSO (debía pagar el mes pasado)
-        //
-        // Ejemplos reales (hoy 5 abril):
-        //   Flor Magdalena  payDay=5, pagó abril → Paso 1 resuelve → PAGADA ✅
-        //   Alexandra/Ramon payDay=5, no pagaron → Paso 1 no; Paso 2: 5>5 NO;
-        //                   Paso 3: contrato inició en abril → nuevo → AL DÍA ✅
-        //   Carolyn/Dan/Jonathan payDay=30, no pagaron →
-        //                   Paso 1 no; Paso 2: 5>30 NO;
-        //                   Paso 3: no pagaron marzo → MOROSOS ✅
-        //   Luis Alfredo    payDay=15, pagó marzo →
-        //                   Paso 1 no (abril no pagado); Paso 2: 5>15 NO;
-        //                   Paso 3: pagó marzo → AL DÍA ✅
-        // ═══════════════════════════════════════════════════════════════
+        // REGLA: moroso SOLO si hoy > día_de_pago y no pagó.
+        // Si hoy == día_de_pago → NO es moroso.
+        // Comparación numérica pura para evitar bugs de timezone.
         const n = now();
         const todayDay = n.getDate();
 
         return CONTRATOS.filter((c) => {
-          const cs =
-            c.startBase instanceof Date ? c.startBase : new Date(c.startBase);
           const pd = c.payDay || 1;
 
-          // PASO 1: ¿Tiene pago registrado para el mes actual?
+          // Inicio del contrato como números enteros (sin timezone)
+          const csRaw =
+            c.startBase instanceof Date ?
+              c.startBase
+            : new Date(String(c.startBase).substring(0, 10) + "T12:00:00");
+          const csNum =
+            csRaw.getFullYear() * 10000 +
+            csRaw.getMonth() * 100 +
+            csRaw.getDate();
+
+          // PASO 1: ¿Pagó el mes actual?
           const paidCurrentMonth = PAGOS_HISTORICOS.some(
             (p) => p.contratoId === c.id && p.mes === mes && p.año === año,
           );
-          if (paidCurrentMonth) return false; // PAGADO → no es moroso
+          if (paidCurrentMonth) return false;
 
-          // PASO 2: ¿Ya pasó el día de pago de ESTE mes?
-          if (todayDay > pd) return true; // MOROSO: venció y no pagó
+          // PASO 2: ¿Ya pasó el día de pago de ESTE mes? (hoy ESTRICTAMENTE mayor)
+          if (todayDay > pd) return true;
 
-          // PASO 3: hoy <= payDay → este mes aún no vence.
-          // Verificar si pagó el MES ANTERIOR.
-          let prevMes = mes - 1;
-          let prevAño = año;
+          // PASO 3: Este mes aún no vence → revisar mes anterior
+          let prevMes = mes - 1,
+            prevAño = año;
           if (prevMes < 0) {
             prevMes = 11;
             prevAño = año - 1;
           }
 
-          // ¿El contrato estaba activo ANTES del día de pago del mes anterior?
-          // Ej: Luis Alfredo inició el 28 de marzo, payDay=15 → fecha anterior = 15 mar.
-          // cs (28 mar) NO es anterior al 15 mar → su primera obligación es el 15 ABR → AL DÍA
-          // Carolyn inició antes del 30 mar → su 30 mar ya venció → MOROSA
-          const prevPayDate = new Date(Date.UTC(prevAño, prevMes, pd));
-          if (cs >= prevPayDate) return false; // Contrato inició después del pago anterior → AL DÍA
+          // ¿El contrato inició DESPUÉS del día de pago anterior? → primera obligación es este mes
+          const prevNum = prevAño * 10000 + prevMes * 100 + pd;
+          if (csNum > prevNum) return false; // nuevo contrato → AL DÍA
 
           // ¿Pagó el mes anterior?
           const paidPrevMonth = PAGOS_HISTORICOS.some(
             (p) =>
               p.contratoId === c.id && p.mes === prevMes && p.año === prevAño,
           );
-          return !paidPrevMonth; // MOROSO si no pagó el mes anterior
+          return !paidPrevMonth;
         });
       }
       function CalcularDeudaPorApartamento(c) {
@@ -3816,7 +3795,16 @@
         const año = n.getFullYear();
         const pd = c.payDay || 1;
         const todayDay = n.getDate();
-        const cs = new Date(c.startBase);
+
+        // Inicio del contrato como número entero puro (sin timezone)
+        const csRaw =
+          c.startBase instanceof Date ?
+            c.startBase
+          : new Date(String(c.startBase).substring(0, 10) + "T12:00:00");
+        const csNum =
+          csRaw.getFullYear() * 10000 +
+          csRaw.getMonth() * 100 +
+          csRaw.getDate();
 
         const cobradoTotal = PAGOS_HISTORICOS.filter(
           (p) => p.contratoId === c.id,
@@ -3825,7 +3813,6 @@
           (p) => p.contratoId === c.id,
         ).length;
 
-        // MISMA lógica de 3 pasos que DetectarMorosos
         // PASO 1: ¿Pagó el mes actual?
         const paidCurrentMonth = PAGOS_HISTORICOS.some(
           (p) => p.contratoId === c.id && p.mes === mes && p.año === año,
@@ -3837,22 +3824,22 @@
           estadoPago = "pagado";
           deuda = 0;
         } else if (todayDay > pd) {
-          // PASO 2: venció este mes sin pago
+          // PASO 2: hoy > pd → venció sin pago → MOROSO
           estadoPago = "moroso";
           deuda = c.rent;
         } else {
-          // PASO 3: este mes no ha vencido — revisar mes anterior
-          let prevMes = mes - 1;
-          let prevAño = año;
+          // PASO 3: este mes aún no vence → revisar mes anterior
+          let prevMes = mes - 1,
+            prevAño = año;
           if (prevMes < 0) {
             prevMes = 11;
             prevAño = año - 1;
           }
 
-          // Comparar contra la fecha exacta del pago anterior (mismo criterio que DetectarMorosos)
-          const prevPayDate = new Date(Date.UTC(prevAño, prevMes, pd));
-          if (cs >= prevPayDate) {
-            estadoPago = "al_dia"; // primera obligación es este mes → AL DÍA
+          // ¿Contrato inició DESPUÉS del día de pago anterior? → primera obligación es este mes
+          const prevNum = prevAño * 10000 + prevMes * 100 + pd;
+          if (csNum > prevNum) {
+            estadoPago = "al_dia";
             deuda = 0;
           } else {
             const paidPrevMonth = PAGOS_HISTORICOS.some(
@@ -5206,7 +5193,7 @@
                 const raw =
                   c.start_base ? String(c.start_base).substring(0, 10) : null;
                 if (raw && /^\d{4}-\d{2}-\d{2}$/.test(raw))
-                  return new Date(raw);
+                  return new Date(raw + "T12:00:00");
                 const _t = new Date();
                 return new Date(
                   _t.getUTCFullYear() +
@@ -5620,7 +5607,7 @@
                       String(payload.start_base).substring(0, 10)
                     : null;
                   if (raw && /^\d{4}-\d{2}-\d{2}$/.test(raw))
-                    return new Date(raw);
+                    return new Date(raw + "T12:00:00");
                   const _t = new Date();
                   return new Date(
                     _t.getUTCFullYear() +
@@ -5668,7 +5655,7 @@
                     String(payload.start_base).substring(0, 10)
                   : null;
                 if (raw && /^\d{4}-\d{2}-\d{2}$/.test(raw))
-                  return new Date(raw);
+                  return new Date(raw + "T12:00:00");
                 const _t = new Date();
                 return new Date(
                   _t.getUTCFullYear() +
