@@ -3688,15 +3688,30 @@
          correct interpretation, falling back to 1-indexed (subtract 1).
       ────────────────────────────────────────────────────────────────────── */
       function normalizarMes(dbMes, fechaPagoStr) {
-        // PRIMARY: always use fecha_pago's actual month — 100% unambiguous
-        const fpDate = new Date((fechaPagoStr || "") + "T12:00:00");
-        if (!isNaN(fpDate.getTime())) {
-          return fpDate.getMonth(); // 0-indexed, directly correct
+        // Tomar solo YYYY-MM-DD para evitar que timestamps rompan el parse
+        const fechaOnly = String(fechaPagoStr || "").substring(0, 10);
+        const fpDate = new Date(fechaOnly + "T12:00:00");
+        if (!isNaN(fpDate.getTime()) && fechaOnly.length === 10) {
+          return fpDate.getMonth(); // 0-indexed, definitivamente correcto
         }
-        // Fallback if fecha_pago is missing/invalid
-        if (dbMes === 0) return 0; // 0-indexed January
-        if (dbMes === 12) return 11; // 1-indexed December
-        return dbMes - 1; // assume 1-indexed (current standard)
+        // Fallback: convertir de 1-indexed a 0-indexed
+        const m = parseInt(dbMes, 10);
+        if (m >= 1 && m <= 12) return m - 1;
+        return m;
+      }
+
+      // Verificacion robusta: revisa mes/año normalizados Y fecha real del pago
+      function pagoPorPeriodo(contratoId, checkMes, checkAño) {
+        return PAGOS_HISTORICOS.some((p) => {
+          if (p.contratoId !== contratoId) return false;
+          if (p.mes === checkMes && p.año === checkAño) return true;
+          // Fallback: usar fecha real del pago si normalizarMes fallo
+          if (p.fechaPago instanceof Date && !isNaN(p.fechaPago.getTime())) {
+            return p.fechaPago.getMonth() === checkMes &&
+                   p.fechaPago.getFullYear() === checkAño;
+          }
+          return false;
+        });
       }
 
       // Deduplication: keep one payment per (contratoId, mes, año) — highest monto wins
@@ -3744,9 +3759,7 @@
           const s = startYMD(c);
 
           // PASO 1: ¿Pagó este mes? → AL DÍA
-          if (PAGOS_HISTORICOS.some(
-            (p) => p.contratoId === c.id && p.mes === mes && p.año === año
-          )) return false;
+          if (pagoPorPeriodo(c.id, mes, año)) return false;
 
           // PASO 2: ¿Venció el día de pago de ESTE mes? (hoy > pd, estrictamente)
           if (todayDay > pd) {
@@ -3760,9 +3773,7 @@
           if (prevMes < 0) { prevMes = 11; prevAño = año - 1; }
 
           // ¿Pagó el mes anterior? → AL DÍA
-          if (PAGOS_HISTORICOS.some(
-            (p) => p.contratoId === c.id && p.mes === prevMes && p.año === prevAño
-          )) return false;
+          if (pagoPorPeriodo(c.id, prevMes, prevAño)) return false;
 
           // ¿Contrato inició después del día de pago anterior? → primera cuota es este mes → AL DÍA
           if (contratoNuevoParaPeriodo(s, prevAño, prevMes, pd)) return false;
@@ -3804,9 +3815,7 @@
         let estadoPago, deuda;
 
         // PASO 1: ¿Pagó este mes?
-        if (PAGOS_HISTORICOS.some(
-          (p) => p.contratoId === c.id && p.mes === mes && p.año === año
-        )) {
+        if (pagoPorPeriodo(c.id, mes, año)) {
           estadoPago = "pagado";
           deuda = 0;
         } else if (todayDay > pd) {
@@ -3823,9 +3832,7 @@
           let prevMes = mes - 1, prevAño = año;
           if (prevMes < 0) { prevMes = 11; prevAño = año - 1; }
 
-          if (PAGOS_HISTORICOS.some(
-            (p) => p.contratoId === c.id && p.mes === prevMes && p.año === prevAño
-          ) || nuevoParaPeriodo(prevAño, prevMes)) {
+          if (pagoPorPeriodo(c.id, prevMes, prevAño) || nuevoParaPeriodo(prevAño, prevMes)) {
             estadoPago = "al_dia";
             deuda = 0;
           } else {
