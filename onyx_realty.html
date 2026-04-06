@@ -4268,22 +4268,15 @@
           pendCount = 0,
           morosoCount = 0;
         $("month-tbody").innerHTML = CONTRATOS.map((c) => {
-          const paid = PAGOS_HISTORICOS.find(
-            (p) => p.contratoId === c.id && p.mes === mes && p.año === año,
-          );
-          const payDayPassed = n.getDate() >= (c.payDay || 1);
-          // Verificar que contrato ya inició
-          const cs = new Date(c.startBase);
-          const contratoActivo =
-            cs.getUTCFullYear() < año ||
-            (cs.getUTCFullYear() === año && cs.getUTCMonth() <= mes);
+          // Usar CalcularDeudaPorApartamento como fuente única de verdad
+          const { estadoPago, deuda } = CalcularDeudaPorApartamento(c);
 
           let estado, estadoLabel;
-          if (paid) {
+          if (estadoPago === "pagado") {
             estado = "pagado";
             estadoLabel = "✓ Pagado";
             paidCount++;
-          } else if (!contratoActivo || !payDayPassed) {
+          } else if (estadoPago === "al_dia") {
             estado = "pendiente";
             estadoLabel = "Al día";
             pendCount++;
@@ -4292,6 +4285,21 @@
             estadoLabel = "Moroso";
             morosoCount++;
           }
+          // "paid" para el botón Registrar — buscar si ya pagó en el período relevante
+          const pd = c.payDay || 1;
+          const todayDay = n.getDate();
+          const checkMes =
+            todayDay >= pd ? mes
+            : mes === 0 ? 11
+            : mes - 1;
+          const checkAño =
+            todayDay >= pd ? año
+            : mes === 0 ? año - 1
+            : año;
+          const paid = PAGOS_HISTORICOS.find(
+            (p) =>
+              p.contratoId === c.id && p.mes === checkMes && p.año === checkAño,
+          );
           return `<tr>
       <td><span class="td-apt">${c.id}</span></td>
       <td><span class="td-name">${c.tenant.split("\n")[0]}</span></td>
